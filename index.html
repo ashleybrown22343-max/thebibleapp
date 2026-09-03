@@ -4,9 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bibeli Mimo</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0f172a">
+    <style>
+        :root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; --accent: #f59e0b; --border: #e9ecef; --header: #0f172a; }
+        body.dark { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; --border: #333; --header: #000; }
+        body.church { --bg: #000; --text: #ffff00; --card: #000; --border: #ffff00; --header: #000; font-size: 24px; line-height: 1.8; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 70px; transition: 0.3s; }
+        .splash { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--header); color: white; }
+        .header { background: var(--header); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header-actions { display: flex; gap: 15px; } .header h2 { margin: 0; font-size: 20px; } .header p { margin: 0; font-size: 12px; opacity: 0.8; }
+        .icon-btn { background: none; border: none; color: var(--text); cursor: pointer; } .header .icon-btn { color: white; }
+        .icon { width: 24px; height: 24px; } .icon-lg { width: 32px; height: 32px; }
+        .screen { display: none; padding: 20px; } .screen.active { display: block; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
+        .card:active { transform: scale(0.98); }
+        .continue-card { border-left: 5px solid var(--accent); } .plan-card { border-left: 5px solid #1a73e8; }
+        .votd-card { background: linear-gradient(135deg, #1a237e, #0f172a); color: white; display: block; cursor: default; }
+        .card-content h3 { margin: 0 0 5px 0; font-size: 18px; } .card-content p { margin: 0; font-size: 14px; opacity: 0.7; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+        .nav-btn { background: none; border: none; color: var(--text); opacity: 0.6; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-btn.active { color: var(--accent); opacity: 1; }
+        .section-title { font-weight: 700; margin: 20px 0 10px; font-size: 18px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .grid-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; text-align: center; font-weight: 600; cursor: pointer; }
+        .grid-item.red { color: #d32f2f; }
+        .history-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; }
+        .history-item { min-width: 120px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; font-weight: 600; }
+        .reading-content { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .verse-container { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .verse-number { font-weight: 800; color: var(--accent); font-size: 24px; display: block; margin-bottom: 5px; }
+        .yoruba-text { font-weight: 600; font-size: 1.2em; margin: 8px 0; } .english-text { opacity: 0.7; font-size: 0.95em; margin: 0; }
+        .highlight-yellow { background-color: #fff9c4; } .highlight-green { background-color: #c8e6c9; } .highlight-blue { background-color: #bbdefb; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 20px; } .chapter-nav button { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px 20px; color: var(--text); font-size: 16px; cursor: pointer; }
+        .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; display: none; }
+        .action-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-radius: 20px 20px 0 0; z-index: 401; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
+        .action-sheet.show { transform: translateY(0); }
+        .sheet-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        .sheet-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 5px; background: var(--bg); border-radius: 10px; cursor: pointer; font-size: 12px; }
+        .sheet-item svg { color: var(--accent); margin-bottom: 5px; }
+        .cancel-btn { width: 100%; padding: 15px; background: var(--bg); border: none; border-radius: 10px; font-weight: bold; color: var(--text); cursor: pointer; }
+        .note-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border-radius: 12px; z-index: 401; padding: 20px; display: none; }
+        .note-modal textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; font-size: 16px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; } .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; }
+        .floating-btn { position: fixed; bottom: 90px; right: 20px; background: var(--accent); border: none; border-radius: 50%; width: 60px; height: 60px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 200; display: flex; justify-content: center; align-items: center; }
+    </style>
 </head>
 <body>
     <div id="splash-screen" class="splash"><h1>Bibeli Mimo</h1><p>Loading...</p></div>
@@ -14,55 +54,43 @@
         <header class="header">
             <div><h2 id="greeting">Good Morning</h2><p>Bibeli Mimo</p></div>
             <div class="header-actions">
-                <button id="search-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
-                <button id="theme-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
+                <button id="search-btn" class="icon-btn">🔍</button>
+                <button id="theme-btn" class="icon-btn">🌙</button>
             </div>
         </header>
-
-        <!-- HOME SCREEN -->
         <div id="screen-home" class="screen active">
             <div class="card continue-card" onclick="continueReading()">
-                <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
                 <div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div>
             </div>
             <div class="card votd-card"><h3>Verse of the Day</h3><p id="votd">Loading...</p></div>
             <div class="card plan-card" onclick="loadPlanChapter()">
-                <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
                 <div class="card-content"><h3>Today's Plan</h3><p id="plan-text">Bible in 1 Year: Genesis 1</p></div>
             </div>
             <h3 class="section-title">Recently Read</h3>
             <div id="history-list" class="history-list"></div>
         </div>
-
-        <!-- BOOKS SCREEN -->
         <div id="screen-books" class="screen">
             <h2 class="section-title">Old Testament</h2><div id="ot-grid" class="grid"></div>
             <h2 class="section-title">New Testament</h2><div id="nt-grid" class="grid"></div>
         </div>
-
-        <!-- CHAPTERS SCREEN -->
         <div id="screen-chapters" class="screen">
-            <button class="back-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <button class="back-btn" onclick="switchTab('books')">← Back</button>
             <h2 id="chapter-title" class="section-title">Genesis</h2>
             <div id="chapter-grid" class="grid"></div>
         </div>
-
-        <!-- READING SCREEN -->
         <div id="screen-reading" class="screen">
             <div class="reading-header">
-                <button class="icon-btn" onclick="goToChapters()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+                <button class="icon-btn" onclick="goToChapters()">←</button>
                 <h2 id="reading-title">Genesis 1</h2>
                 <div class="reader-actions">
-                    <button id="audio-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg></button>
-                    <button id="share-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
+                    <button id="audio-btn" class="icon-btn">🔊</button>
+                    <button id="share-btn" class="icon-btn">📤</button>
                     <div class="font-controls"><button onclick="changeFont(-1)">A-</button><button onclick="changeFont(1)">A+</button></div>
                 </div>
             </div>
             <div id="bible-text" class="reading-content"></div>
             <div class="chapter-nav"><button onclick="prevChapter()">Previous</button><button onclick="nextChapter()">Next</button></div>
         </div>
-
-        <!-- LIBRARY SCREEN -->
         <div id="screen-saved" class="screen">
             <h2>My Library</h2>
             <div class="tab-bar">
@@ -71,31 +99,27 @@
             </div>
             <div id="library-list"></div>
         </div>
-
-        <!-- BOTTOM NAV -->
         <nav class="bottom-nav">
-            <button class="nav-btn active" onclick="switchTab('home')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
-            <button class="nav-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
-            <button class="nav-btn" onclick="switchTab('saved')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Library</span></button>
+            <button class="nav-btn active" onclick="switchTab('home')">🏠<span>Home</span></button>
+            <button class="nav-btn" onclick="switchTab('books')">📖<span>Books</span></button>
+            <button class="nav-btn" onclick="switchTab('saved')">🔖<span>Library</span></button>
         </nav>
     </div>
 
-    <!-- ACTION SHEET -->
     <div id="action-sheet-overlay" class="sheet-overlay" onclick="closeActionSheet()"></div>
     <div id="action-sheet" class="action-sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-header" id="sheet-verse-ref">Genesis 1:1</div>
         <div class="sheet-actions">
-            <div class="sheet-item" onclick="copyVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span>Copy</span></div>
-            <div class="sheet-item" onclick="readVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg><span>Read</span></div>
-            <div class="sheet-item" onclick="actionHighlight()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10M12 3a2 2 0 012 2v1l-2 7-2-7V5a2 2 0 012-2z" /></svg><span>Highlight</span></div>
-            <div class="sheet-item" onclick="openNoteModal()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg><span>Note</span></div>
-            <div class="sheet-item" onclick="saveVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Save</span></div>
+            <div class="sheet-item" onclick="copyVerse()">📋<span>Copy</span></div>
+            <div class="sheet-item" onclick="readVerse()">🔊<span>Read</span></div>
+            <div class="sheet-item" onclick="actionHighlight()">🖍️<span>Highlight</span></div>
+            <div class="sheet-item" onclick="openNoteModal()">📝<span>Note</span></div>
+            <div class="sheet-item" onclick="saveVerse()">🔖<span>Save</span></div>
         </div>
         <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
     </div>
 
-    <!-- NOTE MODAL -->
     <div id="note-overlay" class="sheet-overlay" onclick="closeNoteModal()"></div>
     <div id="note-modal" class="note-modal">
         <h3>Add Note</h3>
@@ -103,8 +127,178 @@
         <div class="modal-buttons"><button onclick="closeNoteModal()">Cancel</button><button onclick="saveNote()" class="save-btn">Save</button></div>
     </div>
 
-    <button id="church-mode-btn" class="floating-btn" title="Elder Mode"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.998a11.952 11.952 0 01-6.824-2.941 12.083 12.083 0 01.665-6.479L12 14z" /></svg></button>
+    <button id="church-mode-btn" class="floating-btn">⛪</button>
 
-    <script src="app.js"></script>
+    <script>
+        let yoruba = [], english = [], englishMap = {};
+        let saved = JSON.parse(localStorage.getItem('saved') || '[]');
+        let notes = JSON.parse(localStorage.getItem('notes') || '{}');
+        let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
+        let history = JSON.parse(localStorage.getItem('history') || '[]');
+        let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
+        let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
+        let currentEnglishChapterText = '';
+        let currentLibrary = 'saved';
+        let activeVerse = { b: 0, c: 0, v: 0 };
+
+        const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
+        const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+
+        async function init() {
+            try {
+                const splash = document.getElementById('splash-screen');
+                const app = document.getElementById('app-container');
+                const yRes = await fetch('data/yoruba.json');
+                if (!yRes.ok) throw new Error("Yoruba data not found");
+                yoruba = await yRes.json();
+                try {
+                    const eRes = await fetch('data/english_net.json');
+                    if (eRes.ok) { english = await eRes.json(); english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); }
+                } catch (e) {}
+                splash.style.display = 'none';
+                app.style.display = 'block';
+                loadHome(); buildBooks();
+                document.getElementById('search-btn').onclick = toggleSearch;
+                document.getElementById('audio-btn').onclick = playAudio;
+                document.getElementById('share-btn').onclick = shareChapter;
+                document.getElementById('theme-btn').onclick = toggleTheme;
+                document.getElementById('church-mode-btn').onclick = toggleChurch;
+            } catch(e) { splash.innerHTML = "<h3>Error: " + e.message + "</h3>"; }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('screen-' + tab).classList.add('active');
+            if(tab === 'home') document.querySelectorAll('.nav-btn')[0].classList.add('active');
+            if(tab === 'books') document.querySelectorAll('.nav-btn')[1].classList.add('active');
+            if(tab === 'saved') { document.querySelectorAll('.nav-btn')[2].classList.add('active'); loadLibrary(); }
+        }
+
+        function loadHome() {
+            const hour = new Date().getHours();
+            document.getElementById('greeting').textContent = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+            const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
+            document.getElementById('last-read').textContent = `${englishNames[codes.indexOf(last.b)]} ${last.c}`;
+            const day = new Date().getDate();
+            if(yoruba[day * 500]) document.getElementById('votd').textContent = yoruba[day * 500].text;
+            const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            const allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
+            const target = allChapters[dayOfYear % allChapters.length].split('-');
+            document.getElementById('plan-text').textContent = `Bible in 1 Year: ${englishNames[parseInt(target[0]) - 1]} ${target[1]}`;
+            const histContainer = document.getElementById('history-list');
+            histContainer.innerHTML = '';
+            history.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`;
+                div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); };
+                histContainer.appendChild(div);
+            });
+        }
+
+        function loadPlanChapter() {
+            const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            const allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
+            const target = allChapters[dayOfYear % allChapters.length].split('-');
+            currentBook = codes[parseInt(target[0]) - 1];
+            currentBookName = englishNames[parseInt(target[0]) - 1];
+            currentChapter = parseInt(target[1]);
+            loadChapter();
+        }
+
+        function buildBooks() {
+            const otGrid = document.getElementById('ot-grid');
+            const ntGrid = document.getElementById('nt-grid');
+            for(let i=0; i<englishNames.length; i++) {
+                const div = document.createElement('div');
+                div.className = i >= 39 ? 'grid-item red' : 'grid-item';
+                div.textContent = englishNames[i];
+                div.onclick = () => { currentBook = codes[i]; currentBookName = englishNames[i]; buildChapters(); };
+                (i >= 39 ? ntGrid : otGrid).appendChild(div);
+            }
+        }
+
+        function buildChapters() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-chapters').classList.add('active');
+            document.getElementById('chapter-title').textContent = currentBookName;
+            const bookNum = codes.indexOf(currentBook) + 1;
+            const maxCh = Math.max(...yoruba.filter(v => v.book === bookNum).map(v => v.chapter));
+            const grid = document.getElementById('chapter-grid');
+            grid.innerHTML = '';
+            for(let i=1; i<=maxCh; i++) {
+                const div = document.createElement('div');
+                div.className = 'grid-item';
+                div.textContent = i;
+                div.onclick = () => { currentChapter = i; loadChapter(); };
+                grid.appendChild(div);
+            }
+        }
+
+        function goToChapters() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-chapters').classList.add('active'); }
+
+        function loadChapter() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-reading').classList.add('active');
+            document.getElementById('reading-title').textContent = `${currentBookName} ${currentChapter}`;
+            const bookNum = codes.indexOf(currentBook) + 1;
+            const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
+            let html = ''; currentEnglishChapterText = '';
+            verses.forEach(v => {
+                const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || ""; currentEnglishChapterText += eng + ' ';
+                const key = `${v.book}-${v.chapter}-${v.verse}`;
+                const note = notes[key];
+                const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
+                html += `<div class="verse-container ${highlightClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})"><span class="verse-number">${v.verse}</span><p class="yoruba-text">${v.text}</p><p class="english-text">${eng}</p>${note ? `<div class="note-text">${note}</div>` : ''}</div>`;
+            });
+            document.getElementById('bible-text').innerHTML = html;
+            document.getElementById('bible-text').style.fontSize = currentFontSize + '%';
+            const currentHistory = { b: currentBook, c: currentChapter };
+            history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c);
+            history.unshift(currentHistory);
+            if (history.length > 10) history.pop();
+            localStorage.setItem('history', JSON.stringify(history));
+            localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
+            let startX = 0;
+            const el = document.getElementById('bible-text');
+            el.ontouchstart = e => startX = e.changedTouches[0].screenX;
+            el.ontouchend = e => { let endX = e.changedTouches[0].screenX; if (endX < startX - 50) nextChapter(); if (endX > startX + 50) prevChapter(); };
+        }
+
+        function nextChapter() { if(currentChapter < 150) { currentChapter++; loadChapter(); } }
+        function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(); } }
+        function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[codes.indexOf(currentBook)]; currentChapter = last.c; loadChapter(); }
+        function changeFont(delta) { currentFontSize += delta * 10; if (currentFontSize < 80) currentFontSize = 80; if (currentFontSize > 150) currentFontSize = 150; localStorage.setItem('fontSize', currentFontSize); document.getElementById('bible-text').style.fontSize = currentFontSize + '%'; }
+
+        function openActionSheet(b, c, v) {
+            activeVerse = { b: b, c: c, v: v };
+            document.getElementById('sheet-verse-ref').textContent = `${englishNames[b-1]} ${c}:${v}`;
+            document.getElementById('action-sheet-overlay').style.display = 'block';
+            const sheet = document.getElementById('action-sheet');
+            setTimeout(() => sheet.classList.add('show'), 10);
+        }
+        function closeActionSheet() { const sheet = document.getElementById('action-sheet'); sheet.classList.remove('show'); setTimeout(() => document.getElementById('action-sheet-overlay').style.display = 'none', 200); }
+        function copyVerse() { const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; navigator.clipboard.writeText(`${verseObj.text}\n${eng}`).then(() => closeActionSheet()); }
+        function readVerse() { closeActionSheet(); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; const u = new SpeechSynthesisUtterance(eng); u.lang = 'en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
+        function actionHighlight() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const order = ['yellow', 'green', 'blue', 'none']; const current = highlights[key] || 'none'; const next = order[(order.indexOf(current) + 1) % order.length]; if (next === 'none') delete highlights[key]; else highlights[key] = next; localStorage.setItem('highlights', JSON.stringify(highlights)); closeActionSheet(); loadChapter(); }
+        function saveVerse() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } }
+        function openNoteModal() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; document.getElementById('note-input').value = notes[key] || ""; document.getElementById('note-overlay').style.display = 'block'; document.getElementById('note-modal').style.display = 'block'; }
+        function closeNoteModal() { document.getElementById('note-overlay').style.display = 'none'; document.getElementById('note-modal').style.display = 'none'; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').classList.add('show'); }
+        function saveNote() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const text = document.getElementById('note-input').value; if (text.trim() === "") delete notes[key]; else notes[key] = text; localStorage.setItem('notes', JSON.stringify(notes)); closeNoteModal(); loadChapter(); }
+        function switchLibrary(type) { currentLibrary = type; document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); if (type === 'saved') document.querySelectorAll('.tab-btn')[0].classList.add('active'); else document.querySelectorAll('.tab-btn')[1].classList.add('active'); loadLibrary(); }
+        function loadLibrary() { const list = document.getElementById('library-list'); list.innerHTML = ''; if (currentLibrary === 'saved') { saved.forEach(key => { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p>`; div.onclick = () => { removeBookmark(key); }; list.appendChild(div); } }); if (list.innerHTML === '') list.innerHTML = '<p>Tap any verse to save it.</p>'; } else { for (const key in notes) { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p class="note-text">${notes[key]}</p>`; div.onclick = () => { delete notes[key]; localStorage.setItem('notes', JSON.stringify(notes)); loadLibrary(); }; list.appendChild(div); } } if (list.innerHTML === '') list.innerHTML = '<p>Tap the pencil icon to add a note.</p>'; } }
+        function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
+        function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
+        function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; loadChapter(); }
+        function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(currentEnglishChapterText); u.lang = 'en-US'; speechSynthesis.speak(u); }
+        function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
+        function toggleTheme() { document.body.classList.toggle('dark'); }
+        function toggleChurch() { document.body.classList.toggle('church'); }
+
+        window.onload = init;
+    </script>
 </body>
-    </html>
+</html>
