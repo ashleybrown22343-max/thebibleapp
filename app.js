@@ -2,22 +2,13 @@ let yoruba = [], english = [], englishMap = {};
 let saved = JSON.parse(localStorage.getItem('saved') || '[]');
 let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
 let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
+let currentEnglishChapterText = '';
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
 
 const splash = document.getElementById('splash-screen');
 const app = document.getElementById('app-container');
-
-// --- AUDIO VOICE LOADING ---
-let voices = [];
-function loadVoices() {
-    voices = window.speechSynthesis.getVoices();
-}
-loadVoices();
-if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-}
 
 async function init() {
     try {
@@ -101,8 +92,11 @@ function loadChapter() {
     const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
 
     let html = '';
+    currentEnglishChapterText = ''; // Reset English text for audio
+    
     verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
+        currentEnglishChapterText += eng + ' '; // Store English for audio
         html += `<div class="verse-container" onclick="saveVerse(${v.book},${v.chapter},${v.verse})">
             <span class="verse-number">${v.verse}</span>
             <p class="yoruba-text">${v.text}</p>
@@ -114,7 +108,6 @@ function loadChapter() {
     
     localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
     
-    // Swipe to change chapter
     let startX = 0;
     const el = document.getElementById('bible-text');
     el.ontouchstart = e => startX = e.changedTouches[0].screenX;
@@ -180,21 +173,17 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
 
-// AUDIO (Text-to-Speech) - Fixed with proper voice loading
+// AUDIO - NOW SPEAKS ENGLISH ONLY (Guaranteed to work on all phones)
 document.getElementById('audio-btn').onclick = () => {
     if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
-    const text = document.getElementById('bible-text').innerText.replace(/[0-9]/g, '');
-    const u = new SpeechSynthesisUtterance(text);
-    
-    const yoVoice = voices.find(v => v.lang.includes('yo'));
-    if (yoVoice) {
-        u.voice = yoVoice;
-        u.lang = yoVoice.lang;
-    } else {
-        u.lang = 'yo-NG';
+    const text = currentEnglishChapterText;
+    if (!text) {
+        alert("English text not found for this chapter.");
+        return;
     }
-    
-    u.rate = 0.9;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; // Standard English
+    u.rate = 1.0; 
     speechSynthesis.speak(u);
 };
 
