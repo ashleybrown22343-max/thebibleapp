@@ -9,12 +9,23 @@ const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Jo
 const splash = document.getElementById('splash-screen');
 const app = document.getElementById('app-container');
 
+// --- AUDIO VOICE LOADING ---
+let voices = [];
+function loadVoices() {
+    voices = window.speechSynthesis.getVoices();
+}
+loadVoices();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
 async function init() {
     try {
         const [yRes, eRes] = await Promise.all([fetch('data/yoruba.json'), fetch('data/english_net.json')]);
         yoruba = await yRes.json(); 
         english = await eRes.json();
         english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text);
+        
         splash.style.display = 'none';
         app.style.display = 'block';
         loadHome();
@@ -35,9 +46,11 @@ function loadHome() {
     const hour = new Date().getHours();
     const greet = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
     document.getElementById('greeting').textContent = greet;
+
     const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
     const bookIndex = codes.indexOf(last.b);
     document.getElementById('last-read').textContent = `${englishNames[bookIndex]} ${last.c}`;
+
     const day = new Date().getDate();
     const verse = yoruba[day * 500];
     if(verse) document.getElementById('votd').textContent = verse.text;
@@ -86,6 +99,7 @@ function loadChapter() {
     
     const bookNum = codes.indexOf(currentBook) + 1;
     const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
+
     let html = '';
     verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
@@ -100,6 +114,7 @@ function loadChapter() {
     
     localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
     
+    // Swipe to change chapter
     let startX = 0;
     const el = document.getElementById('bible-text');
     el.ontouchstart = e => startX = e.changedTouches[0].screenX;
@@ -165,12 +180,20 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
 
-// AUDIO (Text-to-Speech)
+// AUDIO (Text-to-Speech) - Fixed with proper voice loading
 document.getElementById('audio-btn').onclick = () => {
     if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
     const text = document.getElementById('bible-text').innerText.replace(/[0-9]/g, '');
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'yo-NG';
+    
+    const yoVoice = voices.find(v => v.lang.includes('yo'));
+    if (yoVoice) {
+        u.voice = yoVoice;
+        u.lang = yoVoice.lang;
+    } else {
+        u.lang = 'yo-NG';
+    }
+    
     u.rate = 0.9;
     speechSynthesis.speak(u);
 };
