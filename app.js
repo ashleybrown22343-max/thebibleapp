@@ -1,8 +1,12 @@
 let yoruba = [], english = [], englishMap = {};
 let saved = JSON.parse(localStorage.getItem('saved') || '[]');
+let notes = JSON.parse(localStorage.getItem('notes') || '{}');
+let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
+let history = JSON.parse(localStorage.getItem('history') || '[]');
 let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
 let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
 let currentEnglishChapterText = '';
+let currentLibrary = 'saved';
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
@@ -30,7 +34,7 @@ function switchTab(tab) {
     document.getElementById('screen-' + tab).classList.add('active');
     if(tab === 'home') document.querySelectorAll('.nav-btn')[0].classList.add('active');
     if(tab === 'books') document.querySelectorAll('.nav-btn')[1].classList.add('active');
-    if(tab === 'saved') { document.querySelectorAll('.nav-btn')[2].classList.add('active'); loadSaved(); }
+    if(tab === 'saved') { document.querySelectorAll('.nav-btn')[2].classList.add('active'); loadLibrary(); }
 }
 
 function loadHome() {
@@ -45,6 +49,17 @@ function loadHome() {
     const day = new Date().getDate();
     const verse = yoruba[day * 500];
     if(verse) document.getElementById('votd').textContent = verse.text;
+
+    // Render History
+    const histContainer = document.getElementById('history-list');
+    histContainer.innerHTML = '';
+    history.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`;
+        div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); };
+        histContainer.appendChild(div);
+    });
 }
 
 function buildBooks() {
@@ -90,22 +105,38 @@ function loadChapter() {
     
     const bookNum = codes.indexOf(currentBook) + 1;
     const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
-
     let html = '';
-    currentEnglishChapterText = ''; // Reset English text for audio
-    
+    currentEnglishChapterText = ''; 
+
     verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
-        currentEnglishChapterText += eng + ' '; // Store English for audio
-        html += `<div class="verse-container" onclick="saveVerse(${v.book},${v.chapter},${v.verse})">
+        currentEnglishChapterText += eng + ' ';
+
+        const key = `${v.book}-${v.chapter}-${v.verse}`;
+        const note = notes[key];
+        const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
+
+        html += `<div class="verse-container ${highlightClass}" onclick="saveVerse(${v.book},${v.chapter},${v.verse})">
+            <div class="verse-actions" onclick="event.stopPropagation()">
+                <button title="Note" class="note-icon" onclick="addNote(${v.book},${v.chapter},${v.verse})">📝</button>
+                <button title="Highlight" onclick="toggleHighlight(${v.book},${v.chapter},${v.verse})">🖍️</button>
+            </div>
             <span class="verse-number">${v.verse}</span>
             <p class="yoruba-text">${v.text}</p>
             <p class="english-text">${eng}</p>
+            ${note ? `<div class="note-text">📝 ${note}</div>` : ''}
         </div>`;
     });
     document.getElementById('bible-text').innerHTML = html;
     document.getElementById('bible-text').style.fontSize = currentFontSize + '%';
     
+    // Update History
+    const currentHistory = { b: currentBook, c: currentChapter };
+    history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c);
+    history.unshift(currentHistory);
+    if (history.length > 10) history.pop();
+    localStorage.setItem('history', JSON.stringify(history));
+
     localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
     
     let startX = 0;
@@ -149,16 +180,76 @@ function saveVerse(b, c, v) {
     }
 }
 
-function loadSaved() {
-    let html = '';
-    saved.forEach(key => {
-        const [b,c,v] = key.split('-').map(Number);
-        const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v);
-        if(verse) html += `<div class="card" onclick="removeBookmark('${key}')"><strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><span style="font-size:12px; opacity:0.5;">Tap to delete</span></div>`;
-    });
-    document.getElementById('saved-list').innerHTML = html || '<p>Tap any verse to save it.</p>';
+function addNote(b, c, v) {
+    const key = `${b}-${c}-${v}`;
+    const text = prompt("Enter your note:", notes[key] || "");
+    if (text !== null) {
+        if (text.trim() === "") delete notes[key];
+        else notes[key] = text;
+        localStorage.setItem('notes', JSON.stringify(notes));
+        loadChapter();
+    }
 }
-function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadSaved(); }
+
+function toggleHighlight(b, c, v) {
+    const key = `${b}-${c}-${v}`;
+    const order = ['yellow', 'green', 'blue', 'none'];
+    const current = highlights[key] || 'none';
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    
+    if (next === 'none') delete highlights[key];
+    else highlights[key] = next;
+    
+    localStorage.setItem('highlights', JSON.stringify(highlights));
+    loadChapter();
+}
+
+function switchLibrary(type) {
+    currentLibrary = type;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (type === 'saved') document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    else document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    loadLibrary();
+}
+
+function loadLibrary() {
+    const list = document.getElementById('library-list');
+    list.innerHTML = '';
+    
+    if (currentLibrary === 'saved') {
+        saved.forEach(key => {
+            const [b,c,v] = key.split('-').map(Number);
+            const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v);
+            if(verse) {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><span style="font-size:12px; opacity:0.5;">Tap to delete</span>`;
+                div.onclick = () => { removeBookmark(key); };
+                list.appendChild(div);
+            }
+        });
+        if (list.innerHTML === '') list.innerHTML = '<p>Tap any verse to save it.</p>';
+    } else {
+        for (const key in notes) {
+            const [b,c,v] = key.split('-').map(Number);
+            const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v);
+            if(verse) {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p class="note-text">📝 ${notes[key]}</p><span style="font-size:12px; opacity:0.5;">Tap to delete note</span>`;
+                div.onclick = () => { delete notes[key]; localStorage.setItem('notes', JSON.stringify(notes)); loadLibrary(); };
+                list.appendChild(div);
+            }
+        }
+        if (list.innerHTML === '') list.innerHTML = '<p>Tap the 📝 icon on a verse to add a note.</p>';
+    }
+}
+
+function removeBookmark(key) { 
+    saved = saved.filter(k => k !== key); 
+    localStorage.setItem('saved', JSON.stringify(saved)); 
+    loadLibrary(); 
+}
 
 // SEARCH
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
@@ -173,17 +264,14 @@ document.getElementById('search-input').addEventListener('input', (e) => {
 });
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
 
-// AUDIO - NOW SPEAKS ENGLISH ONLY (Guaranteed to work on all phones)
+// AUDIO
 document.getElementById('audio-btn').onclick = () => {
     if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
     const text = currentEnglishChapterText;
-    if (!text) {
-        alert("English text not found for this chapter.");
-        return;
-    }
+    if (!text) return;
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US'; // Standard English
-    u.rate = 1.0; 
+    u.lang = 'en-US';
+    u.rate = 1.0;
     speechSynthesis.speak(u);
 };
 
