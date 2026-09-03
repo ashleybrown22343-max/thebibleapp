@@ -9,18 +9,15 @@
     <meta name="theme-color" content="#0f172a">
 </head>
 <body>
-    <!-- Loading Screen -->
     <div id="splash-screen" class="splash"><div class="logo">📖</div><h1>Bibeli Mimo</h1><p>Loading...</p></div>
 
-    <!-- Main App -->
     <div id="app-container" style="display: none;">
-        <!-- Header -->
         <header class="header">
             <div><h2 id="greeting">Good Morning</h2><p>Bibeli Mimo</p></div>
             <button id="theme-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
         </header>
 
-        <!-- Screen 1: Home Dashboard -->
+        <!-- Screen 1: Home -->
         <div id="screen-home" class="screen active">
             <div class="card continue-card" onclick="continueReading()">
                 <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
@@ -33,7 +30,7 @@
             </div>
         </div>
 
-        <!-- Screen 2: Books Grid -->
+        <!-- Screen 2: Books -->
         <div id="screen-books" class="screen">
             <h2 class="section-title">Old Testament</h2>
             <div id="ot-grid" class="grid"></div>
@@ -41,19 +38,36 @@
             <div id="nt-grid" class="grid"></div>
         </div>
 
-        <!-- Screen 3: Chapter Grid -->
+        <!-- Screen 3: Chapters -->
         <div id="screen-chapters" class="screen">
-            <button class="back-btn" onclick="switchTab('books')">
-                <svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-            </button>
+            <button class="back-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
             <h2 id="chapter-title" class="section-title">Genesis</h2>
             <div id="chapter-grid" class="grid"></div>
         </div>
 
-        <!-- Screen 4: Saved (Empty for now) -->
-        <div id="screen-saved" class="screen"><h2>Saved</h2><p>We will build this next step.</p></div>
+        <!-- Screen 4: READING VIEW -->
+        <div id="screen-reading" class="screen">
+            <div class="reading-header">
+                <button class="icon-btn" onclick="goToChapters()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+                <h2 id="reading-title">Genesis 1</h2>
+                <div class="font-controls">
+                    <button onclick="changeFont(-1)">A-</button>
+                    <button onclick="changeFont(1)">A+</button>
+                </div>
+            </div>
+            
+            <div id="bible-text" class="reading-content"></div>
 
-        <!-- Bottom Navigation -->
+            <div class="chapter-nav">
+                <button onclick="prevChapter()">Previous</button>
+                <button onclick="nextChapter()">Next</button>
+            </div>
+        </div>
+
+        <!-- Screen 5: Saved -->
+        <div id="screen-saved" class="screen"><h2>Saved</h2><div id="saved-list"></div></div>
+
+        <!-- Bottom Nav -->
         <nav class="bottom-nav">
             <button class="nav-btn active" onclick="switchTab('home')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
             <button class="nav-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
@@ -63,4 +77,4 @@
 
     <script src="app.js"></script>
 </body>
-                                                                                            </html>
+                                                                                                                                                                                                                                                                                                   </html>
