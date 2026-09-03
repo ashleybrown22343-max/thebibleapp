@@ -19,13 +19,18 @@
             </div>
         </header>
 
-        <!-- Screen 1: Home -->
+        <!-- Screen 1: Home (With History) -->
         <div id="screen-home" class="screen active">
             <div class="card continue-card" onclick="continueReading()">
                 <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
                 <div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div>
             </div>
+            
             <div class="card votd-card"><h3>Verse of the Day</h3><p id="votd">Loading...</p></div>
+
+            <h3 class="section-title">Recently Read</h3>
+            <div id="history-list" class="history-list"></div>
+
             <div class="card nav-card" onclick="switchTab('books')">
                 <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
                 <div class="card-content"><h3>Start Reading</h3><p>Browse all books</p></div>
@@ -45,7 +50,7 @@
             <div id="chapter-grid" class="grid"></div>
         </div>
 
-        <!-- Screen 4: READING VIEW WITH AUDIO & SHARE -->
+        <!-- Screen 4: READER (With Note & Highlight Buttons) -->
         <div id="screen-reading" class="screen">
             <div class="reading-header">
                 <button class="icon-btn" onclick="goToChapters()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
@@ -60,18 +65,23 @@
             <div class="chapter-nav"><button onclick="prevChapter()">Previous</button><button onclick="nextChapter()">Next</button></div>
         </div>
 
-        <!-- Screen 5: Saved -->
-        <div id="screen-saved" class="screen"><h2>Saved</h2><div id="saved-list"></div></div>
+        <!-- Screen 5: Library (Saved, Notes, Highlights) -->
+        <div id="screen-saved" class="screen">
+            <h2>My Library</h2>
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchLibrary('saved')">Saved</button>
+                <button class="tab-btn" onclick="switchLibrary('notes')">Notes</button>
+            </div>
+            <div id="library-list"></div>
+        </div>
 
-        <!-- Bottom Nav -->
         <nav class="bottom-nav">
             <button class="nav-btn active" onclick="switchTab('home')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
             <button class="nav-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
-            <button class="nav-btn" onclick="switchTab('saved')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Saved</span></button>
+            <button class="nav-btn" onclick="switchTab('saved')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Library</span></button>
         </nav>
     </div>
 
-    <!-- Search Overlay -->
     <div id="search-overlay" class="overlay">
         <div class="overlay-header">
             <input type="text" id="search-input" placeholder="Search Yoruba or English...">
@@ -80,9 +90,7 @@
         <div id="search-results"></div>
     </div>
 
-    <!-- Floating Church Mode Button -->
     <button id="church-mode-btn" class="floating-btn" title="Elder Mode">⛪</button>
-
     <script src="app.js"></script>
 </body>
-                                                                                                                                              </html>
+    </html>
