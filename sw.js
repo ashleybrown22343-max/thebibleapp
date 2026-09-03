@@ -1,4 +1,5 @@
-const CACHE_NAME = 'bible-offline-final-v3';
+// CHANGE THIS TO 'bible-v2' NEXT TIME YOU UPDATE
+const CACHE_NAME = 'bible-v1';
 const urlsToCache = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json', '/data/yoruba.json', '/data/english_net.json'];
 
 self.addEventListener('install', event => {
@@ -14,13 +15,5 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request).then(response => {
-                const clone = response.clone();
-                caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                return response;
-            });
-        })
-    );
+    event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
 });
