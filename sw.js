@@ -1,5 +1,5 @@
 // CHANGE THIS TO 'bible-v2' NEXT TIME YOU UPDATE
-const CACHE_NAME = 'bible-v1';
+const CACHE_NAME = 'bible-v2';
 const urlsToCache = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json', '/data/yoruba.json', '/data/english_net.json'];
 
 self.addEventListener('install', event => {
