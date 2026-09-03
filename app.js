@@ -16,19 +16,15 @@ const app = document.getElementById('app-container');
 
 async function init() {
     try {
-        const [yRes, eRes] = await Promise.all([
-            fetch('data/yoruba.json').then(res => { if(!res.ok) throw new Error("Yoruba"); return res.json(); }),
-            fetch('data/english_net.json').then(res => { if(!res.ok) return null; return res.json(); })
-        ]);
-        yoruba = yRes;
-        if (eRes) { english = eRes; english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); }
+        const [yRes, eRes] = await Promise.all([fetch('data/yoruba.json'), fetch('data/english_net.json')]);
+        yoruba = await yRes.json(); 
+        english = await eRes.json();
+        english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text);
         splash.style.display = 'none';
         app.style.display = 'block';
         loadHome();
         buildBooks();
-    } catch(e) {
-        splash.innerHTML = "<h3>Error: Yoruba Data Not Found. Check the 'data' folder in GitHub.</h3>";
-    }
+    } catch(e) { splash.innerHTML = "<h3>Error: data files not found</h3>"; }
 }
 
 function switchTab(tab) {
@@ -48,22 +44,38 @@ function loadHome() {
     const day = new Date().getDate();
     if(yoruba[day * 500]) document.getElementById('votd').textContent = yoruba[day * 500].text;
 
-    const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
     const allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
     const target = allChapters[dayOfYear % allChapters.length].split('-');
-    document.getElementById('plan-text').textContent = `Bible in 1 Year: ${englishNames[parseInt(target[0]) - 1]} ${target[1]}`;
+    const planBookNum = parseInt(target[0]);
+    const planChapter = parseInt(target[1]);
+    document.getElementById('plan-text').textContent = `Bible in 1 Year: ${englishNames[planBookNum - 1]} ${planChapter}`;
 
-    const histContainer = document.getElementById('history-list'); histContainer.innerHTML = '';
-    history.forEach(h => { const div = document.createElement('div'); div.className = 'history-item'; div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`; div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); }; histContainer.appendChild(div); });
+    const histContainer = document.getElementById('history-list');
+    histContainer.innerHTML = '';
+    history.forEach(h => {
+        const div = document.createElement('div'); div.className = 'history-item';
+        div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`;
+        div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); };
+        histContainer.appendChild(div);
+    });
 }
 
 function loadPlanChapter() {
-    const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const start = new Date(now.getFullYear(), 0, 0);
+    const diff = now - start;
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
     const allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
     const target = allChapters[dayOfYear % allChapters.length].split('-');
-    currentBook = codes[parseInt(target[0]) - 1]; currentBookName = englishNames[parseInt(target[0]) - 1]; currentChapter = parseInt(target[1]); loadChapter();
+    currentBook = codes[parseInt(target[0]) - 1];
+    currentBookName = englishNames[parseInt(target[0]) - 1];
+    currentChapter = parseInt(target[1]);
+    loadChapter();
 }
 
 function buildBooks() {
@@ -85,7 +97,11 @@ function buildChapters() {
     for(let i=1; i<=maxCh; i++) { const div = document.createElement('div'); div.className = 'grid-item'; div.textContent = i; div.onclick = () => { currentChapter = i; loadChapter(); }; grid.appendChild(div); }
 }
 
-function goToChapters() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-chapters').classList.add('active'); }
+function goToChapters() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-chapters').classList.add('active');
+}
+
 function loadChapter() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-reading').classList.add('active');
@@ -158,7 +174,6 @@ function saveVerse() {
     if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); }
     else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); }
 }
-
 function openNoteModal() {
     const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`;
     document.getElementById('note-input').value = notes[key] || "";
@@ -178,7 +193,6 @@ function saveNote() {
     localStorage.setItem('notes', JSON.stringify(notes));
     closeNoteModal(); loadChapter();
 }
-
 function switchLibrary(type) {
     currentLibrary = type;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -197,7 +211,6 @@ function loadLibrary() {
     }
 }
 function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
-
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
 document.getElementById('search-btn').onclick = toggleSearch;
 document.getElementById('search-input').addEventListener('input', (e) => {
@@ -207,7 +220,6 @@ document.getElementById('search-input').addEventListener('input', (e) => {
     document.getElementById('search-results').innerHTML = html;
 });
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
-
 document.getElementById('audio-btn').onclick = () => { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(currentEnglishChapterText); u.lang = 'en-US'; speechSynthesis.speak(u); };
 document.getElementById('share-btn').onclick = () => { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); };
 document.getElementById('theme-btn').onclick = () => document.body.classList.toggle('dark');
