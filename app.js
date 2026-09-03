@@ -14,33 +14,72 @@ async function init() {
         splash.style.display = 'none';
         app.style.display = 'block';
         loadHome();
+        buildBooks();
     } catch(e) { splash.innerHTML = "<h3>Error: data files not found</h3>"; }
 }
 
 function switchTab(tab) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    
     document.getElementById('screen-' + tab).classList.add('active');
+    
     if(tab === 'home') document.querySelectorAll('.nav-btn')[0].classList.add('active');
     if(tab === 'books') document.querySelectorAll('.nav-btn')[1].classList.add('active');
     if(tab === 'saved') document.querySelectorAll('.nav-btn')[2].classList.add('active');
 }
 
 function loadHome() {
-    // Greeting
     const hour = new Date().getHours();
     const greet = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
     document.getElementById('greeting').textContent = greet;
 
-    // Continue Reading
     const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
     const bookIndex = codes.indexOf(last.b);
     document.getElementById('last-read').textContent = `${englishNames[bookIndex]} ${last.c}`;
 
-    // Verse of the Day
     const day = new Date().getDate();
     const verse = yoruba[day * 500];
     if(verse) document.getElementById('votd').textContent = verse.text;
+}
+
+function buildBooks() {
+    const otGrid = document.getElementById('ot-grid');
+    const ntGrid = document.getElementById('nt-grid');
+    
+    for(let i=0; i<englishNames.length; i++) {
+        const div = document.createElement('div');
+        div.className = i >= 39 ? 'grid-item red' : 'grid-item';
+        div.textContent = englishNames[i];
+        div.onclick = () => { 
+            currentBook = codes[i]; 
+            currentBookName = englishNames[i]; 
+            buildChapters(); 
+        };
+        (i >= 39 ? ntGrid : otGrid).appendChild(div);
+    }
+}
+
+function buildChapters() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-chapters').classList.add('active');
+    document.getElementById('chapter-title').textContent = currentBookName;
+    
+    const bookNum = codes.indexOf(currentBook) + 1;
+    const maxCh = Math.max(...yoruba.filter(v => v.book === bookNum).map(v => v.chapter));
+    const grid = document.getElementById('chapter-grid'); 
+    grid.innerHTML = '';
+    
+    for(let i=1; i<=maxCh; i++) {
+        const div = document.createElement('div');
+        div.className = 'grid-item';
+        div.textContent = i;
+        div.onclick = () => {
+            currentChapter = i;
+            alert("Reader view coming in the next step!");
+        };
+        grid.appendChild(div);
+    }
 }
 
 function continueReading() {
@@ -48,7 +87,7 @@ function continueReading() {
     currentBook = last.b;
     currentBookName = englishNames[codes.indexOf(currentBook)];
     currentChapter = last.c;
-    alert("This will open Chapter " + currentChapter + " in the next phase!");
+    buildChapters();
 }
 
 document.getElementById('theme-btn').onclick = () => document.body.classList.toggle('dark');
