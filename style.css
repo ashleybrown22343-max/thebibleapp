@@ -1,37 +1,37 @@
-:root {
-    --bg: #f8f9fa; --text: #212529; --card: #ffffff; --accent: #f59e0b; --border: #e9ecef; --header: #0f172a;
-}
+:root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; --accent: #f59e0b; --border: #e9ecef; --header: #0f172a; }
 body.dark { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; --border: #333; --header: #000; }
 body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 70px; transition: 0.3s; }
-
 .splash { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--header); color: white; }
 .logo { font-size: 60px; }
-
 .header { background: var(--header); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
 .header h2 { margin: 0; font-size: 20px; } .header p { margin: 0; font-size: 12px; opacity: 0.8; }
-.icon-btn { background: none; border: none; color: white; cursor: pointer; }
-.icon { width: 24px; height: 24px; }
-.icon-lg { width: 32px; height: 32px; }
-
+.icon-btn { background: none; border: none; color: var(--text); cursor: pointer; }
+.header .icon-btn { color: white; }
+.icon { width: 24px; height: 24px; } .icon-lg { width: 32px; height: 32px; }
 .screen { display: none; padding: 20px; } .screen.active { display: block; }
-
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
 .card:active { transform: scale(0.98); }
 .continue-card { border-left: 5px solid var(--accent); }
 .votd-card { background: linear-gradient(135deg, #1a237e, #0f172a); color: white; display: block; cursor: default; }
-.votd-card h3 { margin-top: 0; }
-.card-content h3 { margin: 0 0 5px 0; font-size: 18px; }
-.card-content p { margin: 0; font-size: 14px; opacity: 0.7; }
+.card-content h3 { margin: 0 0 5px 0; font-size: 18px; } .card-content p { margin: 0; font-size: 14px; opacity: 0.7; }
 .card-icon { color: var(--accent); }
-
 .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
 .nav-btn { background: none; border: none; color: var(--text); opacity: 0.6; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .nav-btn.active { color: var(--accent); opacity: 1; }
-
-/* New styles for Books & Chapters */
 .section-title { font-weight: 700; margin: 20px 0 10px; font-size: 18px; }
 .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .grid-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; text-align: center; font-weight: 600; cursor: pointer; transition: 0.2s; }
-.grid-item:active { transform: scale(0.95); }
-.grid-item.red { color: #d32f2f; }
+.grid-item:active { transform: scale(0.95); } .grid-item.red { color: #d32f2f; }
 .back-btn { background: none; border: none; color: var(--accent); font-size: 16px; cursor: pointer; padding: 5px; display: flex; align-items: center; }
+
+/* READING VIEW STYLES */
+.reading-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.reading-header h2 { margin: 0; font-size: 18px; }
+.font-controls button { background: var(--card); border: 1px solid var(--border); border-radius: 5px; padding: 5px 10px; margin-left: 5px; color: var(--text); font-weight: bold; cursor: pointer; }
+.reading-content { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.verse-container { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.verse-number { font-weight: 800; color: var(--accent); font-size: 24px; display: block; margin-bottom: 5px; }
+.yoruba-text { font-weight: 600; font-size: 1.2em; margin: 8px 0; }
+.english-text { opacity: 0.7; font-size: 0.95em; margin: 0; }
+.chapter-nav { display: flex; justify-content: space-between; margin-top: 20px; }
+.chapter-nav button { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px 20px; color: var(--text); font-size: 16px; cursor: pointer; }
