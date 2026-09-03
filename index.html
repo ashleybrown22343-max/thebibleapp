@@ -4,99 +4,119 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bibeli Mimo</title>
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#0f172a">
 </head>
 <body>
-    <div id="loading-screen" class="loading-screen">
-        <div class="spinner"></div>
-        <p>Loading Bible...</p>
+    <!-- Loading Screen -->
+    <div id="splash-screen" class="splash">
+        <div class="logo">📖</div>
+        <h1>Bibeli Mimo</h1>
+        <p>Ultimate Yoruba & English</p>
     </div>
 
-    <!-- Header -->
-    <header class="app-header">
-        <button id="menu-btn" class="icon-btn">☰</button>
-        <h1>Bibeli Mimo</h1>
-        <button id="theme-toggle" class="icon-btn">🌙</button>
-    </header>
+    <!-- App Container -->
+    <div id="app-container" style="display: none;">
+        
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h2 id="greeting">Good Morning</h2>
+                <p id="greeting-sub">Bibeli Mimo</p>
+            </div>
+            <div class="header-actions">
+                <button id="audio-btn" title="Toggle Read Aloud">🔊</button>
+                <button id="theme-btn" title="Toggle Theme">🌙</button>
+            </div>
+        </header>
 
-    <!-- Drawer -->
-    <div id="side-drawer" class="drawer">
-        <div class="drawer-header">
-            <img src="icon-192.png" alt="Logo">
-            <h2>Settings</h2>
-        </div>
-        <div class="drawer-item">
-            <span>Font Size</span>
-            <div class="font-controls">
-                <button onclick="changeFont(-1)">A-</button>
-                <span id="font-size-label">100%</span>
-                <button onclick="changeFont(1)">A+</button>
+        <!-- Dashboard (Home Screen) -->
+        <div id="screen-home" class="screen active">
+            <div class="card continue-card" onclick="continueReading()">
+                <h3>Continue Reading</h3>
+                <p id="last-read">Genesis 1:1</p>
+            </div>
+
+            <div class="card votd-card">
+                <h3>Today's Verse</h3>
+                <p id="votd">Loading...</p>
+            </div>
+
+            <div class="card streak-card">
+                <h3>Reading Streak</h3>
+                <p id="streak-count">🔥 0 Days</p>
+            </div>
+
+            <div class="card nav-card" onclick="switchTab('books')">
+                <h3>All Books</h3>
+                <p>Browse Old & New Testament</p>
+            </div>
+            
+            <div class="card nav-card" onclick="switchTab('saved')">
+                <h3>My Library</h3>
+                <p>Bookmarks & Notes</p>
             </div>
         </div>
-        <div class="drawer-item" onclick="toggleHighContrast()">
-            <span>High Contrast Mode</span>
-            <span class="toggle-btn" id="hc-toggle">OFF</span>
-        </div>
-        <div class="drawer-item" onclick="shareApp()">
-            <span>Share App</span>
-            <span>➜</span>
-        </div>
-    </div>
 
-    <!-- Main Screens -->
-    <main>
-        <!-- Book Selection -->
-        <div id="screen-books" class="screen active">
-            <h2 class="section-title">Old Testament</h2>
-            <div id="ot-grid" class="grid-container"></div>
-            <h2 class="section-title">New Testament</h2>
-            <div id="nt-grid" class="grid-container"></div>
+        <!-- Books Screen -->
+        <div id="screen-books" class="screen">
+            <div class="section-title">Old Testament</div>
+            <div id="ot-grid" class="grid"></div>
+            <div class="section-title">New Testament</div>
+            <div id="nt-grid" class="grid"></div>
         </div>
 
-        <!-- Chapter Selection -->
+        <!-- Chapters Screen -->
         <div id="screen-chapters" class="screen">
-            <button class="back-btn" onclick="goToBooks()">← Back to Books</button>
-            <h2 id="chapter-title" class="section-title">JENESISI</h2>
-            <div id="chapter-grid" class="grid-container"></div>
+            <button class="back-btn" onclick="switchTab('books')">← Back</button>
+            <h2 id="chapter-title">JENESISI</h2>
+            <div id="chapter-grid" class="grid"></div>
         </div>
 
-        <!-- Reading View -->
+        <!-- Reading Screen -->
         <div id="screen-reading" class="screen">
             <div class="reading-header">
                 <button class="back-btn" onclick="goToChapters()">←</button>
-                <h2 id="reading-title">JENESISI 1</h2>
-                <div></div>
+                <h2 id="reading-title">Genesis 1</h2>
+                <button id="share-current" onclick="shareCurrent()">📤</button>
             </div>
-            <div id="bible-text" class="reading-content">
-                <p>Select a chapter to start reading.</p>
+            <div id="bible-text" class="reading-content"></div>
+            <div class="chapter-nav">
+                <button onclick="prevChapter()">← Previous</button>
+                <button onclick="nextChapter()">Next →</button>
             </div>
         </div>
-    </main>
 
-    <!-- Bottom Navigation (The modern, "better" way) -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('books')">📖 Books</button>
-        <button class="nav-btn" onclick="switchTab('bookmarks')">🔖 Saved</button>
-        <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
-    </nav>
+        <!-- Saved Screen -->
+        <div id="screen-saved" class="screen">
+            <h2>My Library</h2>
+            <button id="back-home" class="back-btn" onclick="switchTab('home')">← Home</button>
+            <div id="saved-list"></div>
+        </div>
+        
+        <!-- Search Overlay -->
+        <div id="search-overlay" class="overlay">
+            <div class="overlay-header">
+                <input type="text" id="search-input" placeholder="Search Yoruba or English...">
+                <button onclick="toggleSearch()">Close</button>
+            </div>
+            <div id="search-results"></div>
+        </div>
 
-    <!-- Hidden Screens -->
-    <div id="screen-bookmarks" class="hidden-screen">
-        <h2>Saved Verses</h2>
-        <div id="bookmark-list"></div>
-        <button class="back-btn" onclick="switchTab('books')">← Back</button>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="switchTab('home')">🏠<span>Home</span></button>
+            <button class="nav-btn" onclick="switchTab('books')">📖<span>Books</span></button>
+            <button class="nav-btn" onclick="toggleSearch()">🔍<span>Search</span></button>
+            <button class="nav-btn" onclick="switchTab('saved')">🔖<span>Saved</span></button>
+        </nav>
+
     </div>
-    <div id="screen-settings" class="hidden-screen">
-        <h2>About App</h2>
-        <p>Bibeli Mimo. World-class speed, 100% offline. Version 1.0.</p>
-        <button class="back-btn" onclick="switchTab('books')">← Back</button>
-    </div>
+
+    <!-- Church / Elder Mode Toggle (Floating) -->
+    <button id="church-mode-btn" class="floating-btn" title="Elder Mode">⛪</button>
 
     <script src="app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-    </script>
 </body>
-</html>
+        </html>
