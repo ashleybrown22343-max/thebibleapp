@@ -1,60 +1,65 @@
 // Data & State
-let yorubaArray = [], englishArray = [], englishMap = {};
-let savedVerses = JSON.parse(localStorage.getItem('savedVerses') || '[]');
-let currentBook = "GEN", currentBookName = "", currentChapter = 1;
-let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
+let yoruba = [], english = [], englishMap = {};
+let saved = JSON.parse(localStorage.getItem('saved') || '[]');
+let notes = JSON.parse(localStorage.getItem('notes') || '{}');
+let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
+let readingStreak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":""}');
 
-const bookNumbers = { "GEN":1, "EXO":2, "LEV":3, "NUM":4, "DEU":5, "JOS":6, "JDG":7, "RUT":8, "1SA":9, "2SA":10, "1KI":11, "2KI":12, "1CH":13, "2CH":14, "EZR":15, "NEH":16, "EST":17, "JOB":18, "PSA":19, "PRO":20, "ECC":21, "SNG":22, "ISA":23, "JER":24, "LAM":25, "EZK":26, "DAN":27, "HOS":28, "JOL":29, "AMO":30, "OBA":31, "JON":32, "MIC":33, "NAM":34, "HAB":35, "ZEP":36, "HAG":37, "ZEC":38, "MAL":39, "MAT":40, "MRK":41, "LUK":42, "JHN":43, "ACT":44, "ROM":45, "1CO":46, "2CO":47, "GAL":48, "EPH":49, "PHP":50, "COL":51, "1TH":52, "2TH":53, "1TI":54, "2TI":55, "TIT":56, "PHM":57, "HEB":58, "JAS":59, "1PE":60, "2PE":61, "1JN":62, "2JN":63, "3JN":64, "JUD":65, "REV":66 };
-const yorubaNames = ["JENESISI","EKISODU","LEFITIKU","NOMBA","DIUTARONOMI","JOSUA","AWON ADAO","RUTU","SAMUELI KINNI","SAMUELI KEJI","AWON OBA KINNI","AWON OBA KEJI","KRONIKA KINNI","KRONIKA KEJI","ESIRA","NEHEMAYA","ESITA","JOBU","ORIN DAFIDI","IWE OWE","IWE ONIWAASU","ORIN SOLOMONI","AISAYA","JEREMAYA","EKUN JEREMAYA","ISIKIELI","DANIELI","HOSIA","JOELI","AMOSI","OBADAYA","JONA","MIKA","NAHUMU","HABAKUKU","SEFANAYA","HAGAI","SAKARAYA","MALAKI","MATIU","MAKU","LUKU","JOHANU","ISE AWON APOSTELI","ROMU","KORINTI KINNI","KORINTI KEJI","GALATIA","EFESU","FILIPI","KOLOSE","TESALONIKA KINNI","TESALONIKA KEJI","TIMOTI KINNI","TIMOTI KEJI","TITU","FILEMONI","HEBERU","JAKOBU","PETRU KINNI","PETRU KEJI","JOHANU KINNI","JOHANU KEJI","JOHANU KETA","JUDA","IFIWE"];
-
-// UI Functions
-function switchTab(tab) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.hidden-screen').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-    if (tab === 'books') { document.getElementById('screen-books').classList.add('active'); document.querySelectorAll('.nav-btn')[0].classList.add('active'); }
-    if (tab === 'bookmarks') { document.getElementById('screen-bookmarks').classList.add('active'); document.querySelectorAll('.nav-btn')[1].classList.add('active'); loadBookmarks(); }
-    if (tab === 'settings') { document.getElementById('screen-settings').classList.add('active'); document.querySelectorAll('.nav-btn')[2].classList.add('active'); }
-}
+// Book Names (Yoruba & English)
+const bookNum = { "GEN":1,"EXO":2, ... "REV":66 };
+const yorubaNames = ["JENESISI","EKISODU", ... "IFIWE"];
+const englishNames = ["Genesis","Exodus", ... "Revelation"];
 
 // Load Data
 async function init() {
     try {
-        const [yoRes, enRes] = await Promise.all([fetch('data/yoruba.json'), fetch('data/english_net.json')]);
-        yorubaArray = await yoRes.json(); englishArray = await enRes.json();
-        englishArray.forEach(v => { englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text; });
-        
-        populateBooks();
-        document.getElementById('loading-screen').style.display = 'none';
-    } catch (e) {
-        document.getElementById('loading-screen').innerHTML = '<h3>Error loading data. Ensure your JSON files are in the "data" folder.</h3>';
+        const [yRes, eRes] = await Promise.all([fetch('data/yoruba.json'), fetch('data/english_net.json')]);
+        yoruba = await yRes.json(); english = await eRes.json();
+        english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text);
+        splashScreen.style.display = 'none';
+        appContainer.style.display = 'block';
+        buildHome();
+        buildBookGrids();
+        updateStreak();
+    } catch(e) { splashScreen.innerHTML = "Error: Data not found in /data folder"; }
+}
+
+// Build Home Dashboard
+function buildHome() {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
+    document.getElementById('greeting').textContent = greeting + " ☀️";
+    
+    // Verse of the Day (Deterministic)
+    const day = new Date().getDate();
+    const votd = yoruba[day * 1000];
+    if(votd) document.getElementById('votd').textContent = votd.text;
+    
+    // Continue Reading
+    const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
+    document.getElementById('last-read').textContent = `${englishNames[bookNum[last.b]-1]} ${last.c}`;
+}
+
+// Build Book Grids
+function buildBookGrids() {
+    // Populate OT and NT grids
+    for(let i=0; i<yorubaNames.length; i++) {
+        const div = document.createElement('div');
+        div.className = i >= 39 ? 'grid-item red' : 'grid-item';
+        div.textContent = yorubaNames[i];
+        div.onclick = () => { currentBook = Object.keys(bookNum)[i]; currentBookName = englishNames[i]; buildChapters(); };
+        (i >= 39 ? document.getElementById('nt-grid') : document.getElementById('ot-grid')).appendChild(div);
     }
 }
 
-function populateBooks() {
-    const otGrid = document.getElementById('ot-grid');
-    const ntGrid = document.getElementById('nt-grid');
-    yorubaNames.forEach((name, i) => {
-        const code = Object.keys(bookNumbers)[i];
-        const div = document.createElement('div');
-        div.className = i >= 39 ? 'grid-item red' : 'grid-item';
-        div.textContent = name;
-        div.onclick = () => { currentBook = code; currentBookName = name; populateChapters(); };
-        (i >= 39 ? ntGrid : otGrid).appendChild(div);
-    });
-}
-
-function populateChapters() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-chapters').classList.add('active');
-    document.getElementById('chapter-title').textContent = currentBookName;
-    
-    const bookNum = bookNumbers[currentBook];
-    const maxCh = Math.max(...yorubaArray.filter(v => v.book === bookNum).map(v => v.chapter));
+// Build Chapters
+function buildChapters() {
+    switchScreen('chapters');
+    document.getElementById('chapter-title').textContent = currentBookName.toUpperCase();
+    const bN = bookNum[currentBook];
+    const max = Math.max(...yoruba.filter(v => v.book === bN).map(v => v.chapter));
     const grid = document.getElementById('chapter-grid'); grid.innerHTML = '';
-    
-    for (let i = 1; i <= maxCh; i++) {
+    for(let i=1; i<=max; i++) {
         const div = document.createElement('div');
         div.className = 'grid-item'; div.textContent = i;
         div.onclick = () => { currentChapter = i; loadChapter(); };
@@ -62,73 +67,105 @@ function populateChapters() {
     }
 }
 
-function goToBooks() { switchTab('books'); }
-function goToChapters() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-chapters').classList.add('active'); }
-
+// Load Reading View
 function loadChapter() {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-reading').classList.add('active');
+    switchScreen('reading');
     document.getElementById('reading-title').textContent = `${currentBookName} ${currentChapter}`;
-    
-    const bookNum = bookNumbers[currentBook];
-    const yoChapter = yorubaArray.filter(v => v.book === bookNum && v.chapter === currentChapter);
+    const bN = bookNum[currentBook];
+    const verses = yoruba.filter(v => v.book === bN && v.chapter === currentChapter);
     
     let html = '';
-    yoChapter.forEach(v => {
+    verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
-        html += `<div class="verse-container" onclick="saveVerse(${v.book}, ${v.chapter}, ${v.verse})">
+        html += `<div class="verse-container" onclick="saveVerse(${v.book},${v.chapter},${v.verse})">
             <span class="verse-number">${v.verse}</span>
             <p class="yoruba-text">${v.text}</p>
             <p class="english-text">${eng}</p>
         </div>`;
     });
-    
     document.getElementById('bible-text').innerHTML = html;
     
-    // Swipe support for reading
-    let startX = 0;
-    const el = document.getElementById('bible-text');
-    el.ontouchstart = e => startX = e.changedTouches[0].screenX;
-    el.ontouchend = e => {
-        let endX = e.changedTouches[0].screenX;
-        if (endX < startX - 50) { if (currentChapter < 150) { currentChapter++; loadChapter(); } }
-        if (endX > startX + 50) { if (currentChapter > 1) { currentChapter--; loadChapter(); } }
+    // Save progress
+    localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
+    
+    // Swipe
+    let startX;
+    document.getElementById('bible-text').ontouchstart = e => startX = e.changedTouches[0].screenX;
+    document.getElementById('bible-text').ontouchend = e => {
+        if(e.changedTouches[0].screenX < startX - 50) nextChapter();
+        if(e.changedTouches[0].screenX > startX + 50) prevChapter();
     };
 }
 
-function saveVerse(book, ch, v) {
-    const key = `${book}-${ch}-${v}`;
-    if (!savedVerses.includes(key)) {
-        savedVerses.push(key); localStorage.setItem('savedVerses', JSON.stringify(savedVerses));
-        // Visual feedback without annoying alert
-        event.currentTarget.style.background = "rgba(255,255,255,0.3)";
-        setTimeout(() => event.currentTarget.style.background = "", 300);
+// Navigation & Tabs
+function switchScreen(screen) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screen).classList.add('active');
+}
+function switchTab(tab) { 
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if(tab === 'home') { switchScreen('home'); document.querySelectorAll('.nav-btn')[0].classList.add('active'); }
+    if(tab === 'books') { switchScreen('books'); document.querySelectorAll('.nav-btn')[1].classList.add('active'); }
+    if(tab === 'saved') { switchScreen('saved'); loadSaved(); document.querySelectorAll('.nav-btn')[3].classList.add('active'); }
+}
+function goToChapters() { switchScreen('chapters'); }
+function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[bookNum[currentBook]-1]; currentChapter = last.c; loadChapter(); }
+
+// Navigation Buttons
+function nextChapter() { if(currentChapter < 150) { currentChapter++; loadChapter(); } }
+function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(); } }
+
+// Saved, Notes, and Verses
+function saveVerse(b, c, v) {
+    const key = `${b}-${c}-${v}`;
+    if(!saved.includes(key)) {
+        saved.push(key); localStorage.setItem('saved', JSON.stringify(saved));
+        event.currentTarget.style.backgroundColor = "#f59e0b";
+        event.currentTarget.style.color = "#000";
+        setTimeout(() => { event.currentTarget.style.backgroundColor = ""; event.currentTarget.style.color = ""; }, 300);
     }
 }
-
-function loadBookmarks() {
+function loadSaved() {
     let html = '';
-    savedVerses.forEach(key => {
-        const [b, c, v] = key.split('-').map(Number);
-        const obj = yorubaArray.find(x => x.book === b && x.chapter === c && x.verse === v);
-        if (obj) html += `<div class="verse-container"><span class="verse-number">${obj.verse}</span><p class="yoruba-text">${obj.text}</p><button onclick="removeBookmark('${key}')">Delete</button></div>`;
+    saved.forEach(key => {
+        const [b,c,v] = key.split('-').map(Number);
+        const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v);
+        if(verse) html += `<div class="card" onclick="removeBookmark('${key}')"><strong>${englishNames[b-1]} ${c}:${v}</strong><p class="yoruba-text">${verse.text}</p><span style="font-size:12px; opacity:0.5;">Tap to delete</span></div>`;
     });
-    document.getElementById('bookmark-list').innerHTML = html || '<p>No saved verses yet. Tap a verse to save.</p>';
+    document.getElementById('saved-list').innerHTML = html || '<p>No saved verses yet. Tap a verse to save it.</p>';
 }
-function removeBookmark(key) { savedVerses = savedVerses.filter(k => k !== key); localStorage.setItem('savedVerses', JSON.stringify(savedVerses)); loadBookmarks(); }
+function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadSaved(); }
 
-function changeFont(delta) {
-    currentFontSize += delta * 10;
-    currentFontSize = Math.min(150, Math.max(80, currentFontSize));
-    localStorage.setItem('fontSize', currentFontSize);
-    document.getElementById('font-size-label').textContent = currentFontSize + '%';
-    document.getElementById('bible-text').style.fontSize = currentFontSize + '%';
+// Streak & Theme & Audio (TTS)
+function updateStreak() {
+    const today = new Date().toDateString();
+    if(readingStreak.lastDate !== today) {
+        if(new Date(readingStreak.lastDate).getDate() === new Date().getDate() - 1) readingStreak.days++;
+        else readingStreak.days = 1;
+        readingStreak.lastDate = today;
+        localStorage.setItem('streak', JSON.stringify(readingStreak));
+    }
+    document.getElementById('streak-count').textContent = `🔥 ${readingStreak.days} Days`;
 }
+document.getElementById('theme-btn').onclick = () => document.body.classList.toggle('dark');
+document.getElementById('church-mode-btn').onclick = () => document.body.classList.toggle('church');
+document.getElementById('audio-btn').onclick = () => { const text = document.getElementById('bible-text').innerText.replace(/[0-9]/g, ''); const u = new SpeechSynthesisUtterance(text); u.lang = 'yo-NG'; speechSynthesis.speak(u); };
 
-// Theme & Drawer
-document.getElementById('theme-toggle').onclick = () => document.body.classList.toggle('dark-mode');
-document.getElementById('menu-btn').onclick = () => document.getElementById('side-drawer').classList.toggle('open');
-function toggleHighContrast() { document.body.classList.toggle('high-contrast'); document.getElementById('hc-toggle').textContent = document.body.classList.contains('high-contrast') ? 'ON' : 'OFF'; }
-function shareApp() { if (navigator.share) navigator.share({ title: 'Bibeli Mimo', url: window.location.href }); else alert(window.location.href); }
+// Search
+function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
+document.getElementById('search-input').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    let results = yoruba.filter(v => v.text.toLowerCase().includes(q)).slice(0, 20);
+    let html = '';
+    results.forEach(v => { html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse}</strong><p>${v.text}</p></div>`; });
+    document.getElementById('search-results').innerHTML = html;
+});
+function jumpToVerse(b,c,v) { currentBook = Object.keys(bookNum).find(k=>bookNum[k]===b); currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
 
+// Sharing (Killer Feature)
+function shareCurrent() { if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: document.getElementById('bible-text').innerText }); else alert(document.getElementById('bible-text').innerText); }
+
+// Startup
+const splashScreen = document.getElementById('splash-screen');
+const appContainer = document.getElementById('app-container');
 init();
