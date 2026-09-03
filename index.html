@@ -19,39 +19,31 @@
             </div>
         </header>
 
-        <!-- Screen 1: Home -->
         <div id="screen-home" class="screen active">
             <div class="card continue-card" onclick="continueReading()">
                 <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
                 <div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div>
             </div>
-            
             <div class="card votd-card"><h3>Verse of the Day</h3><p id="votd">Loading...</p></div>
-
-            <!-- NEW: Daily Reading Plan -->
             <div class="card plan-card" onclick="loadPlanChapter()">
                 <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg></div>
                 <div class="card-content"><h3>Today's Plan</h3><p id="plan-text">Bible in 1 Year: Genesis 1</p></div>
             </div>
-
             <h3 class="section-title">Recently Read</h3>
             <div id="history-list" class="history-list"></div>
         </div>
 
-        <!-- Screen 2: Books -->
         <div id="screen-books" class="screen">
             <h2 class="section-title">Old Testament</h2><div id="ot-grid" class="grid"></div>
             <h2 class="section-title">New Testament</h2><div id="nt-grid" class="grid"></div>
         </div>
 
-        <!-- Screen 3: Chapters -->
         <div id="screen-chapters" class="screen">
             <button class="back-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
             <h2 id="chapter-title" class="section-title">Genesis</h2>
             <div id="chapter-grid" class="grid"></div>
         </div>
 
-        <!-- Screen 4: Reader -->
         <div id="screen-reading" class="screen">
             <div class="reading-header">
                 <button class="icon-btn" onclick="goToChapters()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
@@ -66,7 +58,6 @@
             <div class="chapter-nav"><button onclick="prevChapter()">Previous</button><button onclick="nextChapter()">Next</button></div>
         </div>
 
-        <!-- Screen 5: Library -->
         <div id="screen-saved" class="screen">
             <h2>My Library</h2>
             <div class="tab-bar">
@@ -83,60 +74,30 @@
         </nav>
     </div>
 
-    <!-- Search Overlay -->
-    <div id="search-overlay" class="overlay">
-        <div class="overlay-header">
-            <input type="text" id="search-input" placeholder="Search Yoruba or English...">
-            <button onclick="toggleSearch()">Close</button>
-        </div>
-        <div id="search-results"></div>
-    </div>
-
-    <!-- NEW: Action Bottom Sheet (No emojis, fully native) -->
+    <!-- Action Sheet -->
     <div id="action-sheet-overlay" class="sheet-overlay" onclick="closeActionSheet()"></div>
     <div id="action-sheet" class="action-sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-header" id="sheet-verse-ref">Genesis 1:1</div>
         <div class="sheet-actions">
-            <div class="sheet-item" onclick="copyVerse()">
-                <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                <span>Copy Verse</span>
-            </div>
-            <div class="sheet-item" onclick="readVerse()">
-                <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg>
-                <span>Read Aloud</span>
-            </div>
-            <div class="sheet-item" onclick="actionHighlight()">
-                <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10M12 3a2 2 0 012 2v1l-2 7-2-7V5a2 2 0 012-2zM12 2v1M9 11l3 9 3-9" /></svg>
-                <span>Highlight</span>
-            </div>
-            <div class="sheet-item" onclick="openNoteModal()">
-                <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                <span>Take Note</span>
-            </div>
-            <div class="sheet-item" onclick="saveVerse()">
-                <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                <span>Save Verse</span>
-            </div>
+            <div class="sheet-item" onclick="copyVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span>Copy</span></div>
+            <div class="sheet-item" onclick="readVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg><span>Read</span></div>
+            <div class="sheet-item" onclick="actionHighlight()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10M12 3a2 2 0 012 2v1l-2 7-2-7V5a2 2 0 012-2z" /></svg><span>Highlight</span></div>
+            <div class="sheet-item" onclick="openNoteModal()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg><span>Note</span></div>
+            <div class="sheet-item" onclick="saveVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Save</span></div>
         </div>
         <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
     </div>
 
-    <!-- NEW: Custom Note Modal (Replaces browser prompt) -->
+    <!-- Note Modal -->
     <div id="note-overlay" class="sheet-overlay" onclick="closeNoteModal()"></div>
     <div id="note-modal" class="note-modal">
         <h3>Add Note</h3>
         <textarea id="note-input" placeholder="Type your note here..."></textarea>
-        <div class="modal-buttons">
-            <button onclick="closeNoteModal()">Cancel</button>
-            <button onclick="saveNote()" class="save-btn">Save Note</button>
-        </div>
+        <div class="modal-buttons"><button onclick="closeNoteModal()">Cancel</button><button onclick="saveNote()" class="save-btn">Save</button></div>
     </div>
 
-    <!-- Floating Church Button (SVG Icon) -->
-    <button id="church-mode-btn" class="floating-btn" title="Elder Mode">
-        <svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.998a11.952 11.952 0 01-6.824-2.941 12.083 12.083 0 01.665-6.479L12 14z" /></svg>
-    </button>
+    <button id="church-mode-btn" class="floating-btn" title="Elder Mode"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.998a11.952 11.952 0 01-6.824-2.941 12.083 12.083 0 01.665-6.479L12 14z" /></svg></button>
 
     <script src="app.js"></script>
 </body>
