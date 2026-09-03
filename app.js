@@ -1,5 +1,4 @@
-let yoruba = [], english = [];
-let englishMap = {};
+let yoruba = [], english = [], englishMap = {};
 let saved = JSON.parse(localStorage.getItem('saved') || '[]');
 let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
 let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
@@ -16,7 +15,6 @@ async function init() {
         yoruba = await yRes.json(); 
         english = await eRes.json();
         english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text);
-        
         splash.style.display = 'none';
         app.style.display = 'block';
         loadHome();
@@ -37,11 +35,9 @@ function loadHome() {
     const hour = new Date().getHours();
     const greet = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
     document.getElementById('greeting').textContent = greet;
-
     const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
     const bookIndex = codes.indexOf(last.b);
     document.getElementById('last-read').textContent = `${englishNames[bookIndex]} ${last.c}`;
-
     const day = new Date().getDate();
     const verse = yoruba[day * 500];
     if(verse) document.getElementById('votd').textContent = verse.text;
@@ -83,7 +79,6 @@ function goToChapters() {
     document.getElementById('screen-chapters').classList.add('active');
 }
 
-// THE CORE READER
 function loadChapter() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-reading').classList.add('active');
@@ -91,7 +86,6 @@ function loadChapter() {
     
     const bookNum = codes.indexOf(currentBook) + 1;
     const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
-
     let html = '';
     verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
@@ -106,7 +100,6 @@ function loadChapter() {
     
     localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
     
-    // Swipe to change chapter
     let startX = 0;
     const el = document.getElementById('bible-text');
     el.ontouchstart = e => startX = e.changedTouches[0].screenX;
@@ -159,5 +152,38 @@ function loadSaved() {
 }
 function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadSaved(); }
 
+// SEARCH
+function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
+document.getElementById('search-btn').onclick = toggleSearch;
+document.getElementById('search-input').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    if (q.length < 2) return;
+    let results = yoruba.filter(v => v.text.toLowerCase().includes(q)).slice(0, 20);
+    let html = '';
+    results.forEach(v => { html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse}</strong><p>${v.text}</p></div>`; });
+    document.getElementById('search-results').innerHTML = html;
+});
+function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
+
+// AUDIO (Text-to-Speech)
+document.getElementById('audio-btn').onclick = () => {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    const text = document.getElementById('bible-text').innerText.replace(/[0-9]/g, '');
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'yo-NG';
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+};
+
+// SHARE
+document.getElementById('share-btn').onclick = () => {
+    const text = document.getElementById('bible-text').innerText;
+    if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text });
+    else alert(text);
+};
+
+// THEME & CHURCH MODE
 document.getElementById('theme-btn').onclick = () => document.body.classList.toggle('dark');
+document.getElementById('church-mode-btn').onclick = () => document.body.classList.toggle('church');
+
 init();
