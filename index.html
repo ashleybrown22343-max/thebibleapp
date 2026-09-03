@@ -2,55 +2,77 @@
 <html lang="yo">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bibeli Mimo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yoruba Bible</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a237e">
+    <meta name="theme-color" content="#f0f0f0">
 </head>
 <body>
-    <header>
-        <div class="header-title">
-            <h1>Bibeli Mimo</h1>
-            <p>Yoruba & English</p>
-        </div>
-        <div class="header-controls">
-            <button id="theme-btn">🌙</button>
-            <button id="church-btn">⛪</button>
-        </div>
-    </header>
 
-    <div class="tab-bar">
-        <button class="tab-btn active" id="tab-read">Read</button>
-        <button class="tab-btn" id="tab-search">Search</button>
-        <button class="tab-btn" id="tab-bookmark">Saved</button>
+    <!-- Navigation Drawer (Hidden by default) -->
+    <div id="sidenav" class="sidenav">
+        <div class="sidenav-header">
+            <img src="icon-192.png" style="width: 50px; border-radius: 50%;">
+            <h3>Yoruba Bible</h3>
+        </div>
+        <a href="javascript:void(0)" class="closebtn" onclick="toggleNav()">&times;</a>
+        <a href="#" onclick="switchScreen('reading')">📖 Reading</a>
+        <a href="#" onclick="switchScreen('bookmarks')">🔖 Bookmarks</a>
+        <a href="#" onclick="switchScreen('notes')">📝 Notes</a>
+        <a href="#" onclick="switchScreen('settings')">⚙️ Settings</a>
+        <a href="#" onclick="toggleTheme()">🌙 Day / Night</a>
+        <a href="#" onclick="shareApp()">📤 Share APP</a>
     </div>
 
-    <!-- Read Section -->
-    <div id="read-section" class="section">
-        <div class="controls">
-            <select id="book-select"></select>
-            <input type="number" id="chapter-input" placeholder="Chapter" min="1" value="1">
-            <button id="load-btn">Read</button>
+    <!-- Main Content -->
+    <div id="main">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <button class="menu-btn" onclick="toggleNav()">☰</button>
+            <h2 id="app-title">Yoruba Bible</h2>
+            <button class="menu-btn">🔍</button>
         </div>
-        <button id="install-btn" style="display:none; width:100%; padding:15px; background-color:#ff9800; color:white; border:none; border-radius:8px; font-size:18px; margin-bottom:20px; cursor:pointer; font-weight:bold;">
-            📲 Download App for Offline Use
-        </button>
-        <div class="votd-banner" id="votd-banner">Verse of the Day: Loading...</div>
-        <div class="bible-text" id="bible-text"><p>Loading...</p></div>
-    </div>
 
-    <!-- Search Section -->
-    <div id="search-section" class="section" style="display: none;">
-        <input type="text" id="search-input" placeholder="Search Yoruba or English...">
-        <button id="search-btn">Search</button>
-        <div id="search-results"></div>
-    </div>
+        <!-- Screen 1: Book Grid -->
+        <div id="screen-books" class="screen">
+            <div class="grid-title">Books</div>
+            <div id="book-grid" class="grid-container"></div>
+        </div>
 
-    <!-- Bookmarks Section -->
-    <div id="bookmark-section" class="section" style="display: none;">
-        <h3>Your Saved Verses</h3>
-        <div id="bookmark-list"></div>
+        <!-- Screen 2: Chapter Grid -->
+        <div id="screen-chapters" class="screen" style="display: none;">
+            <div class="grid-title" id="chapter-book-title">JENESISI</div>
+            <button class="back-btn" onclick="goToBooks()">← Back to Books</button>
+            <div id="chapter-grid" class="grid-container"></div>
+        </div>
+
+        <!-- Screen 3: Reading View -->
+        <div id="screen-reading" class="screen" style="display: none;">
+            <div class="reading-header">
+                <button class="back-btn" onclick="goToChapters()">←</button>
+                <span id="reading-title">JENESISI 1</span>
+            </div>
+            <div id="bible-text" class="reading-content">
+                <p>Loading...</p>
+            </div>
+        </div>
+        
+        <!-- Screen 4: Bookmarks -->
+        <div id="screen-bookmarks" class="screen" style="display: none;">
+            <h3>Saved Verses</h3>
+            <div id="bookmark-list"></div>
+        </div>
+        
+        <!-- Settings -->
+        <div id="screen-settings" class="screen" style="display: none;">
+            <h3>Settings</h3>
+            <p>Font Size</p>
+            <button onclick="increaseFont()" style="padding: 10px;">A+</button>
+            <button onclick="decreaseFont()" style="padding: 10px;">A-</button>
+            <p style="margin-top:20px;">App Information</p>
+            <p>Version 1.0.0 (Offline)</p>
+        </div>
     </div>
 
     <script src="app.js"></script>
@@ -58,4 +80,4 @@
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
-</html>
+                </html>
