@@ -44,17 +44,21 @@ function loadHome() {
     const day = new Date().getDate();
     if(yoruba[day * 500]) document.getElementById('votd').textContent = yoruba[day * 500].text;
 
+    // Reading Plan Logic (Day of Year)
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 0);
     const diff = now - start;
     const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
     
+    // Map dayOfYear to a chapter (loops through Bible)
     const allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
     const target = allChapters[dayOfYear % allChapters.length].split('-');
     const planBookNum = parseInt(target[0]);
     const planChapter = parseInt(target[1]);
+    const planBookCode = codes[planBookNum - 1];
     document.getElementById('plan-text').textContent = `Bible in 1 Year: ${englishNames[planBookNum - 1]} ${planChapter}`;
 
+    // History
     const histContainer = document.getElementById('history-list');
     histContainer.innerHTML = '';
     history.forEach(h => {
@@ -94,7 +98,10 @@ function buildChapters() {
     const bookNum = codes.indexOf(currentBook) + 1;
     const maxCh = Math.max(...yoruba.filter(v => v.book === bookNum).map(v => v.chapter));
     const grid = document.getElementById('chapter-grid'); grid.innerHTML = '';
-    for(let i=1; i<=maxCh; i++) { const div = document.createElement('div'); div.className = 'grid-item'; div.textContent = i; div.onclick = () => { currentChapter = i; loadChapter(); }; grid.appendChild(div); }
+    for(let i=1; i<=maxCh; i++) {
+        const div = document.createElement('div'); div.className = 'grid-item'; div.textContent = i;
+        div.onclick = () => { currentChapter = i; loadChapter(); }; grid.appendChild(div);
+    }
 }
 
 function goToChapters() {
@@ -137,6 +144,7 @@ function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(
 function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[codes.indexOf(currentBook)]; currentChapter = last.c; loadChapter(); }
 function changeFont(delta) { currentFontSize += delta * 10; if (currentFontSize < 80) currentFontSize = 80; if (currentFontSize > 150) currentFontSize = 150; localStorage.setItem('fontSize', currentFontSize); document.getElementById('bible-text').style.fontSize = currentFontSize + '%'; }
 
+// NEW: ACTION SHEET LOGIC
 function openActionSheet(b, c, v) {
     activeVerse = { b: b, c: c, v: v };
     document.getElementById('sheet-verse-ref').textContent = `${englishNames[b-1]} ${c}:${v}`;
@@ -153,7 +161,7 @@ function copyVerse() {
     const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v);
     const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || "";
     const text = `${verseObj.text}\n${eng}`;
-    navigator.clipboard.writeText(text).then(() => { closeActionSheet(); }).catch(() => { closeActionSheet(); });
+    navigator.clipboard.writeText(text).then(() => { closeActionSheet(); }).catch(() => { alert("Failed to copy"); });
 }
 function readVerse() {
     closeActionSheet();
@@ -171,9 +179,11 @@ function actionHighlight() {
 }
 function saveVerse() {
     const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`;
-    if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); }
-    else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); }
+    if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); alert("Verse saved!"); }
+    else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); alert("Verse unsaved!"); }
 }
+
+// NEW: CUSTOM NOTE MODAL
 function openNoteModal() {
     const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`;
     document.getElementById('note-input').value = notes[key] || "";
@@ -193,6 +203,8 @@ function saveNote() {
     localStorage.setItem('notes', JSON.stringify(notes));
     closeNoteModal(); loadChapter();
 }
+
+// Library
 function switchLibrary(type) {
     currentLibrary = type;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -211,6 +223,8 @@ function loadLibrary() {
     }
 }
 function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
+
+// Search
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
 document.getElementById('search-btn').onclick = toggleSearch;
 document.getElementById('search-input').addEventListener('input', (e) => {
@@ -220,8 +234,12 @@ document.getElementById('search-input').addEventListener('input', (e) => {
     document.getElementById('search-results').innerHTML = html;
 });
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
+
+// Audio & Share
 document.getElementById('audio-btn').onclick = () => { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(currentEnglishChapterText); u.lang = 'en-US'; speechSynthesis.speak(u); };
 document.getElementById('share-btn').onclick = () => { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); };
+
+// Theme
 document.getElementById('theme-btn').onclick = () => document.body.classList.toggle('dark');
 document.getElementById('church-mode-btn').onclick = () => document.body.classList.toggle('church');
 
