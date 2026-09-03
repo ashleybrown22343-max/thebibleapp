@@ -3,76 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yoruba Bible</title>
+    <title>Bibeli Mimo</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#f0f0f0">
+    <meta name="theme-color" content="#0f172a">
 </head>
 <body>
-
-    <!-- Navigation Drawer (Hidden by default) -->
-    <div id="sidenav" class="sidenav">
-        <div class="sidenav-header">
-            <img src="icon-192.png" style="width: 50px; border-radius: 50%;">
-            <h3>Yoruba Bible</h3>
-        </div>
-        <a href="javascript:void(0)" class="closebtn" onclick="toggleNav()">&times;</a>
-        <a href="#" onclick="switchScreen('reading')">📖 Reading</a>
-        <a href="#" onclick="switchScreen('bookmarks')">🔖 Bookmarks</a>
-        <a href="#" onclick="switchScreen('notes')">📝 Notes</a>
-        <a href="#" onclick="switchScreen('settings')">⚙️ Settings</a>
-        <a href="#" onclick="toggleTheme()">🌙 Day / Night</a>
-        <a href="#" onclick="shareApp()">📤 Share APP</a>
+    <div id="loading-screen" class="loading-screen">
+        <div class="spinner"></div>
+        <p>Loading Bible...</p>
     </div>
 
-    <!-- Main Content -->
-    <div id="main">
-        <!-- Top Bar -->
-        <div class="top-bar">
-            <button class="menu-btn" onclick="toggleNav()">☰</button>
-            <h2 id="app-title">Yoruba Bible</h2>
-            <button class="menu-btn">🔍</button>
+    <!-- Header -->
+    <header class="app-header">
+        <button id="menu-btn" class="icon-btn">☰</button>
+        <h1>Bibeli Mimo</h1>
+        <button id="theme-toggle" class="icon-btn">🌙</button>
+    </header>
+
+    <!-- Drawer -->
+    <div id="side-drawer" class="drawer">
+        <div class="drawer-header">
+            <img src="icon-192.png" alt="Logo">
+            <h2>Settings</h2>
+        </div>
+        <div class="drawer-item">
+            <span>Font Size</span>
+            <div class="font-controls">
+                <button onclick="changeFont(-1)">A-</button>
+                <span id="font-size-label">100%</span>
+                <button onclick="changeFont(1)">A+</button>
+            </div>
+        </div>
+        <div class="drawer-item" onclick="toggleHighContrast()">
+            <span>High Contrast Mode</span>
+            <span class="toggle-btn" id="hc-toggle">OFF</span>
+        </div>
+        <div class="drawer-item" onclick="shareApp()">
+            <span>Share App</span>
+            <span>➜</span>
+        </div>
+    </div>
+
+    <!-- Main Screens -->
+    <main>
+        <!-- Book Selection -->
+        <div id="screen-books" class="screen active">
+            <h2 class="section-title">Old Testament</h2>
+            <div id="ot-grid" class="grid-container"></div>
+            <h2 class="section-title">New Testament</h2>
+            <div id="nt-grid" class="grid-container"></div>
         </div>
 
-        <!-- Screen 1: Book Grid -->
-        <div id="screen-books" class="screen">
-            <div class="grid-title">Books</div>
-            <div id="book-grid" class="grid-container"></div>
-        </div>
-
-        <!-- Screen 2: Chapter Grid -->
-        <div id="screen-chapters" class="screen" style="display: none;">
-            <div class="grid-title" id="chapter-book-title">JENESISI</div>
+        <!-- Chapter Selection -->
+        <div id="screen-chapters" class="screen">
             <button class="back-btn" onclick="goToBooks()">← Back to Books</button>
+            <h2 id="chapter-title" class="section-title">JENESISI</h2>
             <div id="chapter-grid" class="grid-container"></div>
         </div>
 
-        <!-- Screen 3: Reading View -->
-        <div id="screen-reading" class="screen" style="display: none;">
+        <!-- Reading View -->
+        <div id="screen-reading" class="screen">
             <div class="reading-header">
                 <button class="back-btn" onclick="goToChapters()">←</button>
-                <span id="reading-title">JENESISI 1</span>
+                <h2 id="reading-title">JENESISI 1</h2>
+                <div></div>
             </div>
             <div id="bible-text" class="reading-content">
-                <p>Loading...</p>
+                <p>Select a chapter to start reading.</p>
             </div>
         </div>
-        
-        <!-- Screen 4: Bookmarks -->
-        <div id="screen-bookmarks" class="screen" style="display: none;">
-            <h3>Saved Verses</h3>
-            <div id="bookmark-list"></div>
-        </div>
-        
-        <!-- Settings -->
-        <div id="screen-settings" class="screen" style="display: none;">
-            <h3>Settings</h3>
-            <p>Font Size</p>
-            <button onclick="increaseFont()" style="padding: 10px;">A+</button>
-            <button onclick="decreaseFont()" style="padding: 10px;">A-</button>
-            <p style="margin-top:20px;">App Information</p>
-            <p>Version 1.0.0 (Offline)</p>
-        </div>
+    </main>
+
+    <!-- Bottom Navigation (The modern, "better" way) -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('books')">📖 Books</button>
+        <button class="nav-btn" onclick="switchTab('bookmarks')">🔖 Saved</button>
+        <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+    </nav>
+
+    <!-- Hidden Screens -->
+    <div id="screen-bookmarks" class="hidden-screen">
+        <h2>Saved Verses</h2>
+        <div id="bookmark-list"></div>
+        <button class="back-btn" onclick="switchTab('books')">← Back</button>
+    </div>
+    <div id="screen-settings" class="hidden-screen">
+        <h2>About App</h2>
+        <p>Bibeli Mimo. World-class speed, 100% offline. Version 1.0.</p>
+        <button class="back-btn" onclick="switchTab('books')">← Back</button>
     </div>
 
     <script src="app.js"></script>
@@ -80,4 +99,4 @@
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
-                </html>
+</html>
