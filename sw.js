@@ -1,9 +1,10 @@
-const CACHE_NAME = 'bible-offline-v1';
+const CACHE_NAME = 'bible-offline-final-v2';
 const urlsToCache = [
     '/',
     '/index.html',
     '/style.css',
     '/app.js',
+    '/manifest.json',
     '/data/yoruba.json',
     '/data/english_net.json'
 ];
@@ -12,6 +13,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
     );
+    self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
@@ -20,6 +22,7 @@ self.addEventListener('activate', event => {
             if (key !== CACHE_NAME) return caches.delete(key);
         })))
     );
+    self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
