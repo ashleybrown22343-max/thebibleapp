@@ -1,10 +1,30 @@
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; color: #333; }
-header { background-color: #1a237e; color: white; padding: 20px; text-align: center; }
-main { padding: 20px; max-width: 800px; margin: 0 auto; }
-.controls { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-select, input, button { padding: 10px; font-size: 16px; }
-button { cursor: pointer; background-color: #1a237e; color: white; border: none; border-radius: 5px; }
-.verse-container { margin-bottom: 15px; padding: 10px; background: white; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; }
-.verse-number { font-weight: bold; margin-right: 10px; color: #1a237e; }
-.yoruba-text { color: #333; }
-.english-text { color: #555; margin-top: 5px; border-top: 1px solid #eee; padding-top: 5px; }
+:root {
+    --bg: #f4f4f9; --text: #333; --verse-bg: #ffffff; --header: #1a237e; --header-text: #ffffff; --border: #ddd; --accent: #ff9800;
+}
+body.dark-mode { --bg: #121212; --text: #e0e0e0; --verse-bg: #1e1e1e; --header: #000; --header-text: #fff; --border: #333; }
+body.church-mode { --bg: #000; --text: #ffff00; --verse-bg: #000; --header: #000; --header-text: #ffff00; --border: #ffff00; font-size: 24px; }
+
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); transition: background 0.3s, color 0.3s; }
+header { background-color: var(--header); color: var(--header-text); padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+.header-title { text-align: center; flex-grow: 1; } .header-title h1 { margin: 0; font-size: 24px; } .header-title p { margin: 0; font-size: 14px; opacity: 0.8; }
+.header-controls { display: flex; gap: 10px; } .header-controls button { background: none; border: 2px solid var(--header-text); color: var(--header-text); border-radius: 50%; font-size: 18px; width: 40px; height: 40px; cursor: pointer; }
+
+.tab-bar { display: flex; background: var(--verse-bg); border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 15px; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--text); font-weight: bold; }
+.tab-btn.active { border-bottom: 4px solid var(--accent); color: var(--accent); }
+
+.controls { padding: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+select, input, button { padding: 12px; font-size: 16px; border-radius: 8px; border: 1px solid var(--border); background-color: var(--verse-bg); color: var(--text); }
+#load-btn { background-color: var(--header); color: var(--header-text); border: none; cursor: pointer; }
+
+.bible-text { padding: 20px; max-width: 800px; margin: 0 auto; touch-action: pan-y; }
+.votd-banner { background-color: var(--accent); color: white; padding: 10px; margin: 15px; border-radius: 8px; text-align: center; font-weight: bold; }
+
+.verse-container { margin-bottom: 15px; padding: 15px; background: var(--verse-bg); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; }
+.verse-number { font-weight: bold; margin-right: 15px; color: var(--accent); font-size: 18px; }
+.yoruba-text { font-size: 1.2em; font-weight: bold; margin-bottom: 8px; }
+.english-text { font-size: 1em; color: var(--text); opacity: 0.9; margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px; }
+.save-btn { align-self: flex-end; background: var(--header); color: var(--header-text); border: none; border-radius: 5px; padding: 5px 10px; margin-top: 10px; cursor: pointer; }
+
+#search-section { padding: 20px; } #search-input { width: 100%; margin-bottom: 10px; } #search-results { margin-top: 10px; }
+#bookmark-section { padding: 20px; } #bookmark-list { margin-top: 10px; }
