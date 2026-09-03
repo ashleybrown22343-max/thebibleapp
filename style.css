@@ -27,3 +27,11 @@ body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); co
 .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
 .nav-btn { background: none; border: none; color: var(--text); opacity: 0.6; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .nav-btn.active { color: var(--accent); opacity: 1; }
+
+/* New styles for Books & Chapters */
+.section-title { font-weight: 700; margin: 20px 0 10px; font-size: 18px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.grid-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; text-align: center; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.grid-item:active { transform: scale(0.95); }
+.grid-item.red { color: #d32f2f; }
+.back-btn { background: none; border: none; color: var(--accent); font-size: 16px; cursor: pointer; padding: 5px; display: flex; align-items: center; }
