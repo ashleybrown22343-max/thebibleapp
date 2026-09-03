@@ -3,31 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoruba & English Bible</title>
+    <title>Bibeli Mimo</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a237e">
 </head>
 <body>
-    <header><h1>Bibeli Mimo</h1></header>
-    <main>
+    <header>
+        <div class="header-title">
+            <h1>Bibeli Mimo</h1>
+            <p>Yoruba & English</p>
+        </div>
+        <div class="header-controls">
+            <button id="theme-btn">🌙</button>
+            <button id="church-btn">⛪</button>
+        </div>
+    </header>
+
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tab-read">Read</button>
+        <button class="tab-btn" id="tab-search">Search</button>
+        <button class="tab-btn" id="tab-bookmark">Saved</button>
+    </div>
+
+    <!-- Read Section -->
+    <div id="read-section" class="section">
         <div class="controls">
             <select id="book-select"></select>
             <input type="number" id="chapter-input" placeholder="Chapter" min="1" value="1">
             <button id="load-btn">Read</button>
         </div>
-        
-        <!-- THE INSTALL BUTTON -->
-        <button id="install-btn" style="display:none; width:100%; padding:15px; background-color:#ff9800; color:white; border:none; border-radius:5px; font-size:18px; margin-bottom:20px; cursor:pointer;">
-            📲 Download App
+        <button id="install-btn" style="display:none; width:100%; padding:15px; background-color:#ff9800; color:white; border:none; border-radius:8px; font-size:18px; margin-bottom:20px; cursor:pointer; font-weight:bold;">
+            📲 Download App for Offline Use
         </button>
-
+        <div class="votd-banner" id="votd-banner">Verse of the Day: Loading...</div>
         <div class="bible-text" id="bible-text"><p>Loading...</p></div>
-    </main>
+    </div>
+
+    <!-- Search Section -->
+    <div id="search-section" class="section" style="display: none;">
+        <input type="text" id="search-input" placeholder="Search Yoruba or English...">
+        <button id="search-btn">Search</button>
+        <div id="search-results"></div>
+    </div>
+
+    <!-- Bookmarks Section -->
+    <div id="bookmark-section" class="section" style="display: none;">
+        <h3>Your Saved Verses</h3>
+        <div id="bookmark-list"></div>
+    </div>
+
     <script src="app.js"></script>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
 </html>
