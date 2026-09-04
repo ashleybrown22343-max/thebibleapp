@@ -24,12 +24,11 @@
                 <a onclick="goToBooks()">Books</a>
                 <a onclick="goToLibrary()">Library</a>
                 <a onclick="goToDailyVerses()">Daily Verses</a>
-                <a onclick="goToGenerator()" style="color: var(--accent); font-weight: bold;">Image Studio</a>
-                
+                <a href="studio.html" style="color: var(--accent); font-weight: bold;">Image Studio</a>
                 <div class="drawer-section-title">Settings</div>
                 <a onclick="goToSettings()">Settings</a>
                 <a onclick="goToPlans()">Reading Plans</a>
-                <p class="about-text">Version 1.5.0<br>Free Yoruba & English</p>
+                <p class="about-text">Version 1.6.0</p>
             </div>
         </div>
         <div id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -62,108 +61,27 @@
             <button class="back-btn" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> Back</button>
             <h2>Reading Plans</h2>
             <div class="plan-section"><h3>Canonical Plan</h3><p>Straight through.</p><div class="plan-buttons"><button onclick="selectPlan('one-year')">1 Year</button><button onclick="selectPlan('180-days')">180 Days</button><button onclick="selectPlan('90-days')">90 Days</button></div></div>
-            <div class="plan-section"><h3>Chronological Plan</h3><p>In order of events.</p><div class="plan-buttons"><button onclick="selectPlan('chron-one-year')">1 Year</button><button onclick="selectPlan('chron-180-days')">180 Days</button><button onclick="selectPlan('chron-90-days')">90 Days</button></div></div>
         </div>
 
         <div id="screen-settings" class="screen">
             <button class="back-btn" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> Back</button>
             <h2>Settings</h2>
             <div class="live-preview-box"><h3>Preview</h3><p id="settings-preview-text" style="font-family: var(--font); line-height: 1.5;"><strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀. <br><em style="opacity:0.8;">In the beginning God created the heaven and the earth.</em></p></div>
-
             <div class="setting-section"><h3>Font Style</h3><div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div></div>
             <div class="setting-section"><h3>Font Size</h3><div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div></div>
-            <div class="setting-section"><h3>Line Spacing</h3><div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div></div>
             <div class="setting-section"><h3>Display</h3>
                 <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
                 <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
-                <div class="setting-row"><span>Parallel View</span><button id="settings-parallel-btn" class="toggle-switch">OFF</button></div>
             </div>
-        </div>
-
-        <!-- 500+ TEMPLATES IMAGE STUDIO -->
-        <div id="screen-generator" class="screen">
-            <button class="back-btn" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> Back</button>
-            <h2>Image Studio</h2>
-
-            <div class="studio-verse-picker">
-                <h4>Select Verse</h4>
-                <div class="picker-row">
-                    <select id="studio-book" onchange="updateStudioChapters()"></select>
-                    <select id="studio-chapter" onchange="updateStudioVerse()"></select>
-                    <select id="studio-verse"></select>
-                </div>
-            </div>
-
-            <div class="studio-preview-box">
-                <div id="image-preview" class="image-preview-card">
-                    <h3 id="preview-ref">Genesis 1:1</h3>
-                    <p id="preview-text"></p>
-                </div>
-            </div>
-
-            <div class="studio-controls">
-                <h4>Text Settings</h4>
-                <div class="control-row">
-                    <label>Font Style</label>
-                    <button id="studio-font-btn" onclick="toggleStudioFont()">Sans</button>
-                </div>
-                <div class="control-row">
-                    <label>Text Size</label>
-                    <input type="range" id="studio-font-size" min="14" max="40" value="22" oninput="updateStudioText()">
-                </div>
-                <div class="control-row">
-                    <label>Text Color</label>
-                    <div class="color-buttons">
-                        <button style="background:#fff; color:#000;" onclick="setStudioColor('white')">A</button>
-                        <button style="background:#000; color:#fff;" onclick="setStudioColor('black')">A</button>
-                        <button style="background:#FFD700; color:#000;" onclick="setStudioColor('gold')">A</button>
-                        <button style="background:#1E90FF; color:#fff;" onclick="setStudioColor('blue')">A</button>
-                    </div>
-                </div>
-                <div class="control-row">
-                    <label>Language</label>
-                    <div class="lang-toggle">
-                        <label><input type="checkbox" id="img-yo" checked onchange="updateStudioText()"> Yoruba</label>
-                        <label><input type="checkbox" id="img-en" checked onchange="updateStudioText()"> English</label>
-                    </div>
-                </div>
-            </div>
-
-            <div class="studio-templates">
-                <h4>500+ Templates</h4>
-                <div id="image-templates" class="template-grid"></div>
-            </div>
-            
-            <button class="download-btn" onclick="downloadImage()">Share Image</button>
         </div>
 
         <nav class="bottom-nav">
             <button class="nav-btn active" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
             <button class="nav-btn" onclick="goToBooks()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
-            <button class="nav-btn" onclick="goToGenerator()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Studio</span></button>
+            <button class="nav-btn" onclick="window.location.href='studio.html'"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Studio</span></button>
             <button class="nav-btn" onclick="goToLibrary()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Library</span></button>
         </nav>
     </div>
-
-    <div id="search-overlay" class="overlay"><div class="overlay-header"><input type="text" id="search-input" placeholder="Search Yoruba or English..."><button onclick="closeSearch()">Close</button></div><div class="search-filters"><label><input type="checkbox" id="search-yo" checked> Yoruba</label><label><input type="checkbox" id="search-en" checked> English</label></div><div id="search-results"></div></div>
-
-    <div id="action-sheet-overlay" class="sheet-overlay" onclick="closeActionSheet()"></div>
-    <div id="action-sheet" class="action-sheet">
-        <div class="sheet-header" id="sheet-verse-ref">Genesis 1:1</div>
-        <div class="sheet-actions">
-            <div class="sheet-item" onclick="copyVerse()">Copy</div>
-            <div class="sheet-item" onclick="readVerse()">Read</div>
-            <div class="sheet-item" onclick="actionHighlight()">Highlight</div>
-            <div class="sheet-item" onclick="openNoteModal()">Note</div>
-            <div class="sheet-item" onclick="saveVerse()">Save</div>
-            <div class="sheet-item" onclick="goToGenerator()">Studio</div>
-        </div>
-        <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
-    </div>
-
-    <div id="note-overlay" class="sheet-overlay" onclick="closeNoteModal()"></div>
-    <div id="note-modal" class="note-modal"><h3>Add Note</h3><textarea id="note-input" placeholder="Type..."></textarea><div class="modal-buttons"><button onclick="closeNoteModal()">Cancel</button><button onclick="saveNote()" class="save-btn">Save</button></div></div>
-
     <script src="app.js"></script>
 </body>
-    </html>
+                                                                      </html>
