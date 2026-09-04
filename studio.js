@@ -4,6 +4,13 @@ let studioColor = 'white', studioFont = 'sans', selectedTemplate = 0;
 let currentAlign = 'center', currentVert = 'center';
 let currentRatio = 'square', currentWatermark = true, currentShadow = true;
 
+// AUTO-FIT vs MANUAL
+let autoFit = true;
+let userFontSize = 32;
+let userLineSpacing = 1.7;
+let userPadding = 20;
+const defaultFontSize = 32, defaultLineSpacing = 1.7, defaultPadding = 20;
+
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
 
@@ -77,6 +84,37 @@ function setRatio(ratio) { currentRatio = ratio; updatePreview(); }
 function toggleWatermark() { currentWatermark = !currentWatermark; document.getElementById('watermark-btn').textContent = currentWatermark ? 'ON' : 'OFF'; updatePreview(); }
 function toggleShadow() { currentShadow = !currentShadow; document.getElementById('shadow-btn').textContent = currentShadow ? 'ON' : 'OFF'; updatePreview(); }
 
+// Manual slider handlers
+function manualFontSize(val) {
+    autoFit = false;
+    userFontSize = parseInt(val);
+    document.getElementById('studio-font-size').value = val;
+    updatePreview();
+}
+function manualLineSpacing(val) {
+    autoFit = false;
+    userLineSpacing = parseFloat(val);
+    document.getElementById('studio-line-spacing').value = val;
+    updatePreview();
+}
+function manualPadding(val) {
+    autoFit = false;
+    userPadding = parseInt(val);
+    document.getElementById('studio-padding').value = val;
+    updatePreview();
+}
+
+function resetToAutoFit() {
+    autoFit = true;
+    userFontSize = defaultFontSize;
+    userLineSpacing = defaultLineSpacing;
+    userPadding = defaultPadding;
+    document.getElementById('studio-font-size').value = defaultFontSize;
+    document.getElementById('studio-line-spacing').value = defaultLineSpacing;
+    document.getElementById('studio-padding').value = defaultPadding;
+    updatePreview();
+}
+
 const templates = [];
 const colors = ['#1a237e','#b71c1c','#4a148c','#e65100','#00695c','#1565c0','#212121','#880e4f','#33691e','#0d47a1','#5d4037','#01579b','#2e7d32','#37474f','#8e24aa','#00838f','#bf360c','#3e2723','#64b5f6','#FFD700'];
 for (let i=0; i<500; i++) { const c1 = colors[i % colors.length]; const c2 = colors[(i+7) % colors.length]; templates.push(`linear-gradient(135deg, ${c1}, ${c2})`); }
@@ -112,7 +150,57 @@ function getTextData(isPreview) {
     return fullText;
 }
 
-// FIXED PREVIEW LOGIC (Auto-Fits and respects padding)
+// HELPER: Calculate font size, lineHeight, padding based on autoFit or manual
+function getLayoutParams(width, height, refFontSize) {
+    if (autoFit) {
+        // Use autoFit algorithm
+        let fontSize = Math.round(width * 0.08);
+        let lineHeight = fontSize * 1.6;
+        let padding = Math.round(width * 0.12);
+        // Clamp padding to max 15% of width
+        padding = Math.min(padding, Math.round(width * 0.15));
+
+        // Calculate line count
+        function lineCount(fs) {
+            // We'll measure using a temporary context
+            const tempCtx = document.createElement('canvas').getContext('2d');
+            tempCtx.font = `${fs}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
+            const maxTextWidth = width - (padding * 2);
+            let count = 0;
+            const paragraphs = getTextData(false).split('\n');
+            paragraphs.forEach(para => {
+                const words = para.split(' ');
+                let line = '';
+                for (let i=0; i<words.length; i++) {
+                    const testLine = line + words[i] + ' ';
+                    if (tempCtx.measureText(testLine).width > maxTextWidth && i>0) {
+                        count++;
+                        line = words[i] + ' ';
+                    } else line = testLine;
+                }
+                count++;
+            });
+            return count;
+        }
+
+        let totalH = 0;
+        while (fontSize > 30) {
+            lineHeight = fontSize * 1.6;
+            let lines = lineCount(fontSize);
+            totalH = lines * lineHeight;
+            if (totalH <= height - (padding*2) - (refFontSize*1.5)) break;
+            fontSize -= 2;
+        }
+        return { fontSize, lineHeight, padding };
+    } else {
+        // Manual mode: use user values, but still clamp padding to avoid negative
+        let fontSize = userFontSize * 3; // scale to canvas
+        let lineHeight = fontSize * userLineSpacing;
+        let padding = Math.min(userPadding * 4, Math.round(width * 0.15));
+        return { fontSize, lineHeight, padding };
+    }
+}
+
 function updatePreview() {
     const text = getTextData(true);
     document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`;
@@ -124,9 +212,23 @@ function updatePreview() {
     textEl.style.textAlign = currentAlign;
     textEl.style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
 
-    // SAFE PADDING (Max 40px in preview)
-    const previewPadding = Math.min(parseInt(document.getElementById('studio-padding').value), 40);
+    // For preview, we need to scale down the canvas params to fit the box.
+    // We'll just use the sliders directly for preview (or auto-fit approximation)
+    let previewFontSize, previewPadding;
+    if (autoFit) {
+        // In preview, approximate auto-fit by scaling to box height
+        const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
+        const boxWidth = 350; // max width of preview
+        const params = getLayoutParams(boxWidth * 3, boxHeight * 3, 30); // simulate canvas dimensions
+        previewFontSize = params.fontSize / 3;
+        previewPadding = params.padding / 3;
+    } else {
+        previewFontSize = userFontSize;
+        previewPadding = Math.min(userPadding, 40);
+    }
+    textEl.style.fontSize = previewFontSize + 'px';
     textEl.style.padding = previewPadding + 'px';
+    textEl.style.lineHeight = autoFit ? 1.6 : userLineSpacing;
 
     const box = document.getElementById('image-preview');
     box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
@@ -137,7 +239,7 @@ function updatePreview() {
     else box.style.justifyContent = 'center';
 }
 
-// PERFECT CANVAS WITH CLAMPED PADDING
+// PERFECT CANVAS WITH AUTO-FIT OR MANUAL OVERRIDE
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -154,62 +256,42 @@ function generateCanvas() {
 
     const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
-
-    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
     const refFontSize = Math.round(width * 0.055);
-    let fontSize = Math.round(width * 0.08);
 
-    // CLAMPED PADDING FOR CANVAS (Max 15% of width)
-    const rawPadding = parseInt(document.getElementById('studio-padding').value);
-    const padding = Math.min(Math.round(rawPadding * 4), Math.round(width * 0.15));
+    // Get layout parameters from autoFit or manual
+    const params = getLayoutParams(width, height, refFontSize);
+    const { fontSize, lineHeight, padding } = params;
 
-    const maxTextWidth = width - (padding * 2);
-    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
-
-    let lineHeight = fontSize * 1.6; 
-    let lineCount = 0;
-
-    function getLineCount(currentFontSize) {
-        ctx.font = `${currentFontSize}px ${fontName}`;
-        let totalLines = 0;
-        const paragraphs = text.split('\n');
-        paragraphs.forEach(paragraph => {
-            const words = paragraph.split(' ');
-            let line = '';
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = ctx.measureText(testLine);
-                if (metrics.width > maxTextWidth && n > 0) {
-                    totalLines++;
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            totalLines++;
-        });
-        return totalLines;
-    }
-
-    while (fontSize > 30) {
-        lineHeight = fontSize * 1.6;
-        lineCount = getLineCount(fontSize);
-        if (lineCount * lineHeight <= maxTextHeight) break;
-        fontSize -= 2;
-    }
-
+    // Draw reference
     ctx.save();
     if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
     ctx.fillStyle = studioColor;
-    ctx.font = `bold ${refFontSize}px ${fontName}`;
+    ctx.font = `bold ${refFontSize}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
     ctx.textAlign = currentAlign;
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    ctx.font = `${fontSize}px ${fontName}`;
+    // Draw main text
+    ctx.font = `${fontSize}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
-    
+
+    // Calculate line count to position vertically
+    let lineCount = 0;
+    const paragraphs = text.split('\n');
+    paragraphs.forEach(para => {
+        const words = para.split(' ');
+        let line = '';
+        for (let i=0; i<words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            if (ctx.measureText(testLine).width > width - (padding*2) && i>0) {
+                lineCount++;
+                line = words[i] + ' ';
+            } else line = testLine;
+        }
+        lineCount++;
+    });
+
     const totalTextHeight = lineCount * lineHeight;
     let startY;
     if (currentVert === 'top') startY = padding * 1.5;
@@ -217,20 +299,16 @@ function generateCanvas() {
     else startY = (height / 2) - (totalTextHeight / 2);
 
     let drawY = startY;
-    const paragraphs = text.split('\n');
-    paragraphs.forEach(paragraph => {
-        const words = paragraph.split(' ');
+    paragraphs.forEach(para => {
+        const words = para.split(' ');
         let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxTextWidth && n > 0) {
+        for (let i=0; i<words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            if (ctx.measureText(testLine).width > width - (padding*2) && i>0) {
                 ctx.fillText(line.trim(), width / 2, drawY);
-                line = words[n] + ' ';
+                line = words[i] + ' ';
                 drawY += lineHeight;
-            } else {
-                line = testLine;
-            }
+            } else line = testLine;
         }
         ctx.fillText(line.trim(), width / 2, drawY);
         drawY += lineHeight;
