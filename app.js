@@ -113,11 +113,10 @@ function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorag
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
 function closeSearch() { toggleSearch(); }
 
-// ====== NEW ACCURATE SEARCH ENGINE ======
-// ====== CRASH-PROOF SEARCH ENGINE ======
+// ====== FIXED SEARCH ENGINE (Triggers on typing AND checking boxes) ======
 let searchTimeout;
-document.getElementById('search-input').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase().trim();
+function performSearch() {
+    const q = document.getElementById('search-input').value.toLowerCase().trim();
     
     // Clear previous timer
     clearTimeout(searchTimeout);
@@ -133,9 +132,9 @@ document.getElementById('search-input').addEventListener('input', (e) => {
         let results = [];
         const searchYo = document.getElementById('search-yo').checked;
         const searchEn = document.getElementById('search-en').checked;
-        const MAX_RESULTS = 50; // Prevents crash
+        const MAX_RESULTS = 50;
 
-        // 1. Search Yoruba (Break at 50 results)
+        // 1. Search Yoruba
         if (searchYo) {
             for (let i = 0; i < yoruba.length; i++) {
                 if (yoruba[i].text.toLowerCase().includes(q)) {
@@ -145,8 +144,13 @@ document.getElementById('search-input').addEventListener('input', (e) => {
             }
         }
 
-        // 2. Search English (Break at 50 results)
+        // 2. Search English
         if (searchEn) {
+            // Safety check: if the English array is empty, show a friendly message
+            if (english.length === 0) {
+                document.getElementById('search-results').innerHTML = '<div class="card"><p>English data file not found. Please check your "data" folder.</p></div>';
+                return;
+            }
             for (let i = 0; i < english.length; i++) {
                 if (english[i].text.toLowerCase().includes(q)) {
                     results.push({ book: english[i].book, chapter: english[i].chapter, verse: english[i].verse, text: english[i].text, lang: 'en' });
@@ -169,10 +173,13 @@ document.getElementById('search-input').addEventListener('input', (e) => {
         });
         document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
     }, 400);
-});
-// ==========================================
-// ===========================================
+}
 
+// Attach to typing AND checkbox changes
+document.getElementById('search-input').addEventListener('input', performSearch);
+document.getElementById('search-yo').addEventListener('change', performSearch);
+document.getElementById('search-en').addEventListener('change', performSearch);
+// ==========================================
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; closeSearch(); loadChapter(); }
 function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(document.getElementById('bible-text').innerText.replace(/[0-9]/g, '')); u.lang = 'en-US'; speechSynthesis.speak(u); }
 function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
