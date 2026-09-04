@@ -28,7 +28,7 @@
                 <div class="drawer-section-title">Settings</div>
                 <a onclick="goToSettings()">Settings</a>
                 <a onclick="goToPlans()">Reading Plans</a>
-                <p class="about-text">Version 3.0.0</p>
+                <p class="about-text">Version 4.0.0</p>
             </div>
         </div>
         <div id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -36,8 +36,12 @@
         <div id="screen-home" class="screen active">
             <div class="card continue-card" onclick="continueReading()"><div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div></div>
             <div class="card votd-card"><h3>Verse of the Day</h3><p id="votd">Loading...</p></div>
-            <div class="card streak-card"><div class="card-content"><h3>Reading Streak</h3><p id="streak-count">0 Days</p></div></div>
-            <div class="card progress-card"><h3>Reading Progress</h3><div class="progress-bar-container"><div id="reading-progress-bar" class="progress-bar"></div></div><p id="progress-text">0%</p></div>
+            <div class="card streak-card"><div class="card-content"><h3>Reading Streak</h3><p id="streak-count">0 Days</p><p id="best-streak">Best: 0 Days</p></div></div>
+            <div class="card progress-card" onclick="goToPlans()">
+                <h3>Reading Progress</h3>
+                <div class="progress-bar-container"><div id="reading-progress-bar" class="progress-bar"></div></div>
+                <p id="progress-text">Set your plan and start reading</p>
+            </div>
             <h3 class="section-title">Recently Read</h3><div id="history-list" class="history-list"></div>
         </div>
 
@@ -63,7 +67,14 @@
         <div id="screen-plans" class="screen">
             <button class="back-btn" onclick="goToHome()">← Back</button>
             <h2>Reading Plans</h2>
-            <div class="plan-section"><h3>Canonical Plan</h3><p>Straight through.</p><div class="plan-buttons"><button onclick="selectPlan('one-year')">1 Year</button><button onclick="selectPlan('180-days')">180 Days</button><button onclick="selectPlan('90-days')">90 Days</button></div></div>
+            <div class="plan-section"><h3>Canonical Plan</h3><p>Genesis to Revelation.</p><div class="plan-buttons"><button onclick="selectPlan('canonical')">1 Year</button></div></div>
+            <div class="plan-section"><h3>New Testament in 90 Days</h3><p>Matthew to Revelation.</p><div class="plan-buttons"><button onclick="selectPlan('nt-90')">90 Days</button></div></div>
+            <div class="plan-section"><h3>Old Testament in 180 Days</h3><p>Genesis to Malachi.</p><div class="plan-buttons"><button onclick="selectPlan('ot-180')">180 Days</button></div></div>
+            
+            <div class="calendar-section">
+                <h3>Daily Calendar</h3>
+                <div id="calendar-grid" class="calendar-grid"></div>
+            </div>
         </div>
 
         <div id="screen-settings" class="screen">
@@ -73,6 +84,8 @@
             <div class="setting-section"><h3>Font Style</h3><div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div></div>
             <div class="setting-section"><h3>Font Size</h3><div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div></div>
             <div class="setting-section"><h3>Line Spacing</h3><div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div></div>
+            <div class="setting-section"><h3>Verse Spacing</h3><div class="slider-row"><input type="range" id="verse-spacing-slider" min="0.5" max="3" step="0.1" value="1.5"><span id="verse-spacing-label">1.5</span></div></div>
+            <div class="setting-section"><h3>Reading Settings</h3><div class="setting-row"><span>Red Letters Mode</span><button id="settings-red-btn" class="toggle-switch">OFF</button></div></div>
             <div class="setting-section"><h3>Display</h3>
                 <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
                 <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
@@ -87,7 +100,21 @@
         </nav>
     </div>
 
-    <div id="search-overlay" class="overlay"><div class="overlay-header"><input type="text" id="search-input" placeholder="Search Yoruba or English..."><button onclick="closeSearch()">Close</button></div><div class="search-filters"><label><input type="checkbox" id="search-yo" checked> Yoruba</label><label><input type="checkbox" id="search-en" checked> English</label></div><div id="search-results"></div></div>
+    <div id="search-overlay" class="overlay">
+        <div class="overlay-header">
+            <input type="text" id="search-input" placeholder="Search Yoruba or English...">
+            <button onclick="closeSearch()">Close</button>
+        </div>
+        <div class="search-filters">
+            <label><input type="checkbox" id="search-yo" checked> Yoruba</label>
+            <label><input type="checkbox" id="search-en" checked> English</label>
+            <select id="search-book" onchange="performSearch()">
+                <option value="all">All Books</option>
+                <!-- Books will be populated by JS -->
+            </select>
+        </div>
+        <div id="search-results"></div>
+    </div>
 
     <div id="action-sheet-overlay" class="sheet-overlay" onclick="closeActionSheet()"></div>
     <div id="action-sheet" class="action-sheet">
@@ -98,7 +125,7 @@
             <div class="sheet-item" onclick="actionHighlight()">Highlight</div>
             <div class="sheet-item" onclick="openNoteModal()">Note</div>
             <div class="sheet-item" onclick="saveVerse()">Save</div>
-            <div class="sheet-item" onclick="window.location.href='/studio'">Studio</div>
+            <div class="sheet-item" onclick="shareVerseAsImage()">Image</div>
         </div>
         <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
     </div>
@@ -108,4 +135,4 @@
 
     <script src="app.js"></script>
 </body>
-                                                                                              </html>
+                                                                                            </html>
