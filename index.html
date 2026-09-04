@@ -24,12 +24,11 @@
                 <a onclick="goToBooks()">Books</a>
                 <a onclick="goToLibrary()">Library</a>
                 <a onclick="goToDailyVerses()">Daily Verses</a>
-                <a onclick="goToStudio()" style="color: var(--accent); font-weight: bold;">Image Studio</a>
-                
+                <a href="studio.html" style="color: var(--accent); font-weight: bold;">Image Studio</a>
                 <div class="drawer-section-title">Settings</div>
                 <a onclick="goToSettings()">Settings</a>
                 <a onclick="goToPlans()">Reading Plans</a>
-                <p class="about-text">Version 2.0.0<br>Free Yoruba & English</p>
+                <p class="about-text">Version 2.1.0<br>Free Yoruba & English</p>
             </div>
         </div>
         <div id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -77,54 +76,10 @@
             </div>
         </div>
 
-        <!-- IMAGE STUDIO SCREEN -->
-        <div id="screen-studio" class="screen">
-            <button class="back-btn" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg> Back</button>
-            <h2>Image Studio</h2>
-            
-            <div class="picker-section">
-                <h3>Select Verse</h3>
-                <div class="picker-buttons">
-                    <button id="pick-book" class="picker-btn">Genesis</button>
-                    <button id="pick-chapter" class="picker-btn">1</button>
-                    <button id="pick-verse" class="picker-btn">1</button>
-                </div>
-            </div>
-
-            <div id="picker-modal" class="modal-overlay" onclick="closeModal()">
-                <div class="modal-content">
-                    <h3 id="modal-title">Select Book</h3>
-                    <div id="modal-list" class="modal-list"></div>
-                </div>
-            </div>
-
-            <div class="preview-section">
-                <div id="image-preview" class="preview-card">
-                    <h3 id="preview-ref">Genesis 1:1</h3>
-                    <p id="preview-text">Loading...</p>
-                </div>
-            </div>
-
-            <div class="controls-section">
-                <h3>Text Settings</h3>
-                <div class="control-row"><label>Font Style</label><button id="studio-font-btn" onclick="toggleStudioFont()">Sans</button></div>
-                <div class="control-row"><label>Text Size</label><input type="range" id="studio-font-size" min="16" max="48" value="24" oninput="updateStudioPreview()"></div>
-                <div class="control-row"><label>Text Color</label><div class="color-buttons"><button style="background:#fff; color:#000;" onclick="setStudioColor('white')">A</button><button style="background:#000; color:#fff;" onclick="setStudioColor('black')">A</button><button style="background:#FFD700; color:#000;" onclick="setStudioColor('gold')">A</button><button style="background:#1E90FF; color:#fff;" onclick="setStudioColor('blue')">A</button></div></div>
-                <div class="control-row"><label>Language</label><div class="lang-toggle"><label><input type="checkbox" id="img-yo" checked onchange="updateStudioPreview()"> Yoruba</label><label><input type="checkbox" id="img-en" checked onchange="updateStudioPreview()"> English</label></div></div>
-            </div>
-
-            <div class="templates-section">
-                <h3>500+ Templates</h3>
-                <div id="template-grid" class="template-grid"></div>
-            </div>
-            
-            <button class="share-btn" onclick="shareStudioVerse()">Share Verse</button>
-        </div>
-
         <nav class="bottom-nav">
             <button class="nav-btn active" onclick="goToHome()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
             <button class="nav-btn" onclick="goToBooks()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
-            <button class="nav-btn" onclick="goToStudio()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Studio</span></button>
+            <button class="nav-btn" onclick="window.location.href='studio.html'"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Studio</span></button>
             <button class="nav-btn" onclick="goToLibrary()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Library</span></button>
         </nav>
     </div>
@@ -140,7 +95,7 @@
             <div class="sheet-item" onclick="actionHighlight()">Highlight</div>
             <div class="sheet-item" onclick="openNoteModal()">Note</div>
             <div class="sheet-item" onclick="saveVerse()">Save</div>
-            <div class="sheet-item" onclick="goToStudio()">Studio</div>
+            <div class="sheet-item" onclick="window.location.href='studio.html'">Studio</div>
         </div>
         <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
     </div>
@@ -150,4 +105,4 @@
 
     <script src="app.js"></script>
 </body>
-                                                                      </html>
+                                                                                               </html>
