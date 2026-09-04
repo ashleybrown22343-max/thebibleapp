@@ -1,17 +1,32 @@
-/* COMPLETE MAIN APP LOGIC - NO EMOJIS - NO PLACEHOLDERS */
 let yoruba = [], english = [], englishMap = {};
 let saved = JSON.parse(localStorage.getItem('saved') || '[]');
 let notes = JSON.parse(localStorage.getItem('notes') || '{}');
 let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
-let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":""}');
+let completedChapters = JSON.parse(localStorage.getItem('completedChapters') || '[]');
+let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":"","best":0}');
 let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
 let currentLibrary = 'saved';
 let activeVerse = { b: 0, c: 0, v: 0 };
+let currentPlan = localStorage.getItem('currentPlan') || 'canonical';
 let currentLineSpacing = parseFloat(localStorage.getItem('lineSpacing') || '1.5');
+let currentVerseSpacing = parseFloat(localStorage.getItem('verseSpacing') || '1.5');
+let isRedLetter = localStorage.getItem('redLetter') === 'true';
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+
+// Red Letter Verses (Jesus' words in Gospels - simplified based on common study Bibles)
+const redLetterMap = {};
+[[40,5],[40,6],[40,7],[41,4],[41,5],[42,6],[42,7],[43,3],[43,14],[43,15],[43,16],[43,17]].forEach(([b,c]) => {
+    for (let v=1; v<=30; v++) redLetterMap[`${b}-${c}-${v}`] = true;
+});
+
+const plans = {
+    'canonical': { name: 'Canonical', startBook: 1, endBook: 66 },
+    'nt-90': { name: 'New Testament', startBook: 40, endBook: 66 },
+    'ot-180': { name: 'Old Testament', startBook: 1, endBook: 39 }
+};
 
 async function init() {
     try {
@@ -24,8 +39,19 @@ async function init() {
         } catch (e) {}
         document.getElementById('splash-screen').style.display = 'none';
         document.getElementById('app-container').style.display = 'block';
-        loadHome(); buildBooks(); buildDailyVerses(); attachEvents();
+        populateSearchBooks();
+        loadHome(); buildBooks(); buildDailyVerses(); attachEvents(); updateProgress();
     } catch(e) { document.getElementById('splash-screen').innerHTML = "<h3>Error: " + e.message + "</h3>"; }
+}
+
+function populateSearchBooks() {
+    const select = document.getElementById('search-book');
+    englishNames.forEach((name, i) => {
+        const opt = document.createElement('option');
+        opt.value = codes[i];
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
 }
 
 function attachEvents() {
@@ -42,13 +68,17 @@ function attachEvents() {
     const fontBtn = document.getElementById('settings-font-btn');
     const themeBtn = document.getElementById('settings-theme-btn');
     const churchBtn = document.getElementById('settings-church-btn');
+    const redBtn = document.getElementById('settings-red-btn');
     if (fontBtn) fontBtn.onclick = toggleFont;
     if (themeBtn) themeBtn.onclick = toggleDarkMode;
     if (churchBtn) churchBtn.onclick = toggleChurchMode;
+    if (redBtn) redBtn.onclick = toggleRedLetter;
     const fontSizeSlider = document.getElementById('font-size-slider');
     const lineSpacingSlider = document.getElementById('line-spacing-slider');
+    const verseSpacingSlider = document.getElementById('verse-spacing-slider');
     if (fontSizeSlider) fontSizeSlider.addEventListener('input', changeFontSize);
     if (lineSpacingSlider) lineSpacingSlider.addEventListener('input', changeLineSpacing);
+    if (verseSpacingSlider) verseSpacingSlider.addEventListener('input', changeVerseSpacing);
 }
 
 function openDrawer() { document.getElementById('side-drawer').classList.add('open'); document.getElementById('drawer-overlay').style.display = 'block'; }
@@ -58,7 +88,7 @@ function goToBooks() { closeDrawer(); switchScreen('books'); }
 function goToLibrary() { closeDrawer(); switchScreen('library'); loadLibrary(); }
 function goToDailyVerses() { closeDrawer(); switchScreen('daily'); buildDailyVerses(); }
 function goToSettings() { closeDrawer(); switchScreen('settings'); updateSettingsPreview(); }
-function goToPlans() { closeDrawer(); switchScreen('plans'); }
+function goToPlans() { closeDrawer(); switchScreen('plans'); buildCalendar(); }
 function switchScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-' + screen).classList.add('active'); document.querySelectorAll('.nav-btn').forEach((b, i) => { b.classList.toggle('active', (screen === 'home' && i === 0) || (screen === 'books' && i === 1) || (screen === 'library' && i === 3)); }); }
 
 function loadHome() {
@@ -68,8 +98,16 @@ function loadHome() {
     document.getElementById('last-read').textContent = `${englishNames[codes.indexOf(last.b)]} ${last.c}`;
     if(yoruba[new Date().getDate() * 500]) document.getElementById('votd').textContent = yoruba[new Date().getDate() * 500].text;
     const today = new Date().toDateString();
-    if(streak.lastDate !== today) { streak.days = 1; streak.lastDate = today; localStorage.setItem('streak', JSON.stringify(streak)); }
+    if(streak.lastDate !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toDateString();
+        if(streak.lastDate === yesterday) streak.days++;
+        else streak.days = 1;
+        streak.lastDate = today;
+        if(streak.days > streak.best) streak.best = streak.days;
+        localStorage.setItem('streak', JSON.stringify(streak));
+    }
     document.getElementById('streak-count').textContent = streak.days + " Days";
+    document.getElementById('best-streak').textContent = "Best: " + streak.best + " Days";
     const histContainer = document.getElementById('history-list'); histContainer.innerHTML = '';
     history.forEach(h => { const div = document.createElement('div'); div.className = 'history-item'; div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`; div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); }; histContainer.appendChild(div); });
 }
@@ -85,10 +123,28 @@ function loadChapter() {
     switchScreen('reading'); document.getElementById('reading-title').textContent = `${currentBookName} ${currentChapter}`;
     const bookNum = codes.indexOf(currentBook) + 1; const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
     let html = '';
-    verses.forEach(v => { const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || ""; const key = `${v.book}-${v.chapter}-${v.verse}`; const note = notes[key]; const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : ''; html += `<div class="verse-container ${highlightClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})"><span class="verse-number">${v.verse}</span><p class="yoruba-text">${v.text}</p><p class="english-text">${eng}</p>${note ? `<div class="note-text">${note}</div>` : ''}</div>`; });
-    document.getElementById('bible-text').innerHTML = html; document.getElementById('bible-text').style.fontSize = localStorage.getItem('fontSize') + '%'; document.getElementById('bible-text').style.lineHeight = currentLineSpacing;
-    const currentHistory = { b: currentBook, c: currentChapter }; history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c); history.unshift(currentHistory); if (history.length > 10) history.pop(); localStorage.setItem('history', JSON.stringify(history)); localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
-    let startX = 0; const el = document.getElementById('bible-text'); el.ontouchstart = e => startX = e.changedTouches[0].screenX; el.ontouchend = e => { let endX = e.changedTouches[0].screenX; if (endX < startX - 50) nextChapter(); if (endX > startX + 50) prevChapter(); };
+    verses.forEach(v => {
+        const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || "";
+        const key = `${v.book}-${v.chapter}-${v.verse}`; const note = notes[key];
+        const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
+        const redClass = isRedLetter && redLetterMap[key] ? 'red-letter' : '';
+        html += `<div class="verse-container ${highlightClass} ${redClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})"><span class="verse-number">${v.verse}</span><p class="yoruba-text">${v.text}</p><p class="english-text">${eng}</p>${note ? `<div class="note-text">${note}</div>` : ''}</div>`;
+    });
+    document.getElementById('bible-text').innerHTML = html;
+    document.getElementById('bible-text').style.fontSize = localStorage.getItem('fontSize') + '%';
+    document.getElementById('bible-text').style.lineHeight = currentLineSpacing;
+    document.querySelectorAll('.verse-container').forEach(div => div.style.marginBottom = currentVerseSpacing + 'em');
+    
+    // Track completed chapter
+    const chapterKey = `${currentBook}-${currentChapter}`;
+    if (!completedChapters.includes(chapterKey)) {
+        completedChapters.push(chapterKey);
+        localStorage.setItem('completedChapters', JSON.stringify(completedChapters));
+        updateProgress();
+    }
+    const currentHistory = { b: currentBook, c: currentChapter };
+    history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c); history.unshift(currentHistory); if (history.length > 10) history.pop(); localStorage.setItem('history', JSON.stringify(history)); localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
+    // removed swipe handlers
 }
 
 function nextChapter() { if(currentChapter < 150) { currentChapter++; loadChapter(); } }
@@ -96,6 +152,7 @@ function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(
 function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[codes.indexOf(currentBook)]; currentChapter = last.c; loadChapter(); }
 function changeFontSize(e) { const val = e.target.value; localStorage.setItem('fontSize', val); document.getElementById('font-size-label').textContent = val + '%'; document.getElementById('bible-text').style.fontSize = val + '%'; updateSettingsPreview(); }
 function changeLineSpacing(e) { currentLineSpacing = e.target.value; localStorage.setItem('lineSpacing', currentLineSpacing); document.getElementById('line-spacing-label').textContent = currentLineSpacing; document.getElementById('bible-text').style.lineHeight = currentLineSpacing; updateSettingsPreview(); }
+function changeVerseSpacing(e) { currentVerseSpacing = e.target.value; localStorage.setItem('verseSpacing', currentVerseSpacing); document.getElementById('verse-spacing-label').textContent = currentVerseSpacing; document.querySelectorAll('.verse-container').forEach(div => div.style.marginBottom = currentVerseSpacing + 'em'); }
 function updateSettingsPreview() { const p = document.getElementById('settings-preview-text'); const val = localStorage.getItem('fontSize') || '100'; const spacing = localStorage.getItem('lineSpacing') || '1.5'; p.style.fontSize = val + '%'; p.style.lineHeight = spacing; }
 
 function openActionSheet(b, c, v) { activeVerse = { b: b, c: c, v: v }; document.getElementById('sheet-verse-ref').textContent = `${englishNames[b-1]} ${c}:${v}`; document.getElementById('action-sheet-overlay').style.display = 'block'; const sheet = document.getElementById('action-sheet'); setTimeout(() => sheet.classList.add('show'), 10); }
@@ -104,6 +161,7 @@ function copyVerse() { const verseObj = yoruba.find(x => x.book === activeVerse.
 function readVerse() { closeActionSheet(); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; const u = new SpeechSynthesisUtterance(eng); u.lang = 'en-US'; speechSynthesis.speak(u); }
 function actionHighlight() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const order = ['yellow', 'green', 'blue', 'none']; const current = highlights[key] || 'none'; const next = order[(order.indexOf(current) + 1) % order.length]; if (next === 'none') delete highlights[key]; else highlights[key] = next; localStorage.setItem('highlights', JSON.stringify(highlights)); closeActionSheet(); loadChapter(); }
 function saveVerse() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } }
+function shareVerseAsImage() { const url = `/studio?b=${activeVerse.b}&c=${activeVerse.c}&v=${activeVerse.v}`; window.location.href = url; }
 function openNoteModal() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; document.getElementById('note-input').value = notes[key] || ""; document.getElementById('note-overlay').style.display = 'block'; document.getElementById('note-modal').style.display = 'block'; }
 function closeNoteModal() { document.getElementById('note-overlay').style.display = 'none'; document.getElementById('note-modal').style.display = 'none'; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').classList.add('show'); }
 function saveNote() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const text = document.getElementById('note-input').value; if (text.trim() === "") delete notes[key]; else notes[key] = text; localStorage.setItem('notes', JSON.stringify(notes)); closeNoteModal(); loadChapter(); }
@@ -113,59 +171,40 @@ function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorag
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
 function closeSearch() { toggleSearch(); }
 
-// ====== FIXED SEARCH ENGINE (Triggers on typing AND checking boxes) ======
+// REAL SEARCH ENGINE
 let searchTimeout;
 function performSearch() {
     const q = document.getElementById('search-input').value.toLowerCase().trim();
-    
-    // Clear previous timer
     clearTimeout(searchTimeout);
-    
-    // If too short, clear results
-    if (q.length < 2) {
-        document.getElementById('search-results').innerHTML = '';
-        return;
-    }
-
-    // Debounce: Wait 400ms after typing stops
+    if (q.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
     searchTimeout = setTimeout(() => {
         let results = [];
         const searchYo = document.getElementById('search-yo').checked;
         const searchEn = document.getElementById('search-en').checked;
+        const selectedBook = document.getElementById('search-book').value;
         const MAX_RESULTS = 50;
-
-        // 1. Search Yoruba
         if (searchYo) {
             for (let i = 0; i < yoruba.length; i++) {
-                if (yoruba[i].text.toLowerCase().includes(q)) {
-                    results.push({ book: yoruba[i].book, chapter: yoruba[i].chapter, verse: yoruba[i].verse, text: yoruba[i].text, lang: 'yo' });
+                const v = yoruba[i];
+                if ((selectedBook === 'all' || codes[v.book-1] === selectedBook) && v.text.toLowerCase().includes(q)) {
+                    results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'yo' });
                     if (results.length >= MAX_RESULTS) break;
                 }
             }
         }
-
-        // 2. Search English
         if (searchEn) {
-            // Safety check: if the English array is empty, show a friendly message
-            if (english.length === 0) {
-                document.getElementById('search-results').innerHTML = '<div class="card"><p>English data file not found. Please check your "data" folder.</p></div>';
-                return;
-            }
             for (let i = 0; i < english.length; i++) {
-                if (english[i].text.toLowerCase().includes(q)) {
-                    results.push({ book: english[i].book, chapter: english[i].chapter, verse: english[i].verse, text: english[i].text, lang: 'en' });
+                const v = english[i];
+                if ((selectedBook === 'all' || codes[v.book-1] === selectedBook) && v.text.toLowerCase().includes(q)) {
+                    results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'en' });
                     if (results.length >= MAX_RESULTS) break;
                 }
             }
         }
-
-        // 3. Highlight the exact search term
         function highlightText(text, q) {
             const regex = new RegExp(`(${q})`, 'gi');
             return text.replace(regex, '<span class="search-highlight">$1</span>');
         }
-
-        // 4. Show results
         let html = '';
         results.forEach(v => {
             const displayText = highlightText(v.text, q);
@@ -174,20 +213,90 @@ function performSearch() {
         document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
     }, 400);
 }
-
-// Attach to typing AND checkbox changes
 document.getElementById('search-input').addEventListener('input', performSearch);
 document.getElementById('search-yo').addEventListener('change', performSearch);
 document.getElementById('search-en').addEventListener('change', performSearch);
-// ==========================================
+document.getElementById('search-book').addEventListener('change', performSearch);
+
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; closeSearch(); loadChapter(); }
-function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(document.getElementById('bible-text').innerText.replace(/[0-9]/g, '')); u.lang = 'en-US'; speechSynthesis.speak(u); }
+function playAudio() {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; }
+    const verses = document.querySelectorAll('.verse-container');
+    let text = '';
+    verses.forEach(v => {
+        const eng = v.querySelector('.english-text');
+        const yo = v.querySelector('.yoruba-text');
+        if (eng && eng.textContent.trim()) text += eng.textContent + ' ';
+        else if (yo) text += yo.textContent + ' ';
+    });
+    if (!text) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    speechSynthesis.speak(u);
+}
 function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
 function toggleDarkMode() { document.body.classList.toggle('dark'); const btn = document.getElementById('settings-theme-btn'); btn.textContent = document.body.classList.contains('dark') ? 'ON' : 'OFF'; btn.classList.toggle('active', document.body.classList.contains('dark')); updateSettingsPreview(); }
 function toggleChurchMode() { document.body.classList.toggle('church'); const btn = document.getElementById('settings-church-btn'); btn.textContent = document.body.classList.contains('church') ? 'ON' : 'OFF'; }
 function toggleFont() { document.body.classList.toggle('serif'); const btn = document.getElementById('settings-font-btn'); btn.textContent = document.body.classList.contains('serif') ? 'OFF' : 'ON'; }
+function toggleRedLetter() { isRedLetter = !isRedLetter; const btn = document.getElementById('settings-red-btn'); btn.textContent = isRedLetter ? 'ON' : 'OFF'; btn.classList.toggle('active', isRedLetter); localStorage.setItem('redLetter', isRedLetter); loadChapter(); }
 
 function buildDailyVerses() { const day = new Date().getDate(); const list = document.getElementById('daily-list'); list.innerHTML = ''; const psalm = yoruba.find(v => v.book === 19 && v.chapter === day && v.verse === 1); if(psalm) { const eng = englishMap[`${psalm.book}-${psalm.chapter}-${psalm.verse}`] || ""; list.innerHTML += `<div class="daily-item"><h4>Daily Psalm</h4><p>${psalm.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[18]} ${psalm.chapter}:${psalm.verse}</div></div>`; } const gospel = yoruba.find(v => v.book === 40 && v.chapter === Math.max(1, day % 28) && v.verse === 1); if(gospel) { const eng = englishMap[`${gospel.book}-${gospel.chapter}-${gospel.verse}`] || ""; list.innerHTML += `<div class="daily-item"><h4>Daily Gospel</h4><p>${gospel.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[39]} ${gospel.chapter}:${gospel.verse}</div></div>`; } }
-function selectPlan(plan) { alert('Plan selected: ' + plan); currentBook = 'GEN'; currentBookName = 'Genesis'; currentChapter = 1; loadChapter(); }
+
+// REAL PROGRESS
+function getTotalChaptersForPlan() {
+    const plan = plans[currentPlan];
+    let count = 0;
+    yoruba.forEach(v => {
+        if (v.book >= plan.startBook && v.book <= plan.endBook) {
+            const key = `${v.book}-${v.chapter}`;
+            // Need to avoid duplicates - we'll use a Set later in call
+        }
+    });
+    // Use Set to get unique chapters
+    const chapters = new Set();
+    yoruba.forEach(v => {
+        if (v.book >= plan.startBook && v.book <= plan.endBook) chapters.add(`${v.book}-${v.chapter}`);
+    });
+    return chapters.size;
+}
+function getCompletedChaptersForPlan() {
+    const plan = plans[currentPlan];
+    const completed = new Set();
+    completedChapters.forEach(key => {
+        const [bookCode, ch] = key.split('-');
+        const bookNum = codes.indexOf(bookCode) + 1;
+        if (bookNum >= plan.startBook && bookNum <= plan.endBook) completed.add(key);
+    });
+    return completed.size;
+}
+function updateProgress() {
+    const total = getTotalChaptersForPlan();
+    const done = getCompletedChaptersForPlan();
+    const percentage = total > 0 ? Math.round((done / total) * 100) : 0;
+    const bar = document.getElementById('reading-progress-bar');
+    if (bar) bar.style.width = percentage + '%';
+    const text = document.getElementById('progress-text');
+    if (text) text.textContent = `${done} / ${total} Chapters (${percentage}%)`;
+}
+function selectPlan(plan) {
+    currentPlan = plan;
+    localStorage.setItem('currentPlan', plan);
+    updateProgress();
+    buildCalendar();
+    alert('Plan selected: ' + plans[plan].name + '. Reading plan updated.');
+}
+function buildCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    const today = new Date().getDate();
+    // Create a simple 30-day calendar
+    for (let d = 1; d <= 30; d++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.textContent = d;
+        if (d <= today) div.classList.add('read');
+        grid.appendChild(div);
+    }
+}
 
 window.onload = init;
