@@ -112,7 +112,50 @@ function loadLibrary() { const list = document.getElementById('library-list'); l
 function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
 function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
 function closeSearch() { toggleSearch(); }
-document.getElementById('search-input').addEventListener('input', (e) => { const q = e.target.value.toLowerCase(); if (q.length < 2) return; let results = []; if (document.getElementById('search-yo').checked) results = results.concat(yoruba.filter(v => v.text.toLowerCase().includes(q)).slice(0, 20)); if (document.getElementById('search-en').checked) { for (const key in englishMap) { if (englishMap[key].toLowerCase().includes(q)) { const parts = key.split('-'); results.push({ book: parseInt(parts[0]), chapter: parseInt(parts[1]), verse: parseInt(parts[2]), text: englishMap[key] }); if (results.length >= 20) break; } } } let html = ''; results.forEach(v => { html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse}</strong><p>${v.text}</p></div>`; }); document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>'; });
+
+// ====== NEW ACCURATE SEARCH ENGINE ======
+document.getElementById('search-input').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    if (q.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
+
+    let results = [];
+    const searchYo = document.getElementById('search-yo').checked;
+    const searchEn = document.getElementById('search-en').checked;
+
+    // 1. Search the ENTIRE Yoruba JSON
+    if (searchYo) {
+        yoruba.forEach(v => {
+            if (v.text.toLowerCase().includes(q)) {
+                results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'yo' });
+            }
+        });
+    }
+
+    // 2. Search the ENTIRE English JSON
+    if (searchEn) {
+        english.forEach(v => {
+            if (v.text.toLowerCase().includes(q)) {
+                results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'en' });
+            }
+        });
+    }
+
+    // 3. Highlight the exact search term
+    function highlightText(text, q) {
+        const regex = new RegExp(`(${q})`, 'gi');
+        return text.replace(regex, '<span class="search-highlight">$1</span>');
+    }
+
+    // 4. Show EVERY result with the language label
+    let html = '';
+    results.forEach(v => {
+        const displayText = highlightText(v.text, q);
+        html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse} (${v.lang === 'yo' ? 'Yoruba' : 'English'})</strong><p>${displayText}</p></div>`;
+    });
+    document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
+});
+// ===========================================
+
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; closeSearch(); loadChapter(); }
 function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(document.getElementById('bible-text').innerText.replace(/[0-9]/g, '')); u.lang = 'en-US'; speechSynthesis.speak(u); }
 function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
