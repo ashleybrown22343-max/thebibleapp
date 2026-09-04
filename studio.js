@@ -1,11 +1,11 @@
 let yoruba = [], english = [], englishMap = {};
-let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1, currentVerse = 1; // DEFAULT IS GENESIS 1:1
+let currentBook = "PSA", currentBookName = "Psalms", currentChapter = 23, currentVerse = 6;
 let studioColor = 'white', studioFont = 'sans', selectedTemplate = 0;
 let currentAlign = 'center', currentVert = 'center';
 let currentRatio = 'square', currentWatermark = true, currentShadow = true;
 
 // MANUAL OVERRIDE STATE
-let autoFit = true; // true means automatic, false means manual
+let autoFit = true; 
 let userFontSize = 32;
 let userLineSpacing = 1.7;
 let userPadding = 20;
@@ -175,9 +175,6 @@ function updatePreview() {
     let previewLineHeight = userLineSpacing;
 
     if (autoFit) {
-        // Use the canvas calculations to get the auto-fit size, then divide by 3 for preview
-        const canvasSize = generateCanvas().width; // (We won't actually generate, just use the logic)
-        // Simplified auto-fit for preview: shrink until it fits in the box
         const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
         let tempSize = 32;
         while (tempSize > 15) {
@@ -207,7 +204,7 @@ function updatePreview() {
     else box.style.justifyContent = 'center';
 }
 
-// CANVAS GENERATOR (Supports Manual + AutoFit)
+// *** THE ONLY PART CHANGED: CANVAS MIRRORS THE PREVIEW EXACTLY ***
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -216,82 +213,75 @@ function generateCanvas() {
     canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
 
+    // 1. Draw Background Gradient
     const grad = ctx.createLinearGradient(0, 0, width, height);
     const parts = templates[selectedTemplate].match(/#[0-9a-fA-F]{6}/g);
     grad.addColorStop(0, parts ? parts[0] : '#1a237e');
     grad.addColorStop(1, parts ? parts[1] : '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
 
-    const text = getTextData(false);
-    const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
+    // 2. Get EXACT styles from the LIVE preview elements
+    const previewText = document.getElementById('preview-text');
+    const previewRef = document.getElementById('preview-ref');
+    const previewBox = document.getElementById('image-preview');
 
+    const previewStyles = getComputedStyle(previewText);
+    const refStyles = getComputedStyle(previewRef);
+
+    const previewFontSize = parseFloat(previewStyles.fontSize);
+    const previewPadding = parseFloat(previewStyles.paddingLeft);
+    const previewLineHeight = parseFloat(previewStyles.lineHeight);
+    const previewRefSize = parseFloat(refStyles.fontSize);
+
+    const previewWidth = previewBox.clientWidth;
+    const previewHeight = previewBox.clientHeight;
+
+    // 3. Calculate Scale Factors
+    const scaleX = width / previewWidth;
+    const scaleY = height / previewHeight;
+
+    // 4. Scale values to Canvas
+    const canvasFontSize = previewFontSize * scaleX;
+    const canvasPadding = previewPadding * scaleX;
+    const canvasLineHeight = previewLineHeight * scaleX;
+    const canvasRefSize = previewRefSize * scaleX;
+
+    // 5. Prepare Fonts & Shadows
     const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
-    const refFontSize = Math.round(width * 0.055);
-    let fontSize, padding, lineHeight;
-
-    if (autoFit) {
-        fontSize = Math.round(width * 0.08);
-        padding = Math.round(width * 0.12);
-    } else {
-        fontSize = Math.round(userFontSize * 3); // scale manual size to canvas
-        padding = Math.min(Math.round(userPadding * 4), Math.round(width * 0.15));
-    }
-
-    const maxTextWidth = width - (padding * 2);
-    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
-
-    if (autoFit) {
-        lineHeight = fontSize * 1.6;
-        let tempFont = fontSize;
-        let lineCount = 0;
-        function getLineCount(currentFontSize) {
-            ctx.font = `${currentFontSize}px ${fontName}`;
-            let totalLines = 0;
-            const paragraphs = text.split('\n');
-            paragraphs.forEach(paragraph => {
-                const words = paragraph.split(' ');
-                let line = '';
-                for (let n = 0; n < words.length; n++) {
-                    const testLine = line + words[n] + ' ';
-                    const metrics = ctx.measureText(testLine);
-                    if (metrics.width > maxTextWidth && n > 0) {
-                        totalLines++;
-                        line = words[n] + ' ';
-                    } else {
-                        line = testLine;
-                    }
-                }
-                totalLines++;
-            });
-            return totalLines;
-        }
-        while (tempFont > 30) {
-            lineHeight = tempFont * 1.6;
-            lineCount = getLineCount(tempFont);
-            if (lineCount * lineHeight <= maxTextHeight) {
-                fontSize = tempFont;
-                break;
-            }
-            tempFont -= 2;
-        }
-    } else {
-        lineHeight = fontSize * userLineSpacing;
-    }
-
-    ctx.save();
-    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
-    ctx.fillStyle = studioColor;
-    ctx.font = `bold ${refFontSize}px ${fontName}`;
+    ctx.font = `bold ${canvasRefSize}px "${fontName}"`;
     ctx.textAlign = currentAlign;
     ctx.textBaseline = 'middle';
-    ctx.fillText(refText, width / 2, padding * 0.8);
 
-    ctx.font = `${fontSize}px ${fontName}`;
-    ctx.lineWidth = 10;
+    if (currentShadow) {
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 10;
+    }
+    ctx.fillStyle = studioColor;
+
+    // 6. Draw Reference at exact Y position from preview
+    const refYPos = (previewRef.offsetTop + (previewRef.offsetHeight / 2)) * scaleY;
+    ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, refYPos);
+
+    // 7. Prepare Main Text
+    ctx.font = `${canvasFontSize}px "${fontName}"`;
     ctx.textBaseline = 'top';
-    
-    let lineCount = 0;
+
+    // 8. Define X position based on alignment
+    let textX = width / 2;
+    if (currentAlign === 'left') { textX = canvasPadding; }
+    else if (currentAlign === 'right') { textX = width - canvasPadding; }
+
+    // 9. Define starting Y position based on the preview's offsetTop
+    const textYTop = previewText.offsetTop * scaleY;
+
+    // 10. Wrap text using the EXACT scaled line height
+    const maxTextWidth = width - (canvasPadding * 2);
+    const text = previewText.innerHTML.replace(/<br\s*\/?>/gi, '\n'); // Convert breaks to newlines
+
     const paragraphs = text.split('\n');
+    let drawY = textYTop;
+
     paragraphs.forEach(paragraph => {
         const words = paragraph.split(' ');
         let line = '';
@@ -299,47 +289,25 @@ function generateCanvas() {
             const testLine = line + words[n] + ' ';
             const metrics = ctx.measureText(testLine);
             if (metrics.width > maxTextWidth && n > 0) {
-                lineCount++;
+                ctx.fillText(line.trim(), textX, drawY);
                 line = words[n] + ' ';
+                drawY += canvasLineHeight;
             } else {
                 line = testLine;
             }
         }
-        lineCount++;
+        ctx.fillText(line.trim(), textX, drawY);
+        drawY += canvasLineHeight; // Add the paragraph gap
     });
 
-    const totalTextHeight = lineCount * lineHeight;
-    let startY;
-    if (currentVert === 'top') startY = padding * 1.5;
-    else if (currentVert === 'bottom') startY = height - padding - totalTextHeight;
-    else startY = (height / 2) - (totalTextHeight / 2);
-
-    let drawY = startY;
-    paragraphs.forEach(paragraph => {
-        const words = paragraph.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxTextWidth && n > 0) {
-                ctx.fillText(line.trim(), width / 2, drawY);
-                line = words[n] + ' ';
-                drawY += lineHeight;
-            } else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line.trim(), width / 2, drawY);
-        drawY += lineHeight;
-    });
-
+    // 11. Draw Watermark
     if (currentWatermark) {
-        ctx.font = `${Math.round(width * 0.02)}px Poppins`;
+        ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.textBaseline = 'middle';
-        ctx.fillText('Bibeli Mimo', width / 2, height - (padding * 0.4));
+        ctx.fillText('Bibeli Mimo', width / 2, height - (canvasPadding * 0.4));
     }
-    ctx.restore();
+
     return canvas;
 }
 
