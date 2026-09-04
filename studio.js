@@ -13,24 +13,19 @@ async function init() {
         if (!yRes.ok) throw new Error("Yoruba data not found");
         yoruba = await yRes.json();
 
-        // BULLETPROOF ENGLISH DATA LOADING
         try {
             const eRes = await fetch('data/english_net.json');
             if (eRes.ok) { 
                 english = await eRes.json(); 
                 english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); 
             }
-        } catch (e) {
-            console.log("English data not found, continuing with Yoruba only");
-        }
+        } catch (e) {}
 
         buildTemplates(); updatePickerButtons(); updatePreview();
         document.getElementById('pick-book').onclick = () => openModal('book');
         document.getElementById('pick-chapter').onclick = () => openModal('chapter');
         document.getElementById('pick-verse').onclick = () => openModal('verse');
-    } catch(e) { 
-        document.getElementById('preview-text').innerHTML = "Error: " + e.message; 
-    }
+    } catch(e) { document.getElementById('preview-text').innerHTML = "Error: " + e.message; }
 }
 
 function updatePickerButtons() {
@@ -95,14 +90,10 @@ function buildTemplates() {
     });
 }
 
-// --- NEW SPLIT TEXT LOGIC (GUARANTEED ENGLISH) ---
 function getTextData(isPreview) {
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
-    
-    // Fallback 1: Use englishMap
     let englishText = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
-    // Fallback 2: Search raw array if Map fails
     if (!englishText && english.length > 0) {
         const englishVerse = english.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
         if (englishVerse) englishText = englishVerse.text;
@@ -110,11 +101,7 @@ function getTextData(isPreview) {
 
     let yorubaText = '';
     if (document.getElementById('img-yo').checked && yorubaVerse) yorubaText = yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishText) {
-        // Do nothing for empty
-    } else {
-        englishText = '';
-    }
+    if (!document.getElementById('img-en').checked) englishText = '';
 
     let fullText = '';
     if (yorubaText) fullText += yorubaText;
@@ -125,26 +112,32 @@ function getTextData(isPreview) {
     return fullText;
 }
 
+// FIXED PREVIEW LOGIC (Auto-Fits and respects padding)
 function updatePreview() {
     const text = getTextData(true);
     document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`;
-    document.getElementById('preview-text').innerHTML = text;
-    
-    document.getElementById('preview-text').style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
-    document.getElementById('preview-text').style.color = studioColor;
-    document.getElementById('preview-text').style.textAlign = currentAlign;
-    document.getElementById('preview-text').style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
-    
+    const textEl = document.getElementById('preview-text');
+    textEl.innerHTML = text;
+
+    textEl.style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
+    textEl.style.color = studioColor;
+    textEl.style.textAlign = currentAlign;
+    textEl.style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
+
+    // SAFE PADDING (Max 40px in preview)
+    const previewPadding = Math.min(parseInt(document.getElementById('studio-padding').value), 40);
+    textEl.style.padding = previewPadding + 'px';
+
     const box = document.getElementById('image-preview');
     box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
     box.style.background = templates[selectedTemplate];
-    
+
     if (currentVert === 'top') box.style.justifyContent = 'flex-start';
     else if (currentVert === 'bottom') box.style.justifyContent = 'flex-end';
     else box.style.justifyContent = 'center';
 }
 
-// --- PERFECT CANVAS WITH AUTO-FIT AND PARAGRAPH BREAKS ---
+// PERFECT CANVAS WITH CLAMPED PADDING
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -166,7 +159,10 @@ function generateCanvas() {
     const refFontSize = Math.round(width * 0.055);
     let fontSize = Math.round(width * 0.08);
 
-    const padding = Math.round(width * 0.12); 
+    // CLAMPED PADDING FOR CANVAS (Max 15% of width)
+    const rawPadding = parseInt(document.getElementById('studio-padding').value);
+    const padding = Math.min(Math.round(rawPadding * 4), Math.round(width * 0.15));
+
     const maxTextWidth = width - (padding * 2);
     const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
 
