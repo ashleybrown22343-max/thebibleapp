@@ -19,7 +19,6 @@ async function init() {
         const yRes = await fetch('data/yoruba.json');
         if (!yRes.ok) throw new Error("Yoruba data not found");
         yoruba = await yRes.json();
-
         try {
             const eRes = await fetch('data/english_net.json');
             if (eRes.ok) { 
@@ -28,7 +27,6 @@ async function init() {
             }
         } catch (e) {}
 
-        // CRITICAL FIX: Wait for Google Fonts to load before drawing!
         await document.fonts.ready;
 
         buildTemplates(); updatePickerButtons(); updatePreview();
@@ -155,27 +153,25 @@ function getTextData(isPreview) {
     return fullText;
 }
 
-// Unified Layout Engine (Works for both preview and canvas)
+// FIXED AUTO-FIT ENGINE
 function getLayoutParams(width, height, refFontSize) {
     let fontSize, lineHeight, padding;
     if (autoFit) {
-        fontSize = Math.round(width * 0.08);
-        padding = Math.min(Math.round(width * 0.12), Math.round(width * 0.15));
+        // Start with a smaller base and smaller padding to keep font large
+        fontSize = Math.round(width * 0.06);
+        padding = Math.round(width * 0.08);
     } else {
-        fontSize = Math.round(userFontSize * 3); // Scale manual size to canvas
+        fontSize = Math.round(userFontSize * 3);
         padding = Math.min(Math.round(userPadding * 4), Math.round(width * 0.15));
     }
 
-    // Ensure the font is loaded in this context
     const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
     const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = `${fontSize}px "${fontName}"`;
 
     const maxTextWidth = width - (padding * 2);
     const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5);
     const text = getTextData(false);
 
-    // Calculate lines
     function calcLines(fs) {
         ctx.font = `${fs}px "${fontName}"`;
         let totalLines = 0;
@@ -200,7 +196,8 @@ function getLayoutParams(width, height, refFontSize) {
     if (autoFit) {
         let lineH = fontSize * 1.6;
         let lines = calcLines(fontSize);
-        while (lines * lineH > maxTextHeight && fontSize > 30) {
+        // Minimum readable font size (44px canvas / ~14.6px preview)
+        while (lines * lineH > maxTextHeight && fontSize > 44) {
             fontSize -= 2;
             lineH = fontSize * 1.6;
             lines = calcLines(fontSize);
@@ -222,10 +219,8 @@ function updatePreview() {
     textEl.style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
     textEl.style.color = studioColor;
     textEl.style.textAlign = currentAlign;
-    // FIXED SHADOW (Stronger)
     textEl.style.textShadow = currentShadow ? '0 5px 20px rgba(0,0,0,0.8)' : 'none';
 
-    // Scale canvas params down to preview size
     const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
     const params = getLayoutParams(350 * 3, boxHeight * 3, 30);
     textEl.style.fontSize = (params.fontSize / 3) + 'px';
@@ -249,23 +244,19 @@ function generateCanvas() {
     canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    // 1. Background Gradient
     const grad = ctx.createLinearGradient(0, 0, width, height);
     const parts = templates[selectedTemplate].match(/#[0-9a-fA-F]{6}/g);
     grad.addColorStop(0, parts ? parts[0] : '#1a237e');
     grad.addColorStop(1, parts ? parts[1] : '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
 
-    // 2. Get Text
     const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
     const refFontSize = Math.round(width * 0.055);
     const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
 
-    // 3. Get Layout (Auto-fit or Manual)
     const { fontSize, lineHeight, padding } = getLayoutParams(width, height, refFontSize);
 
-    // 4. Draw Reference
     ctx.save();
     if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
     ctx.fillStyle = studioColor;
@@ -274,12 +265,10 @@ function generateCanvas() {
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    // 5. Draw Main Text
     ctx.font = `${fontSize}px "${fontName}"`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
 
-    // Calculate vertical position
     const maxTextWidth = width - (padding * 2);
     let lineCount = 0;
     const paragraphs = text.split('\n');
@@ -318,7 +307,6 @@ function generateCanvas() {
         drawY += lineHeight;
     });
 
-    // 6. Watermark
     if (currentWatermark) {
         ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
