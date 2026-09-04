@@ -1,9 +1,9 @@
 let yoruba = [], english = [], englishMap = {};
-let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1, currentVerse = 1;
+let currentBook = "PSA", currentBookName = "Psalms", currentChapter = 23, currentVerse = 6;
 let studioColor = 'white', studioFont = 'sans', selectedTemplate = 0;
 let currentAlign = 'center', currentVert = 'center';
-let currentRatio = 'square', currentWatermark = true;
-let currentLineSpacing = parseFloat(document.getElementById('studio-line-spacing') ? document.getElementById('studio-line-spacing').value : '1.6');
+let currentRatio = 'square', currentWatermark = true, currentShadow = true;
+let currentPadding = 80;
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
@@ -82,15 +82,21 @@ function setVert(vert) { currentVert = vert; updatePreview(); }
 function setRatio(ratio) {
     currentRatio = ratio;
     const preview = document.getElementById('image-preview');
-    if (ratio === 'square') preview.style.height = '300px';
-    if (ratio === 'portrait') preview.style.height = '400px';
-    if (ratio === 'landscape') preview.style.height = '200px';
+    if (ratio === 'square') preview.style.height = '350px';
+    if (ratio === 'portrait') preview.style.height = '450px';
+    if (ratio === 'landscape') preview.style.height = '250px';
     updatePreview();
 }
 function toggleWatermark() {
     currentWatermark = !currentWatermark;
     const btn = document.getElementById('watermark-btn');
     btn.textContent = currentWatermark ? 'ON' : 'OFF';
+    updatePreview();
+}
+function toggleShadow() {
+    currentShadow = !currentShadow;
+    const btn = document.getElementById('shadow-btn');
+    btn.textContent = currentShadow ? 'ON' : 'OFF';
     updatePreview();
 }
 
@@ -128,28 +134,49 @@ function updatePreview() {
     
     let text = '';
     if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishVerse) text += (text ? '<br><br>' : '') + englishVerse;
+    if (document.getElementById('img-en').checked && englishVerse) text += (text ? '\n\n' : '') + englishVerse;
     
     const textEl = document.getElementById('preview-text');
     textEl.innerHTML = text;
-    textEl.style.fontFamily = studioFont === 'sans' ? 'sans-serif' : 'serif';
+    textEl.style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
     textEl.style.color = studioColor;
     textEl.style.fontSize = document.getElementById('studio-font-size').value + 'px';
     textEl.style.lineHeight = document.getElementById('studio-line-spacing').value;
     textEl.style.textAlign = currentAlign;
+    textEl.style.padding = document.getElementById('studio-padding').value + 'px';
+    textEl.style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
     
-    // vertical align
     const preview = document.getElementById('image-preview');
     if (currentVert === 'top') { preview.style.justifyContent = 'flex-start'; }
     else if (currentVert === 'bottom') { preview.style.justifyContent = 'flex-end'; }
     else { preview.style.justifyContent = 'center'; }
     
-    if (currentWatermark) { textEl.innerHTML += '<div style="font-size:10px; margin-top:30px; opacity:0.5;">Bibeli Mimo</div>'; }
+    if (currentWatermark) { textEl.innerHTML += '<div style="font-size:12px; margin-top:40px; opacity:0.6; font-family:Poppins;">Bibeli Mimo</div>'; }
     
     document.getElementById('image-preview').style.background = templates[selectedTemplate];
 }
 
-// CANVAS LOGIC FOR REAL IMAGE DOWNLOAD & SHARE
+// WORLD-CLASS CANVAS GENERATOR
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let testLine, metrics, testWidth;
+    
+    for (let n = 0; n < words.length; n++) {
+        testLine = line + words[n] + ' ';
+        metrics = ctx.measureText(testLine);
+        testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+            ctx.fillText(line.trim(), x, y);
+            line = words[n] + ' ';
+            y += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    ctx.fillText(line.trim(), x, y);
+}
+
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -172,55 +199,57 @@ function generateCanvas() {
     }
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
-    
-    // Draw Text
-    ctx.fillStyle = studioColor;
-    ctx.font = (studioFont === 'sans' ? 'sans-serif' : 'serif') + ' ' + (document.getElementById('studio-font-size').value * 4) + 'px';
-    ctx.textAlign = currentAlign;
-    ctx.textBaseline = 'middle';
-    
+
+    // Determine Fonts
+    const isSans = studioFont === 'sans';
+    const mainFont = isSans ? 'Poppins' : 'Playfair Display';
+    const refFont = isSans ? 'Poppins' : 'Playfair Display';
+
+    // Parse Text
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
     const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
     
     let text = '';
     if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishVerse) text += (text ? '\n\n' : '') + englishVerse;
-    
+    if (document.getElementById('img-en').checked && englishVerse) text += (text ? ' ' : '') + englishVerse;
+
+    const fontSize = parseInt(document.getElementById('studio-font-size').value) * 4;
+    const lineHeight = fontSize * parseFloat(document.getElementById('studio-line-spacing').value);
+    const padding = parseInt(document.getElementById('studio-padding').value) * 4;
+    const maxTextWidth = width - (padding * 2);
+    const verticalPos = currentVert === 'top' ? padding : currentVert === 'bottom' ? height - padding : height / 2;
+    const startY = verticalPos - (lineHeight * Math.ceil(text.length / (maxTextWidth / fontSize)));
+
     // Draw Reference
-    ctx.font = 'bold ' + (document.getElementById('studio-font-size').value * 2.5) + 'px ' + (studioFont === 'sans' ? 'sans-serif' : 'serif');
-    ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, height / 6);
-    
-    // Wrap Text
-    const maxWidth = width - 100;
-    const lineHeight = document.getElementById('studio-line-spacing').value * (document.getElementById('studio-font-size').value * 4);
-    let y = height / 2;
-    if (currentVert === 'top') y = height / 4;
-    if (currentVert === 'bottom') y = height / 1.5;
-    
-    ctx.font = (studioFont === 'sans' ? 'sans-serif' : 'serif') + ' ' + (document.getElementById('studio-font-size').value * 4) + 'px';
-    let line = '';
-    const words = text.split(' ');
-    
-    for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        const testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
-            ctx.fillText(line.trim(), width / 2, y);
-            line = words[n] + ' ';
-            y += lineHeight;
-        } else {
-            line = testLine;
-        }
+    ctx.save();
+    if (currentShadow) {
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 5;
     }
-    ctx.fillText(line.trim(), width / 2, y);
+    ctx.fillStyle = studioColor;
+    ctx.font = `bold ${fontSize * 0.5}px ${refFont}`;
+    ctx.textAlign = currentAlign;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, padding);
+
+    // Draw Main Text
+    ctx.font = `${fontSize}px ${mainFont}`;
+    ctx.lineWidth = 10;
+    let dynamicY = startY + (lineHeight * 1.5);
+    if(currentVert === 'center') dynamicY = height / 2 - (lineHeight * 2);
     
+    wrapText(ctx, text, width / 2, dynamicY, maxTextWidth, lineHeight);
+    
+    // Watermark
     if (currentWatermark) {
-        ctx.font = '12px sans-serif';
+        ctx.font = `${fontSize * 0.2}px Poppins`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillText('Bibeli Mimo', width / 2, height - 30);
+        ctx.fillText('Bibeli Mimo', width / 2, height - (padding / 2));
     }
+    
+    ctx.restore();
     
     return canvas;
 }
