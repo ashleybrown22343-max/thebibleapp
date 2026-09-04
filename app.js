@@ -114,46 +114,63 @@ function toggleSearch() { const o = document.getElementById('search-overlay'); i
 function closeSearch() { toggleSearch(); }
 
 // ====== NEW ACCURATE SEARCH ENGINE ======
+// ====== CRASH-PROOF SEARCH ENGINE ======
+let searchTimeout;
 document.getElementById('search-input').addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase().trim();
-    if (q.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
+    
+    // Clear previous timer
+    clearTimeout(searchTimeout);
+    
+    // If too short, clear results
+    if (q.length < 2) {
+        document.getElementById('search-results').innerHTML = '';
+        return;
+    }
 
-    let results = [];
-    const searchYo = document.getElementById('search-yo').checked;
-    const searchEn = document.getElementById('search-en').checked;
+    // Debounce: Wait 400ms after typing stops
+    searchTimeout = setTimeout(() => {
+        let results = [];
+        const searchYo = document.getElementById('search-yo').checked;
+        const searchEn = document.getElementById('search-en').checked;
+        const MAX_RESULTS = 50; // Prevents crash
 
-    // 1. Search the ENTIRE Yoruba JSON
-    if (searchYo) {
-        yoruba.forEach(v => {
-            if (v.text.toLowerCase().includes(q)) {
-                results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'yo' });
+        // 1. Search Yoruba (Break at 50 results)
+        if (searchYo) {
+            for (let i = 0; i < yoruba.length; i++) {
+                if (yoruba[i].text.toLowerCase().includes(q)) {
+                    results.push({ book: yoruba[i].book, chapter: yoruba[i].chapter, verse: yoruba[i].verse, text: yoruba[i].text, lang: 'yo' });
+                    if (results.length >= MAX_RESULTS) break;
+                }
             }
-        });
-    }
+        }
 
-    // 2. Search the ENTIRE English JSON
-    if (searchEn) {
-        english.forEach(v => {
-            if (v.text.toLowerCase().includes(q)) {
-                results.push({ book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, lang: 'en' });
+        // 2. Search English (Break at 50 results)
+        if (searchEn) {
+            for (let i = 0; i < english.length; i++) {
+                if (english[i].text.toLowerCase().includes(q)) {
+                    results.push({ book: english[i].book, chapter: english[i].chapter, verse: english[i].verse, text: english[i].text, lang: 'en' });
+                    if (results.length >= MAX_RESULTS) break;
+                }
             }
+        }
+
+        // 3. Highlight the exact search term
+        function highlightText(text, q) {
+            const regex = new RegExp(`(${q})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        // 4. Show results
+        let html = '';
+        results.forEach(v => {
+            const displayText = highlightText(v.text, q);
+            html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse} (${v.lang === 'yo' ? 'Yoruba' : 'English'})</strong><p>${displayText}</p></div>`;
         });
-    }
-
-    // 3. Highlight the exact search term
-    function highlightText(text, q) {
-        const regex = new RegExp(`(${q})`, 'gi');
-        return text.replace(regex, '<span class="search-highlight">$1</span>');
-    }
-
-    // 4. Show EVERY result with the language label
-    let html = '';
-    results.forEach(v => {
-        const displayText = highlightText(v.text, q);
-        html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse} (${v.lang === 'yo' ? 'Yoruba' : 'English'})</strong><p>${displayText}</p></div>`;
-    });
-    document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
+        document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
+    }, 400);
 });
+// ==========================================
 // ===========================================
 
 function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; closeSearch(); loadChapter(); }
