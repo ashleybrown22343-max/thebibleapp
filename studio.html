@@ -13,8 +13,14 @@
         <div style="width: 50px;"></div>
     </header>
 
+    <!-- Sticky Action Bar -->
+    <div class="sticky-actions">
+        <button class="primary-btn" onclick="downloadImage()">Download</button>
+        <button class="primary-btn share" onclick="shareImage()">Share Image</button>
+    </div>
+
     <div class="studio-container">
-        <!-- STICKY PREVIEW AREA -->
+        <!-- Sticky Preview -->
         <div class="sticky-preview">
             <div id="image-preview" class="preview-card">
                 <h3 id="preview-ref">Genesis 1:1</h3>
@@ -22,7 +28,7 @@
             </div>
         </div>
 
-        <!-- CUSTOM PICKERS (No Native Selects) -->
+        <!-- Custom Verse Picker -->
         <div class="controls-section">
             <h3>Select Verse</h3>
             <div class="picker-buttons">
@@ -32,7 +38,6 @@
             </div>
         </div>
 
-        <!-- CUSTOM MODAL FOR PICKING -->
         <div id="picker-modal" class="modal-overlay" onclick="closeModal()">
             <div class="modal-content">
                 <h3 id="modal-title">Select Book</h3>
@@ -40,72 +45,30 @@
             </div>
         </div>
 
-        <!-- TEXT CONTROLS -->
+        <!-- Killer Feature: Layout & Design -->
+        <div class="controls-section">
+            <h3>Layout</h3>
+            <div class="control-row"><label>Aspect Ratio</label><div class="ratio-buttons"><button onclick="setRatio('square')">1:1</button><button onclick="setRatio('portrait')">4:5</button><button onclick="setRatio('landscape')">16:9</button></div></div>
+            <div class="control-row"><label>Text Position</label><div class="align-buttons"><button onclick="setVert('top')">Top</button><button onclick="setVert('center')">Center</button><button onclick="setVert('bottom')">Bottom</button></div></div>
+            <div class="control-row"><label>Watermark</label><button id="watermark-btn" onclick="toggleWatermark()">ON</button></div>
+        </div>
+
         <div class="controls-section">
             <h3>Text Settings</h3>
-            
-            <div class="control-row">
-                <label>Font Style</label>
-                <button id="studio-font-btn" onclick="toggleFont()">Sans</button>
-            </div>
-
-            <div class="control-row">
-                <label>Text Size</label>
-                <input type="range" id="studio-font-size" min="16" max="48" value="24" oninput="updatePreview()">
-            </div>
-
-            <div class="control-row">
-                <label>Text Color</label>
-                <div class="color-buttons">
-                    <button style="background:#fff; color:#000;" onclick="setColor('white')">A</button>
-                    <button style="background:#000; color:#fff;" onclick="setColor('black')">A</button>
-                    <button style="background:#FFD700; color:#000;" onclick="setColor('gold')">A</button>
-                    <button style="background:#1E90FF; color:#fff;" onclick="setColor('blue')">A</button>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <label>Text Alignment</label>
-                <div class="align-buttons">
-                    <button onclick="setAlign('left')">Left</button>
-                    <button onclick="setAlign('center')">Center</button>
-                    <button onclick="setAlign('right')">Right</button>
-                </div>
-            </div>
+            <div class="control-row"><label>Font Style</label><button id="studio-font-btn" onclick="toggleFont()">Sans</button></div>
+            <div class="control-row"><label>Text Size</label><input type="range" id="studio-font-size" min="16" max="48" value="24" oninput="updatePreview()"></div>
+            <div class="control-row"><label>Line Spacing</label><input type="range" id="studio-line-spacing" min="1.0" max="2.5" step="0.1" value="1.6" oninput="updatePreview()"></div>
+            <div class="control-row"><label>Text Color</label><div class="color-buttons"><button style="background:#fff; color:#000;" onclick="setColor('white')">A</button><button style="background:#000; color:#fff;" onclick="setColor('black')">A</button><button style="background:#FFD700; color:#000;" onclick="setColor('gold')">A</button><button style="background:#1E90FF; color:#fff;" onclick="setColor('blue')">A</button></div></div>
+            <div class="control-row"><label>Alignment</label><div class="align-buttons"><button onclick="setAlign('left')">Left</button><button onclick="setAlign('center')">Center</button><button onclick="setAlign('right')">Right</button></div></div>
+            <div class="control-row"><label>Language</label><div class="lang-toggle"><label><input type="checkbox" id="img-yo" checked onchange="updatePreview()"> Yoruba</label><label><input type="checkbox" id="img-en" checked onchange="updatePreview()"> English</label></div></div>
         </div>
 
-        <!-- LANGUAGE & ASPECT RATIO CONTROLS -->
-        <div class="controls-section">
-            <h3>Language & Size</h3>
-            
-            <div class="control-row">
-                <label>Language</label>
-                <div class="lang-toggle">
-                    <label><input type="checkbox" id="img-yo" checked onchange="updatePreview()"> Yoruba</label>
-                    <label><input type="checkbox" id="img-en" checked onchange="updatePreview()"> English</label>
-                </div>
-            </div>
-
-            <div class="control-row">
-                <label>Aspect Ratio</label>
-                <div class="ratio-buttons">
-                    <button onclick="setRatio('square')">1:1</button>
-                    <button onclick="setRatio('portrait')">4:5</button>
-                    <button onclick="setRatio('landscape')">16:9</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 500+ TEMPLATES -->
         <div class="templates-section">
             <h3>500+ Templates</h3>
             <div id="template-grid" class="template-grid"></div>
         </div>
-
-        <!-- SHARE BUTTON -->
-        <button class="share-btn" onclick="shareVerse()">Share Verse</button>
     </div>
 
     <script src="studio.js"></script>
 </body>
-                    </html>
+    </html>
