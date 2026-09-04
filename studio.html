@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Image Studio</title>
+    <title>Bibeli Mimo - Image Studio</title>
     <link rel="stylesheet" href="studio.css">
 </head>
 <body>
@@ -14,8 +14,16 @@
     </header>
 
     <div class="studio-container">
-        <!-- Custom Pickers -->
-        <div class="picker-section">
+        <!-- STICKY PREVIEW AREA -->
+        <div class="sticky-preview">
+            <div id="image-preview" class="preview-card">
+                <h3 id="preview-ref">Genesis 1:1</h3>
+                <p id="preview-text">Loading...</p>
+            </div>
+        </div>
+
+        <!-- CUSTOM PICKERS (No Native Selects) -->
+        <div class="controls-section">
             <h3>Select Verse</h3>
             <div class="picker-buttons">
                 <button id="pick-book" class="picker-btn">Genesis</button>
@@ -24,7 +32,7 @@
             </div>
         </div>
 
-        <!-- Custom Modal for Pickers -->
+        <!-- CUSTOM MODAL FOR PICKING -->
         <div id="picker-modal" class="modal-overlay" onclick="closeModal()">
             <div class="modal-content">
                 <h3 id="modal-title">Select Book</h3>
@@ -32,25 +40,20 @@
             </div>
         </div>
 
-        <!-- Preview -->
-        <div class="preview-section">
-            <div id="image-preview" class="preview-card">
-                <h3 id="preview-ref">Genesis 1:1</h3>
-                <p id="preview-text">Loading...</p>
-            </div>
-        </div>
-
-        <!-- Text Controls -->
+        <!-- TEXT CONTROLS -->
         <div class="controls-section">
             <h3>Text Settings</h3>
+            
             <div class="control-row">
                 <label>Font Style</label>
                 <button id="studio-font-btn" onclick="toggleFont()">Sans</button>
             </div>
+
             <div class="control-row">
                 <label>Text Size</label>
                 <input type="range" id="studio-font-size" min="16" max="48" value="24" oninput="updatePreview()">
             </div>
+
             <div class="control-row">
                 <label>Text Color</label>
                 <div class="color-buttons">
@@ -60,6 +63,21 @@
                     <button style="background:#1E90FF; color:#fff;" onclick="setColor('blue')">A</button>
                 </div>
             </div>
+
+            <div class="control-row">
+                <label>Text Alignment</label>
+                <div class="align-buttons">
+                    <button onclick="setAlign('left')">Left</button>
+                    <button onclick="setAlign('center')">Center</button>
+                    <button onclick="setAlign('right')">Right</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LANGUAGE & ASPECT RATIO CONTROLS -->
+        <div class="controls-section">
+            <h3>Language & Size</h3>
+            
             <div class="control-row">
                 <label>Language</label>
                 <div class="lang-toggle">
@@ -67,18 +85,27 @@
                     <label><input type="checkbox" id="img-en" checked onchange="updatePreview()"> English</label>
                 </div>
             </div>
+
+            <div class="control-row">
+                <label>Aspect Ratio</label>
+                <div class="ratio-buttons">
+                    <button onclick="setRatio('square')">1:1</button>
+                    <button onclick="setRatio('portrait')">4:5</button>
+                    <button onclick="setRatio('landscape')">16:9</button>
+                </div>
+            </div>
         </div>
 
-        <!-- 500 Templates -->
+        <!-- 500+ TEMPLATES -->
         <div class="templates-section">
-            <h3>Templates</h3>
+            <h3>500+ Templates</h3>
             <div id="template-grid" class="template-grid"></div>
         </div>
 
-        <!-- Share Button (Shares the Verse, not a file) -->
+        <!-- SHARE BUTTON -->
         <button class="share-btn" onclick="shareVerse()">Share Verse</button>
     </div>
 
     <script src="studio.js"></script>
 </body>
-</html>
+                    </html>
