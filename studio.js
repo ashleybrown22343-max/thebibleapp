@@ -1,15 +1,14 @@
 let yoruba = [], english = [], englishMap = {};
-let currentBook = "PSA", currentBookName = "Psalms", currentChapter = 23, currentVerse = 6;
+let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1, currentVerse = 1; // DEFAULT IS GENESIS 1:1
 let studioColor = 'white', studioFont = 'sans', selectedTemplate = 0;
 let currentAlign = 'center', currentVert = 'center';
 let currentRatio = 'square', currentWatermark = true, currentShadow = true;
 
-// AUTO-FIT vs MANUAL
-let autoFit = true;
+// MANUAL OVERRIDE STATE
+let autoFit = true; // true means automatic, false means manual
 let userFontSize = 32;
 let userLineSpacing = 1.7;
 let userPadding = 20;
-const defaultFontSize = 32, defaultLineSpacing = 1.7, defaultPadding = 20;
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
@@ -19,6 +18,7 @@ async function init() {
         const yRes = await fetch('data/yoruba.json');
         if (!yRes.ok) throw new Error("Yoruba data not found");
         yoruba = await yRes.json();
+
         try {
             const eRes = await fetch('data/english_net.json');
             if (eRes.ok) { 
@@ -27,15 +27,11 @@ async function init() {
             }
         } catch (e) {}
 
-        await document.fonts.ready;
-
         buildTemplates(); updatePickerButtons(); updatePreview();
         document.getElementById('pick-book').onclick = () => openModal('book');
         document.getElementById('pick-chapter').onclick = () => openModal('chapter');
         document.getElementById('pick-verse').onclick = () => openModal('verse');
-    } catch(e) { 
-        document.getElementById('preview-text').innerHTML = "Error: " + e.message; 
-    }
+    } catch(e) { document.getElementById('preview-text').innerHTML = "Error: " + e.message; }
 }
 
 function updatePickerButtons() {
@@ -87,40 +83,48 @@ function setRatio(ratio) { currentRatio = ratio; updatePreview(); }
 function toggleWatermark() { currentWatermark = !currentWatermark; document.getElementById('watermark-btn').textContent = currentWatermark ? 'ON' : 'OFF'; updatePreview(); }
 function toggleShadow() { currentShadow = !currentShadow; document.getElementById('shadow-btn').textContent = currentShadow ? 'ON' : 'OFF'; updatePreview(); }
 
-// Manual slider handlers
+// MANUAL CONTROLS
 function manualFontSize(val) {
     autoFit = false;
     userFontSize = parseInt(val);
-    document.getElementById('studio-font-size').value = val;
     updatePreview();
 }
 function manualLineSpacing(val) {
     autoFit = false;
     userLineSpacing = parseFloat(val);
-    document.getElementById('studio-line-spacing').value = val;
     updatePreview();
 }
 function manualPadding(val) {
     autoFit = false;
     userPadding = parseInt(val);
-    document.getElementById('studio-padding').value = val;
     updatePreview();
 }
 
+// AUTO-FIT BUTTON (Only resets Text Size, Not the Verse)
 function resetToAutoFit() {
     autoFit = true;
-    userFontSize = defaultFontSize;
-    userLineSpacing = defaultLineSpacing;
-    userPadding = defaultPadding;
-    document.getElementById('studio-font-size').value = defaultFontSize;
-    document.getElementById('studio-line-spacing').value = defaultLineSpacing;
-    document.getElementById('studio-padding').value = defaultPadding;
+    userFontSize = 32;
+    userLineSpacing = 1.7;
+    userPadding = 20;
+    document.getElementById('studio-font-size').value = 32;
+    document.getElementById('studio-line-spacing').value = 1.7;
+    document.getElementById('studio-padding').value = 20;
     updatePreview();
 }
 
+// FIXED DUPLICATE TEMPLATES (Using Set)
 const templates = [];
+const seen = new Set();
 const colors = ['#1a237e','#b71c1c','#4a148c','#e65100','#00695c','#1565c0','#212121','#880e4f','#33691e','#0d47a1','#5d4037','#01579b','#2e7d32','#37474f','#8e24aa','#00838f','#bf360c','#3e2723','#64b5f6','#FFD700'];
-for (let i=0; i<500; i++) { const c1 = colors[i % colors.length]; const c2 = colors[(i+7) % colors.length]; templates.push(`linear-gradient(135deg, ${c1}, ${c2})`); }
+for (let i=0; i<500; i++) {
+    const c1 = colors[i % colors.length];
+    const c2 = colors[(i * 7 + 3) % colors.length];
+    const bg = `linear-gradient(135deg, ${c1}, ${c2})`;
+    if (!seen.has(bg)) {
+        seen.add(bg);
+        templates.push(bg);
+    }
+}
 
 function buildTemplates() {
     const grid = document.getElementById('template-grid'); grid.innerHTML = '';
@@ -153,63 +157,7 @@ function getTextData(isPreview) {
     return fullText;
 }
 
-// FIXED AUTO-FIT ENGINE
-function getLayoutParams(width, height, refFontSize) {
-    let fontSize, lineHeight, padding;
-    if (autoFit) {
-        // Start with a smaller base and smaller padding to keep font large
-        fontSize = Math.round(width * 0.06);
-        padding = Math.round(width * 0.08);
-    } else {
-        fontSize = Math.round(userFontSize * 3);
-        padding = Math.min(Math.round(userPadding * 4), Math.round(width * 0.15));
-    }
-
-    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
-    const ctx = document.createElement('canvas').getContext('2d');
-
-    const maxTextWidth = width - (padding * 2);
-    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5);
-    const text = getTextData(false);
-
-    function calcLines(fs) {
-        ctx.font = `${fs}px "${fontName}"`;
-        let totalLines = 0;
-        const paragraphs = text.split('\n');
-        paragraphs.forEach(para => {
-            const words = para.split(' ');
-            let line = '';
-            for (let i=0; i<words.length; i++) {
-                const testLine = line + words[i] + ' ';
-                if (ctx.measureText(testLine).width > maxTextWidth && i > 0) {
-                    totalLines++;
-                    line = words[i] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            totalLines++;
-        });
-        return totalLines;
-    }
-
-    if (autoFit) {
-        let lineH = fontSize * 1.6;
-        let lines = calcLines(fontSize);
-        // Minimum readable font size (44px canvas / ~14.6px preview)
-        while (lines * lineH > maxTextHeight && fontSize > 44) {
-            fontSize -= 2;
-            lineH = fontSize * 1.6;
-            lines = calcLines(fontSize);
-        }
-        lineHeight = lineH;
-    } else {
-        lineHeight = fontSize * userLineSpacing;
-    }
-
-    return { fontSize, lineHeight, padding };
-}
-
+// PREVIEW LOGIC (Supports Manual + AutoFit)
 function updatePreview() {
     const text = getTextData(true);
     document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`;
@@ -219,16 +167,39 @@ function updatePreview() {
     textEl.style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
     textEl.style.color = studioColor;
     textEl.style.textAlign = currentAlign;
-    textEl.style.textShadow = currentShadow ? '0 5px 20px rgba(0,0,0,0.8)' : 'none';
+    textEl.style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
 
-    const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
-    const params = getLayoutParams(350 * 3, boxHeight * 3, 30);
-    textEl.style.fontSize = (params.fontSize / 3) + 'px';
-    textEl.style.lineHeight = params.lineHeight / (params.fontSize / 3);
-    textEl.style.padding = (params.padding / 3) + 'px';
+    // Decide preview font size (manual vs auto)
+    let previewFontSize = userFontSize;
+    let previewPadding = Math.min(userPadding, 40);
+    let previewLineHeight = userLineSpacing;
+
+    if (autoFit) {
+        // Use the canvas calculations to get the auto-fit size, then divide by 3 for preview
+        const canvasSize = generateCanvas().width; // (We won't actually generate, just use the logic)
+        // Simplified auto-fit for preview: shrink until it fits in the box
+        const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
+        let tempSize = 32;
+        while (tempSize > 15) {
+            textEl.style.fontSize = tempSize + 'px';
+            textEl.style.lineHeight = 1.6;
+            textEl.style.padding = '20px';
+            if (textEl.scrollHeight <= boxHeight - 40) {
+                previewFontSize = tempSize;
+                previewPadding = 20;
+                previewLineHeight = 1.6;
+                break;
+            }
+            tempSize -= 2;
+        }
+    }
+
+    textEl.style.fontSize = previewFontSize + 'px';
+    textEl.style.lineHeight = previewLineHeight;
+    textEl.style.padding = previewPadding + 'px';
 
     const box = document.getElementById('image-preview');
-    box.style.height = boxHeight + 'px';
+    box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
     box.style.background = templates[selectedTemplate];
 
     if (currentVert === 'top') box.style.justifyContent = 'flex-start';
@@ -236,6 +207,7 @@ function updatePreview() {
     else box.style.justifyContent = 'center';
 }
 
+// CANVAS GENERATOR (Supports Manual + AutoFit)
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -252,35 +224,86 @@ function generateCanvas() {
 
     const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
-    const refFontSize = Math.round(width * 0.055);
-    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
 
-    const { fontSize, lineHeight, padding } = getLayoutParams(width, height, refFontSize);
+    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
+    const refFontSize = Math.round(width * 0.055);
+    let fontSize, padding, lineHeight;
+
+    if (autoFit) {
+        fontSize = Math.round(width * 0.08);
+        padding = Math.round(width * 0.12);
+    } else {
+        fontSize = Math.round(userFontSize * 3); // scale manual size to canvas
+        padding = Math.min(Math.round(userPadding * 4), Math.round(width * 0.15));
+    }
+
+    const maxTextWidth = width - (padding * 2);
+    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
+
+    if (autoFit) {
+        lineHeight = fontSize * 1.6;
+        let tempFont = fontSize;
+        let lineCount = 0;
+        function getLineCount(currentFontSize) {
+            ctx.font = `${currentFontSize}px ${fontName}`;
+            let totalLines = 0;
+            const paragraphs = text.split('\n');
+            paragraphs.forEach(paragraph => {
+                const words = paragraph.split(' ');
+                let line = '';
+                for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + ' ';
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxTextWidth && n > 0) {
+                        totalLines++;
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                totalLines++;
+            });
+            return totalLines;
+        }
+        while (tempFont > 30) {
+            lineHeight = tempFont * 1.6;
+            lineCount = getLineCount(tempFont);
+            if (lineCount * lineHeight <= maxTextHeight) {
+                fontSize = tempFont;
+                break;
+            }
+            tempFont -= 2;
+        }
+    } else {
+        lineHeight = fontSize * userLineSpacing;
+    }
 
     ctx.save();
-    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
+    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
     ctx.fillStyle = studioColor;
-    ctx.font = `bold ${refFontSize}px "${fontName}"`;
+    ctx.font = `bold ${refFontSize}px ${fontName}`;
     ctx.textAlign = currentAlign;
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    ctx.font = `${fontSize}px "${fontName}"`;
+    ctx.font = `${fontSize}px ${fontName}`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
-
-    const maxTextWidth = width - (padding * 2);
+    
     let lineCount = 0;
     const paragraphs = text.split('\n');
-    paragraphs.forEach(para => {
-        const words = para.split(' ');
+    paragraphs.forEach(paragraph => {
+        const words = paragraph.split(' ');
         let line = '';
-        for (let i=0; i<words.length; i++) {
-            const testLine = line + words[i] + ' ';
-            if (ctx.measureText(testLine).width > maxTextWidth && i>0) {
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxTextWidth && n > 0) {
                 lineCount++;
-                line = words[i] + ' ';
-            } else line = testLine;
+                line = words[n] + ' ';
+            } else {
+                line = testLine;
+            }
         }
         lineCount++;
     });
@@ -292,23 +315,26 @@ function generateCanvas() {
     else startY = (height / 2) - (totalTextHeight / 2);
 
     let drawY = startY;
-    paragraphs.forEach(para => {
-        const words = para.split(' ');
+    paragraphs.forEach(paragraph => {
+        const words = paragraph.split(' ');
         let line = '';
-        for (let i=0; i<words.length; i++) {
-            const testLine = line + words[i] + ' ';
-            if (ctx.measureText(testLine).width > maxTextWidth && i>0) {
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxTextWidth && n > 0) {
                 ctx.fillText(line.trim(), width / 2, drawY);
-                line = words[i] + ' ';
+                line = words[n] + ' ';
                 drawY += lineHeight;
-            } else line = testLine;
+            } else {
+                line = testLine;
+            }
         }
         ctx.fillText(line.trim(), width / 2, drawY);
         drawY += lineHeight;
     });
 
     if (currentWatermark) {
-        ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
+        ctx.font = `${Math.round(width * 0.02)}px Poppins`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.textBaseline = 'middle';
         ctx.fillText('Bibeli Mimo', width / 2, height - (padding * 0.4));
