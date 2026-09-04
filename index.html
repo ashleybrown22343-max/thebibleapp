@@ -4,110 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bibeli Mimo</title>
-    <style>
-        :root { --bg: #f8f9fa; --text: #212529; --card: #ffffff; --accent: #f59e0b; --border: #e9ecef; --header: #0f172a; --font: 'Segoe UI', sans-serif; }
-        body.serif { --font: 'Georgia', serif; }
-        body.dark { --bg: #121212; --text: #e0e0e0; --card: #1e1e1e; --border: #333; --header: #000; }
-        body.church { --bg: #000; --text: #ffff00; --card: #000; --border: #ffff00; --header: #000; font-size: 24px; line-height: 1.8; }
-        body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text); padding-bottom: 70px; transition: 0.3s; }
-        .splash { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--header); color: white; }
-        .header { background: var(--header); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header-actions { display: flex; gap: 15px; } .header h2 { margin: 0; font-size: 20px; } .header p { margin: 0; font-size: 12px; opacity: 0.8; }
-        .icon-btn { background: none; border: none; color: var(--text); cursor: pointer; } .header .icon-btn { color: white; }
-        .icon { width: 24px; height: 24px; } .icon-lg { width: 32px; height: 32px; }
-        .screen { display: none; padding: 20px; } .screen.active { display: block; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 15px; }
-        .card:active { transform: scale(0.98); }
-        .continue-card { border-left: 5px solid var(--accent); } .plan-card { border-left: 5px solid #1a73e8; } .streak-card { border-left: 5px solid #d32f2f; }
-        .votd-card { background: linear-gradient(135deg, #1a237e, #0f172a); color: white; display: block; cursor: default; }
-        .card-content h3 { margin: 0 0 5px 0; font-size: 18px; } .card-content p { margin: 0; font-size: 14px; opacity: 0.7; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-btn { background: none; border: none; color: var(--text); opacity: 0.6; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .nav-btn.active { color: var(--accent); opacity: 1; }
-        .section-title { font-weight: 700; margin: 20px 0 10px; font-size: 18px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .grid-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; text-align: center; font-weight: 600; cursor: pointer; }
-        .grid-item.red { color: #d32f2f; }
-        .history-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; }
-        .history-item { min-width: 120px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; font-weight: 600; }
-        .reading-content { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .verse-container { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); cursor: pointer; }
-        .verse-number { font-weight: 800; color: var(--accent); font-size: 24px; display: block; margin-bottom: 5px; }
-        .yoruba-text { font-weight: 600; font-size: 1.2em; margin: 8px 0; } .english-text { opacity: 0.7; font-size: 0.95em; margin: 0; }
-        .highlight-yellow { background-color: #fff9c4; } .highlight-green { background-color: #c8e6c9; } .highlight-blue { background-color: #bbdefb; }
-        .note-text { font-style: italic; color: #555; background: var(--bg); padding: 5px; border-radius: 4px; margin-top: 8px; }
-        .chapter-nav { display: flex; justify-content: space-between; margin-top: 20px; } .chapter-nav button { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px 20px; color: var(--text); font-size: 16px; cursor: pointer; }
-        .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; display: none; }
-        .action-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-radius: 20px 20px 0 0; z-index: 401; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
-        .action-sheet.show { transform: translateY(0); }
-        .sheet-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
-        .sheet-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 5px; background: var(--bg); border-radius: 10px; cursor: pointer; font-size: 12px; }
-        .sheet-item svg { color: var(--accent); margin-bottom: 5px; }
-        .cancel-btn { width: 100%; padding: 15px; background: var(--bg); border: none; border-radius: 10px; font-weight: bold; color: var(--text); cursor: pointer; }
-        .note-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border-radius: 12px; z-index: 401; padding: 20px; display: none; }
-        .note-modal textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; font-size: 16px; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; } .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; }
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 300; display: none; }
-        .overlay-header { padding: 20px; background: var(--header); display: flex; gap: 10px; align-items: center; }
-        .overlay-header input { flex: 1; padding: 12px; border-radius: 8px; border: none; font-size: 16px; }
-        .overlay-header button { background: none; border: none; color: white; font-weight: bold; }
-        .search-filters { display: flex; gap: 15px; padding: 10px 20px; background: var(--card); border-bottom: 1px solid var(--border); }
-        .search-filters label { display: flex; align-items: center; gap: 5px; font-size: 14px; font-weight: bold; }
-        #search-results { padding: 20px; }
-        .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; background: none; border: none; font-weight: bold; color: var(--text); border-bottom: 3px solid transparent; }
-        .tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
-        .floating-btn { position: fixed; bottom: 90px; right: 20px; background: var(--accent); border: none; border-radius: 50%; width: 60px; height: 60px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; z-index: 200; display: flex; justify-content: center; align-items: center; }
-        .parallel-mode .verse-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .parallel-mode .verse-number { grid-column: 1 / -1; }
-        /* Image Modal CSS */
-        .image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 500; display: none; justify-content: center; align-items: center; }
-        .image-card { width: 90%; max-width: 400px; background: linear-gradient(135deg, #1a237e, #0f172a); color: white; border-radius: 15px; padding: 30px; text-align: center; }
-        .image-card h3 { font-size: 24px; margin-bottom: 10px; }
-        .image-card p { font-size: 16px; line-height: 1.8; }
-        .image-buttons { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
-        .image-buttons button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .download-btn { background: #f59e0b; color: white; }
-        .close-btn { background: white; color: #333; }
-        /* Plan Selector */
-        .plan-selector { margin-bottom: 20px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
 </head>
 <body>
     <div id="splash-screen" class="splash"><h1>Bibeli Mimo</h1><p>Loading...</p></div>
     <div id="app-container" style="display: none;">
+        
+        <!-- Header -->
         <header class="header">
-            <div><h2 id="greeting">Good Morning</h2><p>Bibeli Mimo</p></div>
+            <button id="menu-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+            <div class="header-title"><h2 id="greeting">Good Morning</h2><p>Bibeli Mimo</p></div>
             <div class="header-actions">
                 <button id="search-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
-                <button id="theme-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button>
             </div>
         </header>
 
+        <!-- Sidebar (Drawer) -->
+        <div id="side-drawer" class="drawer">
+            <div class="drawer-header">
+                <div class="logo-circle">📖</div>
+                <h3>Bibeli Mimo</h3>
+                <button id="close-drawer" class="close-btn">&times;</button>
+            </div>
+            <div class="drawer-menu">
+                <div class="drawer-section-title">Navigation</div>
+                <a onclick="goToHome()">🏠 Home</a>
+                <a onclick="goToBooks()">📖 Books</a>
+                <a onclick="goToLibrary()">🔖 Library</a>
+                
+                <div class="drawer-section-title">Settings</div>
+                <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
+                <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
+                <div class="setting-row"><span>Parallel View</span><button id="settings-parallel-btn" class="toggle-switch">OFF</button></div>
+                <div class="setting-row">
+                    <span>Font Size</span>
+                    <div class="font-controls"><button onclick="changeFont(-1)">A-</button><span id="font-size-label">100%</span><button onclick="changeFont(1)">A+</button></div>
+                </div>
+                <div class="setting-row"><span>Font Style</span><button id="settings-font-btn" onclick="toggleFont()">Sans</button></div>
+                
+                <div class="drawer-section-title">About</div>
+                <p class="about-text">Version 1.0.0<br>Free Yoruba & English Bible</p>
+            </div>
+        </div>
+        <div id="drawer-overlay" onclick="closeDrawer()"></div>
+
+        <!-- Main Screens -->
         <div id="screen-home" class="screen active">
-            <div class="card continue-card" onclick="continueReading()"><div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div></div>
+            <div class="card continue-card" onclick="continueReading()">
+                <div class="card-icon"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></div>
+                <div class="card-content"><h3>Continue Reading</h3><p id="last-read">Genesis 1</p></div>
+            </div>
             <div class="card votd-card"><h3>Verse of the Day</h3><p id="votd">Loading...</p></div>
             <div class="card streak-card"><div class="card-content"><h3>Reading Streak</h3><p id="streak-count">0 Days</p></div></div>
             <div class="card plan-card" onclick="loadPlanChapter()"><div class="card-content"><h3>Today's Plan</h3><p id="plan-text">Bible in 1 Year: Genesis 1</p></div></div>
-            
-            <div class="card plan-selector">
-                <h3>Select Reading Plan</h3>
-                <select id="plan-select" onchange="updatePlanType()">
-                    <option value="one-year">Bible in 1 Year</option>
-                    <option value="nt-90">New Testament in 90 Days</option>
-                    <option value="psalms-proverbs">Psalms & Proverbs in 30 Days</option>
-                </select>
-            </div>
-
-            <div class="card" onclick="toggleParallel()">
-                <h3>Reading Mode</h3>
-                <p id="parallel-text">Currently: Stacked (Yoruba above English)</p>
-            </div>
-            <div class="card" onclick="toggleFont()">
-                <h3>Font Style</h3>
-                <p id="font-text">Currently: Modern Sans-Serif</p>
-            </div>
-
+            <div class="card plan-selector"><h3>Reading Plan</h3><select id="plan-select" onchange="updatePlanType()"><option value="one-year">Bible in 1 Year</option><option value="nt-90">NT in 90 Days</option><option value="psalms-proverbs">Psalms & Proverbs</option></select></div>
             <h3 class="section-title">Recently Read</h3><div id="history-list" class="history-list"></div>
         </div>
 
@@ -117,41 +69,42 @@
         </div>
 
         <div id="screen-chapters" class="screen">
-            <button class="back-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+            <button class="back-btn" onclick="goToBooks()">← Back</button>
             <h2 id="chapter-title" class="section-title">Genesis</h2><div id="chapter-grid" class="grid"></div>
         </div>
 
         <div id="screen-reading" class="screen">
             <div class="reading-header">
-                <button class="icon-btn" onclick="goToChapters()"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg></button>
+                <button class="icon-btn" onclick="goToChapters()">←</button>
                 <h2 id="reading-title">Genesis 1</h2>
                 <div class="reader-actions">
-                    <button id="audio-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg></button>
-                    <button id="share-btn" class="icon-btn"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></button>
-                    <div class="font-controls"><button onclick="changeFont(-1)">A-</button><button onclick="changeFont(1)">A+</button></div>
+                    <button id="audio-btn" class="icon-btn">🔊</button>
+                    <button id="share-btn" class="icon-btn">📤</button>
                 </div>
             </div>
             <div id="bible-text" class="reading-content"></div>
             <div class="chapter-nav"><button onclick="prevChapter()">Previous</button><button onclick="nextChapter()">Next</button></div>
         </div>
 
-        <div id="screen-saved" class="screen">
+        <div id="screen-library" class="screen">
             <h2>My Library</h2>
             <div class="tab-bar"><button class="tab-btn active" onclick="switchLibrary('saved')">Saved</button><button class="tab-btn" onclick="switchLibrary('notes')">Notes</button></div>
             <div id="library-list"></div>
         </div>
 
+        <!-- Bottom Nav -->
         <nav class="bottom-nav">
-            <button class="nav-btn active" onclick="switchTab('home')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg><span>Home</span></button>
-            <button class="nav-btn" onclick="switchTab('books')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg><span>Books</span></button>
-            <button class="nav-btn" onclick="switchTab('saved')"><svg fill="none" class="icon" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Library</span></button>
+            <button class="nav-btn active" onclick="goToHome()">🏠<span>Home</span></button>
+            <button class="nav-btn" onclick="goToBooks()">📖<span>Books</span></button>
+            <button class="nav-btn" onclick="goToLibrary()">🔖<span>Library</span></button>
         </nav>
     </div>
 
+    <!-- Search Overlay -->
     <div id="search-overlay" class="overlay">
         <div class="overlay-header">
             <input type="text" id="search-input" placeholder="Search Yoruba or English...">
-            <button onclick="toggleSearch()">Close</button>
+            <button onclick="closeSearch()">Close</button>
         </div>
         <div class="search-filters">
             <label><input type="checkbox" id="search-yo" checked> Yoruba</label>
@@ -160,20 +113,22 @@
         <div id="search-results"></div>
     </div>
 
+    <!-- Action Sheet -->
     <div id="action-sheet-overlay" class="sheet-overlay" onclick="closeActionSheet()"></div>
     <div id="action-sheet" class="action-sheet">
         <div class="sheet-header" id="sheet-verse-ref">Genesis 1:1</div>
         <div class="sheet-actions">
-            <div class="sheet-item" onclick="copyVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span>Copy</span></div>
-            <div class="sheet-item" onclick="readVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" /></svg><span>Read</span></div>
-            <div class="sheet-item" onclick="actionHighlight()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10M12 3a2 2 0 012 2v1l-2 7-2-7V5a2 2 0 012-2z" /></svg><span>Highlight</span></div>
-            <div class="sheet-item" onclick="openNoteModal()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg><span>Note</span></div>
-            <div class="sheet-item" onclick="saveVerse()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg><span>Save</span></div>
-            <div class="sheet-item" onclick="generateImage()"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>Image</span></div>
+            <div class="sheet-item" onclick="copyVerse()">📋<span>Copy</span></div>
+            <div class="sheet-item" onclick="readVerse()">🔊<span>Read</span></div>
+            <div class="sheet-item" onclick="actionHighlight()">🖍️<span>Highlight</span></div>
+            <div class="sheet-item" onclick="openNoteModal()">📝<span>Note</span></div>
+            <div class="sheet-item" onclick="saveVerse()">🔖<span>Save</span></div>
+            <div class="sheet-item" onclick="generateImage()">🖼️<span>Image</span></div>
         </div>
         <button class="cancel-btn" onclick="closeActionSheet()">Cancel</button>
     </div>
 
+    <!-- Note Modal -->
     <div id="note-overlay" class="sheet-overlay" onclick="closeNoteModal()"></div>
     <div id="note-modal" class="note-modal">
         <h3>Add Note</h3>
@@ -181,249 +136,9 @@
         <div class="modal-buttons"><button onclick="closeNoteModal()">Cancel</button><button onclick="saveNote()" class="save-btn">Save</button></div>
     </div>
 
-    <div id="image-modal" class="image-modal">
-        <div class="image-card" id="image-card">
-            <h3 id="image-ref">Genesis 1:1</h3>
-            <p id="image-text"></p>
-            <div class="image-buttons">
-                <button class="close-btn" onclick="closeImage()">Close</button>
-                <button class="download-btn" onclick="downloadImage()">Share</button>
-            </div>
-        </div>
-    </div>
+    <!-- Image Modal -->
+    <div id="image-modal" class="image-modal"><div class="image-card" id="image-card"><h3 id="image-ref">Genesis 1:1</h3><p id="image-text"></p><div class="image-buttons"><button class="close-btn" onclick="closeImage()">Close</button><button class="download-btn" onclick="downloadImage()">Share</button></div></div></div>
 
-    <button id="church-mode-btn" class="floating-btn"><svg fill="none" class="icon-lg" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.998a11.952 11.952 0 01-6.824-2.941 12.083 12.083 0 01.665-6.479L12 14z" /></svg></button>
-
-    <script>
-        let yoruba = [], english = [], englishMap = {};
-        let saved = JSON.parse(localStorage.getItem('saved') || '[]');
-        let notes = JSON.parse(localStorage.getItem('notes') || '{}');
-        let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
-        let history = JSON.parse(localStorage.getItem('history') || '[]');
-        let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":""}');
-        let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
-        let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
-        let currentEnglishChapterText = '';
-        let currentLibrary = 'saved';
-        let activeVerse = { b: 0, c: 0, v: 0 };
-        let isParallel = false;
-        let currentPlan = 'one-year';
-
-        const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
-        const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
-
-        async function init() {
-            try {
-                const yRes = await fetch('data/yoruba.json');
-                if (!yRes.ok) throw new Error("Yoruba data not found");
-                yoruba = await yRes.json();
-                try {
-                    const eRes = await fetch('data/english_net.json');
-                    if (eRes.ok) { english = await eRes.json(); english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); }
-                } catch (e) {}
-                document.getElementById('splash-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'block';
-                loadHome(); buildBooks();
-                document.getElementById('search-btn').onclick = toggleSearch;
-                document.getElementById('audio-btn').onclick = playAudio;
-                document.getElementById('share-btn').onclick = shareChapter;
-                document.getElementById('theme-btn').onclick = toggleTheme;
-                document.getElementById('church-mode-btn').onclick = toggleChurch;
-            } catch(e) { document.getElementById('splash-screen').innerHTML = "<h3>Error: " + e.message + "</h3>"; }
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('screen-' + tab).classList.add('active');
-            if(tab === 'home') document.querySelectorAll('.nav-btn')[0].classList.add('active');
-            if(tab === 'books') document.querySelectorAll('.nav-btn')[1].classList.add('active');
-            if(tab === 'saved') { document.querySelectorAll('.nav-btn')[2].classList.add('active'); loadLibrary(); }
-        }
-
-        function loadHome() {
-            const hour = new Date().getHours();
-            document.getElementById('greeting').textContent = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
-            const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
-            document.getElementById('last-read').textContent = `${englishNames[codes.indexOf(last.b)]} ${last.c}`;
-            const day = new Date().getDate();
-            if(yoruba[day * 500]) document.getElementById('votd').textContent = yoruba[day * 500].text;
-            
-            const today = new Date().toDateString();
-            if(streak.lastDate !== today) {
-                const yesterday = new Date(Date.now() - 86400000).toDateString();
-                if(streak.lastDate === yesterday) streak.days++; else streak.days = 1;
-                streak.lastDate = today;
-                localStorage.setItem('streak', JSON.stringify(streak));
-            }
-            document.getElementById('streak-count').textContent = streak.days + " Days";
-
-            // Plan Logic
-            let allChapters;
-            if(currentPlan === 'one-year') { allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))]; }
-            else if(currentPlan === 'nt-90') { allChapters = [...new Set(yoruba.filter(v => v.book >= 40).map(v => `${v.book}-${v.chapter}`))]; }
-            else { allChapters = [...new Set(yoruba.filter(v => v.book === 19 || v.book === 20).map(v => `${v.book}-${v.chapter}`))]; }
-            
-            const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
-            const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-            const target = allChapters[dayOfYear % allChapters.length].split('-');
-            document.getElementById('plan-text').textContent = `${englishNames[parseInt(target[0]) - 1]} ${target[1]}`;
-
-            const histContainer = document.getElementById('history-list'); histContainer.innerHTML = '';
-            history.forEach(h => {
-                const div = document.createElement('div'); div.className = 'history-item'; div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`;
-                div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); };
-                histContainer.appendChild(div);
-            });
-        }
-
-        function updatePlanType() {
-            currentPlan = document.getElementById('plan-select').value;
-            loadHome();
-        }
-
-        function loadPlanChapter() {
-            let allChapters;
-            if(currentPlan === 'one-year') { allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))]; }
-            else if(currentPlan === 'nt-90') { allChapters = [...new Set(yoruba.filter(v => v.book >= 40).map(v => `${v.book}-${v.chapter}`))]; }
-            else { allChapters = [...new Set(yoruba.filter(v => v.book === 19 || v.book === 20).map(v => `${v.book}-${v.chapter}`))]; }
-            
-            const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
-            const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-            const target = allChapters[dayOfYear % allChapters.length].split('-');
-            currentBook = codes[parseInt(target[0]) - 1]; currentBookName = englishNames[parseInt(target[0]) - 1]; currentChapter = parseInt(target[1]); loadChapter();
-        }
-
-        function toggleParallel() {
-            isParallel = !isParallel;
-            document.getElementById('bible-text').classList.toggle('parallel-mode', isParallel);
-            document.getElementById('parallel-text').textContent = isParallel ? "Currently: Side-by-Side (Parallel)" : "Currently: Stacked (Yoruba above English)";
-        }
-
-        function toggleFont() {
-            document.body.classList.toggle('serif');
-            document.getElementById('font-text').textContent = document.body.classList.contains('serif') ? "Currently: Classic Serif" : "Currently: Modern Sans-Serif";
-        }
-
-        function buildBooks() {
-            const otGrid = document.getElementById('ot-grid'); const ntGrid = document.getElementById('nt-grid');
-            for(let i=0; i<englishNames.length; i++) {
-                const div = document.createElement('div'); div.className = i >= 39 ? 'grid-item red' : 'grid-item'; div.textContent = englishNames[i];
-                div.onclick = () => { currentBook = codes[i]; currentBookName = englishNames[i]; buildChapters(); };
-                (i >= 39 ? ntGrid : otGrid).appendChild(div);
-            }
-        }
-
-        function buildChapters() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-chapters').classList.add('active'); document.getElementById('chapter-title').textContent = currentBookName;
-            const bookNum = codes.indexOf(currentBook) + 1;
-            const maxCh = Math.max(...yoruba.filter(v => v.book === bookNum).map(v => v.chapter));
-            const grid = document.getElementById('chapter-grid'); grid.innerHTML = '';
-            for(let i=1; i<=maxCh; i++) { const div = document.createElement('div'); div.className = 'grid-item'; div.textContent = i; div.onclick = () => { currentChapter = i; loadChapter(); }; grid.appendChild(div); }
-        }
-
-        function goToChapters() { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-chapters').classList.add('active'); }
-        function loadChapter() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-reading').classList.add('active'); document.getElementById('reading-title').textContent = `${currentBookName} ${currentChapter}`;
-            const bookNum = codes.indexOf(currentBook) + 1;
-            const verses = yoruba.filter(v => v.book === bookNum && v.chapter === currentChapter);
-            let html = ''; currentEnglishChapterText = '';
-            verses.forEach(v => {
-                const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || ""; currentEnglishChapterText += eng + ' ';
-                const key = `${v.book}-${v.chapter}-${v.verse}`; const note = notes[key]; const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
-                html += `<div class="verse-container ${highlightClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})"><span class="verse-number">${v.verse}</span><p class="yoruba-text">${v.text}</p><p class="english-text">${eng}</p>${note ? `<div class="note-text">${note}</div>` : ''}</div>`;
-            });
-            document.getElementById('bible-text').innerHTML = html; document.getElementById('bible-text').style.fontSize = currentFontSize + '%';
-            const currentHistory = { b: currentBook, c: currentChapter };
-            history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c); history.unshift(currentHistory); if (history.length > 10) history.pop();
-            localStorage.setItem('history', JSON.stringify(history)); localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
-            let startX = 0; const el = document.getElementById('bible-text');
-            el.ontouchstart = e => startX = e.changedTouches[0].screenX;
-            el.ontouchend = e => { let endX = e.changedTouches[0].screenX; if (endX < startX - 50) nextChapter(); if (endX > startX + 50) prevChapter(); };
-        }
-
-        function nextChapter() { if(currentChapter < 150) { currentChapter++; loadChapter(); } }
-        function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(); } }
-        function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[codes.indexOf(currentBook)]; currentChapter = last.c; loadChapter(); }
-        function changeFont(delta) { currentFontSize += delta * 10; if (currentFontSize < 80) currentFontSize = 80; if (currentFontSize > 150) currentFontSize = 150; localStorage.setItem('fontSize', currentFontSize); document.getElementById('bible-text').style.fontSize = currentFontSize + '%'; }
-
-        function openActionSheet(b, c, v) {
-            activeVerse = { b: b, c: c, v: v };
-            document.getElementById('sheet-verse-ref').textContent = `${englishNames[b-1]} ${c}:${v}`;
-            document.getElementById('action-sheet-overlay').style.display = 'block';
-            const sheet = document.getElementById('action-sheet'); setTimeout(() => sheet.classList.add('show'), 10);
-        }
-        function closeActionSheet() { const sheet = document.getElementById('action-sheet'); sheet.classList.remove('show'); setTimeout(() => document.getElementById('action-sheet-overlay').style.display = 'none', 200); }
-        function copyVerse() { const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; navigator.clipboard.writeText(`${verseObj.text}\n${eng}`).then(() => closeActionSheet()); }
-        function readVerse() { closeActionSheet(); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; const u = new SpeechSynthesisUtterance(eng); u.lang = 'en-US'; speechSynthesis.cancel(); speechSynthesis.speak(u); }
-        function actionHighlight() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const order = ['yellow', 'green', 'blue', 'none']; const current = highlights[key] || 'none'; const next = order[(order.indexOf(current) + 1) % order.length]; if (next === 'none') delete highlights[key]; else highlights[key] = next; localStorage.setItem('highlights', JSON.stringify(highlights)); closeActionSheet(); loadChapter(); }
-        function saveVerse() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; if(!saved.includes(key)) { saved.push(key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } else { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); closeActionSheet(); } }
-        function openNoteModal() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; document.getElementById('note-input').value = notes[key] || ""; document.getElementById('note-overlay').style.display = 'block'; document.getElementById('note-modal').style.display = 'block'; }
-        function closeNoteModal() { document.getElementById('note-overlay').style.display = 'none'; document.getElementById('note-modal').style.display = 'none'; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').classList.add('show'); }
-        function saveNote() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const text = document.getElementById('note-input').value; if (text.trim() === "") delete notes[key]; else notes[key] = text; localStorage.setItem('notes', JSON.stringify(notes)); closeNoteModal(); loadChapter(); }
-        function switchLibrary(type) { currentLibrary = type; document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); if (type === 'saved') document.querySelectorAll('.tab-btn')[0].classList.add('active'); else document.querySelectorAll('.tab-btn')[1].classList.add('active'); loadLibrary(); }
-        function loadLibrary() { const list = document.getElementById('library-list'); list.innerHTML = ''; if (currentLibrary === 'saved') { saved.forEach(key => { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p>`; div.onclick = () => { removeBookmark(key); }; list.appendChild(div); } }); if (list.innerHTML === '') list.innerHTML = '<p>Tap any verse to save it.</p>'; } else { for (const key in notes) { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p class="note-text">${notes[key]}</p>`; div.onclick = () => { delete notes[key]; localStorage.setItem('notes', JSON.stringify(notes)); loadLibrary(); }; list.appendChild(div); } } if (list.innerHTML === '') list.innerHTML = '<p>Tap the pencil icon to add a note.</p>'; } }
-        function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
-
-        function toggleSearch() { const o = document.getElementById('search-overlay'); if(o.style.display === 'block') { o.style.display = 'none'; document.getElementById('search-input').value = ''; } else { o.style.display = 'block'; document.getElementById('search-input').focus(); } }
-
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase();
-            if (q.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
-            let results = [];
-            const searchYo = document.getElementById('search-yo').checked;
-            const searchEn = document.getElementById('search-en').checked;
-
-            if (searchYo) {
-                results = results.concat(yoruba.filter(v => v.text.toLowerCase().includes(q)).slice(0, 20));
-            }
-            if (searchEn) {
-                const enResults = [];
-                for (const key in englishMap) {
-                    if (englishMap[key].toLowerCase().includes(q)) {
-                        const parts = key.split('-');
-                        enResults.push({ book: parseInt(parts[0]), chapter: parseInt(parts[1]), verse: parseInt(parts[2]), text: englishMap[key] });
-                        if (enResults.length >= 20) break;
-                    }
-                }
-                results = results.concat(enResults);
-            }
-
-                                                                 let html = '';
-            results.forEach(v => {
-                html += `<div class="card" onclick="jumpToVerse(${v.book},${v.chapter},${v.verse})"><strong>${englishNames[v.book-1]} ${v.chapter}:${v.verse}</strong><p>${v.text}</p></div>`;
-            });
-            document.getElementById('search-results').innerHTML = html || '<p>No results found.</p>';
-        });
-
-        function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englishNames[b-1]; currentChapter = c; toggleSearch(); loadChapter(); }
-        function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(currentEnglishChapterText); u.lang = 'en-US'; speechSynthesis.speak(u); }
-        function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
-        function toggleTheme() { document.body.classList.toggle('dark'); }
-        function toggleChurch() { document.body.classList.toggle('church'); }
-
-        // Image Generator
-        function generateImage() {
-            closeActionSheet();
-            const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v);
-            const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || "";
-            document.getElementById('image-ref').textContent = `${englishNames[activeVerse.b-1]} ${activeVerse.c}:${activeVerse.v}`;
-            document.getElementById('image-text').innerHTML = `${verseObj.text}<br><br><em style="opacity:0.8; font-size:14px;">${eng}</em>`;
-            document.getElementById('image-modal').style.display = 'flex';
-        }
-        function closeImage() { document.getElementById('image-modal').style.display = 'none'; }
-        function downloadImage() {
-            const card = document.getElementById('image-card');
-            // Convert the card to image and share it (using canvas method)
-            // This is a simplified way to share the visual text
-            const text = document.getElementById('image-text').innerText;
-            if(navigator.share) navigator.share({ title: 'Bibeli Mimo', text: text });
-            else alert(text);
-        }
-
-        window.onload = init;
-    </script>
+    <script src="app.js"></script>
 </body>
-</html>
+                                                                    </html>
