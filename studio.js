@@ -5,7 +5,7 @@ let currentAlign = 'center', currentVert = 'center';
 let currentRatio = 'square', currentWatermark = true, currentShadow = true;
 let autoFit = true;
 let userFontSize = 32, userLineSpacing = 1.7, userPadding = 20;
-let currentCategory = 'photos'; // Now we only use the uploaded photos
+let currentCategory = 'photos'; // Default category
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
@@ -26,6 +26,31 @@ const photoFiles = [
 ];
 const photoUrls = photoFiles.map(file => `backgrounds/${file}`);
 
+// Curated Gradients
+const gradients = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+    'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
+    'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+    'linear-gradient(135deg, #c79081 0%, #dfa579 100%)',
+    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)',
+    'linear-gradient(135deg, #f83600 0%, #f9d423 100%)',
+    'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+    'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)',
+    'linear-gradient(135deg, #1a2980 0%, #26d0ce 100%)',
+    'linear-gradient(135deg, #0f2027 0%, #203a43 100%, #2c5364 100%)'
+];
+const solids = ['#1a237e','#b71c1c','#4a148c','#e65100','#00695c','#1565c0','#212121','#880e4f','#33691e','#0d47a1','#5d4037','#01579b','#2e7d32','#37474f','#8e24aa','#00838f','#bf360c','#3e2723','#64b5f6','#FFD700'];
+
 async function init() {
     try {
         const yRes = await fetch('data/yoruba.json');
@@ -40,7 +65,6 @@ async function init() {
             }
         } catch (e) {}
 
-        // Wait for fonts to load so the canvas measures correctly
         await document.fonts.ready;
 
         buildTemplates(); 
@@ -109,12 +133,28 @@ function manualLineSpacing(val) { autoFit = false; userLineSpacing = parseFloat(
 function manualPadding(val) { autoFit = false; userPadding = parseInt(val); updatePreview(); }
 function resetToAutoFit() { autoFit = true; userFontSize = 32; userLineSpacing = 1.7; userPadding = 20; document.getElementById('studio-font-size').value = 32; document.getElementById('studio-line-spacing').value = 1.7; document.getElementById('studio-padding').value = 20; updatePreview(); }
 
+// Category switching
+function setCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('cat-' + cat).classList.add('active');
+    selectedTemplate = 0; // Reset selection when switching
+    buildTemplates();
+    updatePreview();
+}
+
 function buildTemplates() {
     const grid = document.getElementById('template-grid'); grid.innerHTML = '';
-    photoUrls.forEach((url, i) => {
+    let items = [];
+    if (currentCategory === 'photos') items = photoUrls.map(url => ({ type: 'url', value: url }));
+    else if (currentCategory === 'gradients') items = gradients.map(g => ({ type: 'gradient', value: g }));
+    else items = solids.map(s => ({ type: 'solid', value: s }));
+
+    items.forEach((item, i) => {
         const div = document.createElement('div');
         div.className = 'template-item' + (i === 0 ? ' selected' : '');
-        div.style.background = `url('${url}') center/cover`;
+        if (item.type === 'url') div.style.background = `url('${item.value}') center/cover`;
+        else div.style.background = item.value;
         div.onclick = () => {
             selectedTemplate = i;
             document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected'));
@@ -154,6 +194,7 @@ function updatePreview() {
 
     let previewFontSize = userFontSize, previewPadding = Math.min(userPadding, 40), previewLineHeight = userLineSpacing;
     if (autoFit) {
+        // FIXED 9:16 HEIGHT
         const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : currentRatio === 'story' ? 600 : 350;
         let tempSize = 32;
         while (tempSize > 15) {
@@ -165,92 +206,110 @@ function updatePreview() {
     textEl.style.fontSize = previewFontSize + 'px'; textEl.style.lineHeight = previewLineHeight; textEl.style.padding = previewPadding + 'px';
 
     const box = document.getElementById('image-preview');
-    box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
-    box.style.background = `url('${photoUrls[selectedTemplate]}') center/cover`;
+    // FIXED 9:16 HEIGHT
+    box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : currentRatio === 'story' ? '600px' : '350px';
+
+    if (currentCategory === 'photos') box.style.background = `url('${photoUrls[selectedTemplate]}') center/cover`;
+    else if (currentCategory === 'gradients') box.style.background = gradients[selectedTemplate] || gradients[0];
+    else box.style.background = solids[selectedTemplate] || solids[0];
 
     if (currentVert === 'top') box.style.justifyContent = 'flex-start';
     else if (currentVert === 'bottom') box.style.justifyContent = 'flex-end';
     else box.style.justifyContent = 'center';
 }
 
-// PERFECT COVER-CROP CANVAS (Matches Preview Exactly)
+// PERFECT COVER-CROP CANVAS
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
     if (currentRatio === 'portrait') { width = 1080; height = 1350; }
     if (currentRatio === 'landscape') { width = 1920; height = 1080; }
-    else if (currentRatio === 'story') { width = 1080; height = 1920; } // 9:16
+    else if (currentRatio === 'story') { width = 1080; height = 1920; }
     canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    // 1. Draw Cover-Cropped Background
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = photoUrls[selectedTemplate]; // Load your local image
-    img.onload = function() {
-        // Calculate cover crop
-        const scale = Math.max(width / img.width, height / img.height);
-        const sw = width / scale, sh = height / scale;
-        const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+    // 1. Draw Background based on category
+    if (currentCategory === 'photos') {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = photoUrls[selectedTemplate];
+        img.onload = function() {
+            const scale = Math.max(width / img.width, height / img.height);
+            const sw = width / scale, sh = height / scale;
+            const sx = (img.width - sw) / 2, sy = (img.height - sh) / 2;
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
 
-        // 2. Get EXACT styles from preview
-        const previewText = document.getElementById('preview-text');
-        const previewRef = document.getElementById('preview-ref');
-        const previewBox = document.getElementById('image-preview');
-        const previewWidth = previewBox.clientWidth, previewHeight = previewBox.clientHeight;
-        const previewFontSize = parseFloat(getComputedStyle(previewText).fontSize);
-        const previewPadding = parseFloat(getComputedStyle(previewText).paddingLeft);
-        const previewLineHeight = parseFloat(getComputedStyle(previewText).lineHeight);
-        const previewRefSize = parseFloat(getComputedStyle(previewRef).fontSize);
-        const scaleX = width / previewWidth, scaleY = height / previewHeight;
+            drawText(ctx, width, height);
+        };
+        if (img.complete) img.onload();
+    } else {
+        let bg = '#1a237e';
+        if (currentCategory === 'gradients') bg = gradients[selectedTemplate] || gradients[0];
+        else bg = solids[selectedTemplate] || solids[0];
 
-        const canvasFontSize = previewFontSize * scaleX;
-        const canvasPadding = previewPadding * scaleX;
-        const canvasLineHeight = previewLineHeight * scaleX;
-        const canvasRefSize = previewRefSize * scaleX;
-        const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        const parts = bg.match(/#[0-9a-fA-F]{6}/g);
+        if (parts && parts.length >= 2) { grad.addColorStop(0, parts[0]); grad.addColorStop(1, parts[1]); }
+        else grad.addColorStop(0, bg); grad.addColorStop(1, '#000');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
+        drawText(ctx, width, height);
+    }
+}
 
-        ctx.font = `bold ${canvasRefSize}px "${fontName}"`;
-        ctx.textAlign = currentAlign; ctx.textBaseline = 'middle';
-        if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
-        ctx.fillStyle = studioColor;
-        const refYPos = (previewRef.offsetTop + (previewRef.offsetHeight / 2)) * scaleY;
-        ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, refYPos);
+function drawText(ctx, width, height) {
+    // Get EXACT styles from preview
+    const previewText = document.getElementById('preview-text');
+    const previewRef = document.getElementById('preview-ref');
+    const previewBox = document.getElementById('image-preview');
+    const previewWidth = previewBox.clientWidth, previewHeight = previewBox.clientHeight;
+    const previewFontSize = parseFloat(getComputedStyle(previewText).fontSize);
+    const previewPadding = parseFloat(getComputedStyle(previewText).paddingLeft);
+    const previewLineHeight = parseFloat(getComputedStyle(previewText).lineHeight);
+    const previewRefSize = parseFloat(getComputedStyle(previewRef).fontSize);
+    const scaleX = width / previewWidth, scaleY = height / previewHeight;
 
-        ctx.font = `${canvasFontSize}px "${fontName}"`; ctx.textBaseline = 'top';
-        let textX = width / 2;
-        if (currentAlign === 'left') textX = canvasPadding;
-        else if (currentAlign === 'right') textX = width - canvasPadding;
+    const canvasFontSize = previewFontSize * scaleX;
+    const canvasPadding = previewPadding * scaleX;
+    const canvasLineHeight = previewLineHeight * scaleX;
+    const canvasRefSize = previewRefSize * scaleX;
+    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
 
-        const text = previewText.innerHTML.replace(/<br\s*\/?>/gi, '\n');
-        const paragraphs = text.split('\n');
-        let drawY = previewText.offsetTop * scaleY;
+    ctx.font = `bold ${canvasRefSize}px "${fontName}"`;
+    ctx.textAlign = currentAlign; ctx.textBaseline = 'middle';
+    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
+    ctx.fillStyle = studioColor;
+    const refYPos = (previewRef.offsetTop + (previewRef.offsetHeight / 2)) * scaleY;
+    ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, refYPos);
 
-        paragraphs.forEach(paragraph => {
-            const words = paragraph.split(' ');
-            let line = '';
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                const metrics = ctx.measureText(testLine);
-                if (metrics.width > (width - canvasPadding * 2) && n > 0) {
-                    ctx.fillText(line.trim(), textX, drawY);
-                    line = words[n] + ' '; drawY += canvasLineHeight;
-                } else line = testLine;
-            }
-            ctx.fillText(line.trim(), textX, drawY);
-            drawY += canvasLineHeight;
-        });
+    ctx.font = `${canvasFontSize}px "${fontName}"`; ctx.textBaseline = 'top';
+    let textX = width / 2;
+    if (currentAlign === 'left') textX = canvasPadding;
+    else if (currentAlign === 'right') textX = width - canvasPadding;
 
-        if (currentWatermark) {
-            ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
-            ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textBaseline = 'middle';
-            ctx.fillText('Bibeli Mimo', width / 2, height - (canvasPadding * 0.4));
+    const text = previewText.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+    const paragraphs = text.split('\n');
+    let drawY = previewText.offsetTop * scaleY;
+
+    paragraphs.forEach(paragraph => {
+        const words = paragraph.split(' ');
+        let line = '';
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > (width - canvasPadding * 2) && n > 0) {
+                ctx.fillText(line.trim(), textX, drawY);
+                line = words[n] + ' '; drawY += canvasLineHeight;
+            } else line = testLine;
         }
-    };
-    
-    // Ensure onload fires even if image is cached
-    if (img.complete) { img.onload(); }
+        ctx.fillText(line.trim(), textX, drawY);
+        drawY += canvasLineHeight;
+    });
+
+    if (currentWatermark) {
+        ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
+        ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.textBaseline = 'middle';
+        ctx.fillText('Bibeli Mimo', width / 2, height - (canvasPadding * 0.4));
+    }
 }
 
 function downloadImage() { const canvas = generateCanvas(); const link = document.createElement('a'); link.download = 'bible-verse.png'; link.href = canvas.toDataURL('image/png'); link.click(); }
