@@ -85,19 +85,33 @@ function buildTemplates() {
     });
 }
 
-// --- THE AUTO-FIT ENGINE ---
-function getTextData() {
+// --- NEW SPLIT TEXT LOGIC (Yoruba and English separated) ---
+function getTextData(isPreview) {
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
     const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
-    let text = '';
-    if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishVerse) text += (text ? ' ' : '') + englishVerse;
-    return text;
+
+    let yorubaText = '';
+    let englishText = '';
+
+    if (document.getElementById('img-yo').checked && yorubaVerse) yorubaText = yorubaVerse.text;
+    if (document.getElementById('img-en').checked && englishVerse) englishText = englishVerse.text;
+
+    let fullText = '';
+    if (yorubaText) fullText += yorubaText;
+    if (englishText) {
+        if (fullText) {
+            // This creates the clear separation between the two languages
+            fullText += (isPreview ? '<br><br>' : '\n\n');
+        }
+        fullText += englishText;
+    }
+    return fullText;
 }
 
 function updatePreview() {
-    const text = getTextData();
+    // Pass 'true' to get HTML breaks
+    const text = getTextData(true);
     document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`;
     document.getElementById('preview-text').innerHTML = text;
     
@@ -118,7 +132,7 @@ function updatePreview() {
     else box.style.justifyContent = 'center';
 }
 
-// --- PERFECT CANVAS WITH AUTO-FIT ---
+// --- PERFECT CANVAS WITH AUTO-FIT AND PARAGRAPH BREAKS ---
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -134,8 +148,8 @@ function generateCanvas() {
     grad.addColorStop(1, parts ? parts[1] : '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
 
-    // 2. Get Text
-    const text = getTextData();
+    // 2. Get Text (Pass 'false' to get \n\n breaks)
+    const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
 
     // 3. Setup Fonts
@@ -146,37 +160,40 @@ function generateCanvas() {
     // 4. AUTO-FIT: Shrink font size until it fits inside the box
     const padding = Math.round(width * 0.12); 
     const maxTextWidth = width - (padding * 2);
-    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); // Leave space for reference at top and padding at bottom
+    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
 
-    let lineHeight = fontSize * 1.6; // Default 1.6
+    let lineHeight = fontSize * 1.6; 
     let lineCount = 0;
-    let testY = 0;
+
+    // Function to count lines while respecting paragraph breaks
+    function getLineCount(currentFontSize) {
+        ctx.font = `${currentFontSize}px ${fontName}`;
+        let totalLines = 0;
+        const paragraphs = text.split('\n');
+        paragraphs.forEach(paragraph => {
+            const words = paragraph.split(' ');
+            let line = '';
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxTextWidth && n > 0) {
+                    totalLines++;
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            totalLines++;
+        });
+        return totalLines;
+    }
 
     // Loop to find the perfect font size
     while (fontSize > 30) {
-        ctx.font = `${fontSize}px ${fontName}`;
-        const words = text.split(' ');
-        let line = '';
-        lineCount = 0;
-        let tempY = 0;
-        
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxTextWidth && n > 0) {
-                lineCount++;
-                line = words[n] + ' ';
-            } else {
-                line = testLine;
-            }
-        }
-        lineCount++;
-        
-        tempY = lineCount * lineHeight;
-        if (tempY <= maxTextHeight) break;
-        
-        fontSize -= 2;
         lineHeight = fontSize * 1.6;
+        lineCount = getLineCount(fontSize);
+        if (lineCount * lineHeight <= maxTextHeight) break;
+        fontSize -= 2;
     }
 
     // 5. Draw Reference
@@ -188,7 +205,7 @@ function generateCanvas() {
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    // 6. Draw Main Text (Auto-Fitted)
+    // 6. Draw Main Text (Auto-Fitted & Split with spacing)
     ctx.font = `${fontSize}px ${fontName}`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
@@ -199,21 +216,25 @@ function generateCanvas() {
     else if (currentVert === 'bottom') startY = height - padding - totalTextHeight;
     else startY = (height / 2) - (totalTextHeight / 2);
 
-    const words = text.split(' ');
-    let line = '';
-    let y = startY;
-    for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxTextWidth && n > 0) {
-            ctx.fillText(line.trim(), width / 2, y);
-            line = words[n] + ' ';
-            y += lineHeight;
-        } else {
-            line = testLine;
+    let drawY = startY;
+    const paragraphs = text.split('\n');
+    paragraphs.forEach(paragraph => {
+        const words = paragraph.split(' ');
+        let line = '';
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxTextWidth && n > 0) {
+                ctx.fillText(line.trim(), width / 2, drawY);
+                line = words[n] + ' ';
+                drawY += lineHeight;
+            } else {
+                line = testLine;
+            }
         }
-    }
-    ctx.fillText(line.trim(), width / 2, y);
+        ctx.fillText(line.trim(), width / 2, drawY);
+        drawY += lineHeight; // This creates the paragraph gap!
+    });
 
     // 7. Watermark
     if (currentWatermark) {
