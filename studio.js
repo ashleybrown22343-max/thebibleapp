@@ -28,11 +28,16 @@ async function init() {
             }
         } catch (e) {}
 
+        // CRITICAL FIX: Wait for Google Fonts to load before drawing!
+        await document.fonts.ready;
+
         buildTemplates(); updatePickerButtons(); updatePreview();
         document.getElementById('pick-book').onclick = () => openModal('book');
         document.getElementById('pick-chapter').onclick = () => openModal('chapter');
         document.getElementById('pick-verse').onclick = () => openModal('verse');
-    } catch(e) { document.getElementById('preview-text').innerHTML = "Error: " + e.message; }
+    } catch(e) { 
+        document.getElementById('preview-text').innerHTML = "Error: " + e.message; 
+    }
 }
 
 function updatePickerButtons() {
@@ -150,55 +155,62 @@ function getTextData(isPreview) {
     return fullText;
 }
 
-// HELPER: Calculate font size, lineHeight, padding based on autoFit or manual
+// Unified Layout Engine (Works for both preview and canvas)
 function getLayoutParams(width, height, refFontSize) {
+    let fontSize, lineHeight, padding;
     if (autoFit) {
-        // Use autoFit algorithm
-        let fontSize = Math.round(width * 0.08);
-        let lineHeight = fontSize * 1.6;
-        let padding = Math.round(width * 0.12);
-        // Clamp padding to max 15% of width
-        padding = Math.min(padding, Math.round(width * 0.15));
-
-        // Calculate line count
-        function lineCount(fs) {
-            // We'll measure using a temporary context
-            const tempCtx = document.createElement('canvas').getContext('2d');
-            tempCtx.font = `${fs}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
-            const maxTextWidth = width - (padding * 2);
-            let count = 0;
-            const paragraphs = getTextData(false).split('\n');
-            paragraphs.forEach(para => {
-                const words = para.split(' ');
-                let line = '';
-                for (let i=0; i<words.length; i++) {
-                    const testLine = line + words[i] + ' ';
-                    if (tempCtx.measureText(testLine).width > maxTextWidth && i>0) {
-                        count++;
-                        line = words[i] + ' ';
-                    } else line = testLine;
-                }
-                count++;
-            });
-            return count;
-        }
-
-        let totalH = 0;
-        while (fontSize > 30) {
-            lineHeight = fontSize * 1.6;
-            let lines = lineCount(fontSize);
-            totalH = lines * lineHeight;
-            if (totalH <= height - (padding*2) - (refFontSize*1.5)) break;
-            fontSize -= 2;
-        }
-        return { fontSize, lineHeight, padding };
+        fontSize = Math.round(width * 0.08);
+        padding = Math.min(Math.round(width * 0.12), Math.round(width * 0.15));
     } else {
-        // Manual mode: use user values, but still clamp padding to avoid negative
-        let fontSize = userFontSize * 3; // scale to canvas
-        let lineHeight = fontSize * userLineSpacing;
-        let padding = Math.min(userPadding * 4, Math.round(width * 0.15));
-        return { fontSize, lineHeight, padding };
+        fontSize = Math.round(userFontSize * 3); // Scale manual size to canvas
+        padding = Math.min(Math.round(userPadding * 4), Math.round(width * 0.15));
     }
+
+    // Ensure the font is loaded in this context
+    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${fontSize}px "${fontName}"`;
+
+    const maxTextWidth = width - (padding * 2);
+    const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5);
+    const text = getTextData(false);
+
+    // Calculate lines
+    function calcLines(fs) {
+        ctx.font = `${fs}px "${fontName}"`;
+        let totalLines = 0;
+        const paragraphs = text.split('\n');
+        paragraphs.forEach(para => {
+            const words = para.split(' ');
+            let line = '';
+            for (let i=0; i<words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                if (ctx.measureText(testLine).width > maxTextWidth && i > 0) {
+                    totalLines++;
+                    line = words[i] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            totalLines++;
+        });
+        return totalLines;
+    }
+
+    if (autoFit) {
+        let lineH = fontSize * 1.6;
+        let lines = calcLines(fontSize);
+        while (lines * lineH > maxTextHeight && fontSize > 30) {
+            fontSize -= 2;
+            lineH = fontSize * 1.6;
+            lines = calcLines(fontSize);
+        }
+        lineHeight = lineH;
+    } else {
+        lineHeight = fontSize * userLineSpacing;
+    }
+
+    return { fontSize, lineHeight, padding };
 }
 
 function updatePreview() {
@@ -210,28 +222,18 @@ function updatePreview() {
     textEl.style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
     textEl.style.color = studioColor;
     textEl.style.textAlign = currentAlign;
-    textEl.style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
+    // FIXED SHADOW (Stronger)
+    textEl.style.textShadow = currentShadow ? '0 5px 20px rgba(0,0,0,0.8)' : 'none';
 
-    // For preview, we need to scale down the canvas params to fit the box.
-    // We'll just use the sliders directly for preview (or auto-fit approximation)
-    let previewFontSize, previewPadding;
-    if (autoFit) {
-        // In preview, approximate auto-fit by scaling to box height
-        const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
-        const boxWidth = 350; // max width of preview
-        const params = getLayoutParams(boxWidth * 3, boxHeight * 3, 30); // simulate canvas dimensions
-        previewFontSize = params.fontSize / 3;
-        previewPadding = params.padding / 3;
-    } else {
-        previewFontSize = userFontSize;
-        previewPadding = Math.min(userPadding, 40);
-    }
-    textEl.style.fontSize = previewFontSize + 'px';
-    textEl.style.padding = previewPadding + 'px';
-    textEl.style.lineHeight = autoFit ? 1.6 : userLineSpacing;
+    // Scale canvas params down to preview size
+    const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
+    const params = getLayoutParams(350 * 3, boxHeight * 3, 30);
+    textEl.style.fontSize = (params.fontSize / 3) + 'px';
+    textEl.style.lineHeight = params.lineHeight / (params.fontSize / 3);
+    textEl.style.padding = (params.padding / 3) + 'px';
 
     const box = document.getElementById('image-preview');
-    box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
+    box.style.height = boxHeight + 'px';
     box.style.background = templates[selectedTemplate];
 
     if (currentVert === 'top') box.style.justifyContent = 'flex-start';
@@ -239,7 +241,6 @@ function updatePreview() {
     else box.style.justifyContent = 'center';
 }
 
-// PERFECT CANVAS WITH AUTO-FIT OR MANUAL OVERRIDE
 function generateCanvas() {
     const canvas = document.createElement('canvas');
     let width = 1080, height = 1080;
@@ -248,35 +249,38 @@ function generateCanvas() {
     canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
 
+    // 1. Background Gradient
     const grad = ctx.createLinearGradient(0, 0, width, height);
     const parts = templates[selectedTemplate].match(/#[0-9a-fA-F]{6}/g);
     grad.addColorStop(0, parts ? parts[0] : '#1a237e');
     grad.addColorStop(1, parts ? parts[1] : '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
 
+    // 2. Get Text
     const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
     const refFontSize = Math.round(width * 0.055);
+    const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
 
-    // Get layout parameters from autoFit or manual
-    const params = getLayoutParams(width, height, refFontSize);
-    const { fontSize, lineHeight, padding } = params;
+    // 3. Get Layout (Auto-fit or Manual)
+    const { fontSize, lineHeight, padding } = getLayoutParams(width, height, refFontSize);
 
-    // Draw reference
+    // 4. Draw Reference
     ctx.save();
-    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
+    if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
     ctx.fillStyle = studioColor;
-    ctx.font = `bold ${refFontSize}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
+    ctx.font = `bold ${refFontSize}px "${fontName}"`;
     ctx.textAlign = currentAlign;
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    // Draw main text
-    ctx.font = `${fontSize}px ${studioFont === 'sans' ? 'Poppins' : 'Playfair Display'}`;
+    // 5. Draw Main Text
+    ctx.font = `${fontSize}px "${fontName}"`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
 
-    // Calculate line count to position vertically
+    // Calculate vertical position
+    const maxTextWidth = width - (padding * 2);
     let lineCount = 0;
     const paragraphs = text.split('\n');
     paragraphs.forEach(para => {
@@ -284,7 +288,7 @@ function generateCanvas() {
         let line = '';
         for (let i=0; i<words.length; i++) {
             const testLine = line + words[i] + ' ';
-            if (ctx.measureText(testLine).width > width - (padding*2) && i>0) {
+            if (ctx.measureText(testLine).width > maxTextWidth && i>0) {
                 lineCount++;
                 line = words[i] + ' ';
             } else line = testLine;
@@ -304,7 +308,7 @@ function generateCanvas() {
         let line = '';
         for (let i=0; i<words.length; i++) {
             const testLine = line + words[i] + ' ';
-            if (ctx.measureText(testLine).width > width - (padding*2) && i>0) {
+            if (ctx.measureText(testLine).width > maxTextWidth && i>0) {
                 ctx.fillText(line.trim(), width / 2, drawY);
                 line = words[i] + ' ';
                 drawY += lineHeight;
@@ -314,8 +318,9 @@ function generateCanvas() {
         drawY += lineHeight;
     });
 
+    // 6. Watermark
     if (currentWatermark) {
-        ctx.font = `${Math.round(width * 0.02)}px Poppins`;
+        ctx.font = `${Math.round(width * 0.02)}px "Poppins"`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.textBaseline = 'middle';
         ctx.fillText('Bibeli Mimo', width / 2, height - (padding * 0.4));
