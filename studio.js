@@ -12,15 +12,25 @@ async function init() {
         const yRes = await fetch('data/yoruba.json');
         if (!yRes.ok) throw new Error("Yoruba data not found");
         yoruba = await yRes.json();
+
+        // BULLETPROOF ENGLISH DATA LOADING
         try {
             const eRes = await fetch('data/english_net.json');
-            if (eRes.ok) { english = await eRes.json(); english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); }
-        } catch (e) {}
+            if (eRes.ok) { 
+                english = await eRes.json(); 
+                english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); 
+            }
+        } catch (e) {
+            console.log("English data not found, continuing with Yoruba only");
+        }
+
         buildTemplates(); updatePickerButtons(); updatePreview();
         document.getElementById('pick-book').onclick = () => openModal('book');
         document.getElementById('pick-chapter').onclick = () => openModal('chapter');
         document.getElementById('pick-verse').onclick = () => openModal('verse');
-    } catch(e) { document.getElementById('preview-text').innerHTML = "Error: " + e.message; }
+    } catch(e) { 
+        document.getElementById('preview-text').innerHTML = "Error: " + e.message; 
+    }
 }
 
 function updatePickerButtons() {
@@ -85,48 +95,50 @@ function buildTemplates() {
     });
 }
 
-// --- NEW SPLIT TEXT LOGIC (Yoruba and English separated) ---
+// --- NEW SPLIT TEXT LOGIC (GUARANTEED ENGLISH) ---
 function getTextData(isPreview) {
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
-    const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
+    
+    // Fallback 1: Use englishMap
+    let englishText = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
+    // Fallback 2: Search raw array if Map fails
+    if (!englishText && english.length > 0) {
+        const englishVerse = english.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
+        if (englishVerse) englishText = englishVerse.text;
+    }
 
     let yorubaText = '';
-    let englishText = '';
-
     if (document.getElementById('img-yo').checked && yorubaVerse) yorubaText = yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishVerse) englishText = englishVerse.text;
+    if (document.getElementById('img-en').checked && englishText) {
+        // Do nothing for empty
+    } else {
+        englishText = '';
+    }
 
     let fullText = '';
     if (yorubaText) fullText += yorubaText;
     if (englishText) {
-        if (fullText) {
-            // This creates the clear separation between the two languages
-            fullText += (isPreview ? '<br><br>' : '\n\n');
-        }
+        if (fullText) fullText += (isPreview ? '<br><br>' : '\n\n');
         fullText += englishText;
     }
     return fullText;
 }
 
 function updatePreview() {
-    // Pass 'true' to get HTML breaks
     const text = getTextData(true);
     document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`;
     document.getElementById('preview-text').innerHTML = text;
     
-    // Force font family
     document.getElementById('preview-text').style.fontFamily = studioFont === 'sans' ? 'Poppins, sans-serif' : 'Playfair Display, serif';
     document.getElementById('preview-text').style.color = studioColor;
     document.getElementById('preview-text').style.textAlign = currentAlign;
     document.getElementById('preview-text').style.textShadow = currentShadow ? '0 4px 15px rgba(0,0,0,0.7)' : 'none';
     
-    // Set box ratio
     const box = document.getElementById('image-preview');
     box.style.height = currentRatio === 'portrait' ? '450px' : currentRatio === 'landscape' ? '250px' : '350px';
     box.style.background = templates[selectedTemplate];
     
-    // Vertical alignment
     if (currentVert === 'top') box.style.justifyContent = 'flex-start';
     else if (currentVert === 'bottom') box.style.justifyContent = 'flex-end';
     else box.style.justifyContent = 'center';
@@ -141,23 +153,19 @@ function generateCanvas() {
     canvas.width = width; canvas.height = height;
     const ctx = canvas.getContext('2d');
 
-    // 1. Gradient
     const grad = ctx.createLinearGradient(0, 0, width, height);
     const parts = templates[selectedTemplate].match(/#[0-9a-fA-F]{6}/g);
     grad.addColorStop(0, parts ? parts[0] : '#1a237e');
     grad.addColorStop(1, parts ? parts[1] : '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
 
-    // 2. Get Text (Pass 'false' to get \n\n breaks)
     const text = getTextData(false);
     const refText = `${currentBookName} ${currentChapter}:${currentVerse}`;
 
-    // 3. Setup Fonts
     const fontName = studioFont === 'sans' ? 'Poppins' : 'Playfair Display';
     const refFontSize = Math.round(width * 0.055);
     let fontSize = Math.round(width * 0.08);
 
-    // 4. AUTO-FIT: Shrink font size until it fits inside the box
     const padding = Math.round(width * 0.12); 
     const maxTextWidth = width - (padding * 2);
     const maxTextHeight = height - (padding * 2) - (refFontSize * 1.5); 
@@ -165,7 +173,6 @@ function generateCanvas() {
     let lineHeight = fontSize * 1.6; 
     let lineCount = 0;
 
-    // Function to count lines while respecting paragraph breaks
     function getLineCount(currentFontSize) {
         ctx.font = `${currentFontSize}px ${fontName}`;
         let totalLines = 0;
@@ -188,7 +195,6 @@ function generateCanvas() {
         return totalLines;
     }
 
-    // Loop to find the perfect font size
     while (fontSize > 30) {
         lineHeight = fontSize * 1.6;
         lineCount = getLineCount(fontSize);
@@ -196,7 +202,6 @@ function generateCanvas() {
         fontSize -= 2;
     }
 
-    // 5. Draw Reference
     ctx.save();
     if (currentShadow) { ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 20; ctx.shadowOffsetY = 10; }
     ctx.fillStyle = studioColor;
@@ -205,7 +210,6 @@ function generateCanvas() {
     ctx.textBaseline = 'middle';
     ctx.fillText(refText, width / 2, padding * 0.8);
 
-    // 6. Draw Main Text (Auto-Fitted & Split with spacing)
     ctx.font = `${fontSize}px ${fontName}`;
     ctx.lineWidth = 10;
     ctx.textBaseline = 'top';
@@ -233,10 +237,9 @@ function generateCanvas() {
             }
         }
         ctx.fillText(line.trim(), width / 2, drawY);
-        drawY += lineHeight; // This creates the paragraph gap!
+        drawY += lineHeight;
     });
 
-    // 7. Watermark
     if (currentWatermark) {
         ctx.font = `${Math.round(width * 0.02)}px Poppins`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
