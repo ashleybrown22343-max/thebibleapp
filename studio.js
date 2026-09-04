@@ -154,7 +154,7 @@ function updatePreview() {
 
     let previewFontSize = userFontSize, previewPadding = Math.min(userPadding, 40), previewLineHeight = userLineSpacing;
     if (autoFit) {
-        const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : 350;
+        const boxHeight = currentRatio === 'portrait' ? 450 : currentRatio === 'landscape' ? 250 : currentRatio === 'story' ? 600 : 350;
         let tempSize = 32;
         while (tempSize > 15) {
             textEl.style.fontSize = tempSize + 'px'; textEl.style.lineHeight = 1.6; textEl.style.padding = '20px';
