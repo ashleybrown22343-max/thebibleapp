@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bibeli Mimo - Image Studio</title>
     <link rel="stylesheet" href="studio.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <header class="studio-header">
@@ -21,7 +22,7 @@
     <div class="studio-container">
         <div class="sticky-preview">
             <div id="image-preview" class="preview-card">
-                <h3 id="preview-ref">Psalms 23:6</h3>
+                <h3 id="preview-ref">Genesis 1:1</h3>
                 <p id="preview-text">Loading...</p>
             </div>
         </div>
@@ -29,9 +30,9 @@
         <div class="controls-section">
             <h3>Select Verse</h3>
             <div class="picker-buttons">
-                <button id="pick-book" class="picker-btn">Psalms</button>
-                <button id="pick-chapter" class="picker-btn">23</button>
-                <button id="pick-verse" class="picker-btn">6</button>
+                <button id="pick-book" class="picker-btn">Genesis</button>
+                <button id="pick-chapter" class="picker-btn">1</button>
+                <button id="pick-verse" class="picker-btn">1</button>
             </div>
         </div>
 
@@ -65,11 +66,15 @@
         </div>
 
         <div class="templates-section">
-            <h3>500+ Premium Templates</h3>
+            <div class="category-tabs">
+                <button id="cat-photos" class="cat-btn active" onclick="setCategory('photos')">Photos</button>
+                <button id="cat-gradients" class="cat-btn" onclick="setCategory('gradients')">Gradients</button>
+                <button id="cat-solids" class="cat-btn" onclick="setCategory('solids')">Solids</button>
+            </div>
             <div id="template-grid" class="template-grid"></div>
         </div>
     </div>
 
     <script src="studio.js"></script>
 </body>
-                                                                                                                                   </html>
+                                                                 </html>
