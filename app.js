@@ -1,14 +1,14 @@
+/* COMPLETE MAIN APP LOGIC - NO EMOJIS - NO PLACEHOLDERS */
 let yoruba = [], english = [], englishMap = {};
 let saved = JSON.parse(localStorage.getItem('saved') || '[]');
 let notes = JSON.parse(localStorage.getItem('notes') || '{}');
 let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
 let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":""}');
-let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1, currentVerse = 1;
+let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
 let currentLibrary = 'saved';
 let activeVerse = { b: 0, c: 0, v: 0 };
 let currentLineSpacing = parseFloat(localStorage.getItem('lineSpacing') || '1.5');
-let studioColor = 'white', studioFont = 'sans', selectedTemplate = 0, pickerType = null;
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
@@ -24,24 +24,31 @@ async function init() {
         } catch (e) {}
         document.getElementById('splash-screen').style.display = 'none';
         document.getElementById('app-container').style.display = 'block';
-        loadHome(); buildBooks(); buildDailyVerses(); buildTemplates(); updatePickerButtons(); attachEvents();
+        loadHome(); buildBooks(); buildDailyVerses(); attachEvents();
     } catch(e) { document.getElementById('splash-screen').innerHTML = "<h3>Error: " + e.message + "</h3>"; }
 }
 
 function attachEvents() {
-    document.getElementById('menu-btn').onclick = openDrawer;
-    document.getElementById('close-drawer').onclick = closeDrawer;
-    document.getElementById('search-btn').onclick = toggleSearch;
-    document.getElementById('audio-btn').onclick = playAudio;
-    document.getElementById('share-btn').onclick = shareChapter;
-    document.getElementById('settings-theme-btn').onclick = toggleDarkMode;
-    document.getElementById('settings-church-btn').onclick = toggleChurchMode;
-    document.getElementById('settings-font-btn').onclick = toggleFont;
-    document.getElementById('font-size-slider').addEventListener('input', changeFontSize);
-    document.getElementById('line-spacing-slider').addEventListener('input', changeLineSpacing);
-    document.getElementById('pick-book').onclick = () => openModal('book');
-    document.getElementById('pick-chapter').onclick = () => openModal('chapter');
-    document.getElementById('pick-verse').onclick = () => openModal('verse');
+    const menuBtn = document.getElementById('menu-btn');
+    const closeBtn = document.getElementById('close-drawer');
+    const searchBtn = document.getElementById('search-btn');
+    if (menuBtn) menuBtn.onclick = openDrawer;
+    if (closeBtn) closeBtn.onclick = closeDrawer;
+    if (searchBtn) searchBtn.onclick = toggleSearch;
+    const audioBtn = document.getElementById('audio-btn');
+    const shareBtn = document.getElementById('share-btn');
+    if (audioBtn) audioBtn.onclick = playAudio;
+    if (shareBtn) shareBtn.onclick = shareChapter;
+    const fontBtn = document.getElementById('settings-font-btn');
+    const themeBtn = document.getElementById('settings-theme-btn');
+    const churchBtn = document.getElementById('settings-church-btn');
+    if (fontBtn) fontBtn.onclick = toggleFont;
+    if (themeBtn) themeBtn.onclick = toggleDarkMode;
+    if (churchBtn) churchBtn.onclick = toggleChurchMode;
+    const fontSizeSlider = document.getElementById('font-size-slider');
+    const lineSpacingSlider = document.getElementById('line-spacing-slider');
+    if (fontSizeSlider) fontSizeSlider.addEventListener('input', changeFontSize);
+    if (lineSpacingSlider) lineSpacingSlider.addEventListener('input', changeLineSpacing);
 }
 
 function openDrawer() { document.getElementById('side-drawer').classList.add('open'); document.getElementById('drawer-overlay').style.display = 'block'; }
@@ -50,10 +57,9 @@ function goToHome() { closeDrawer(); switchScreen('home'); }
 function goToBooks() { closeDrawer(); switchScreen('books'); }
 function goToLibrary() { closeDrawer(); switchScreen('library'); loadLibrary(); }
 function goToDailyVerses() { closeDrawer(); switchScreen('daily'); buildDailyVerses(); }
-function goToStudio() { closeDrawer(); switchScreen('studio'); updateStudioPreview(); }
 function goToSettings() { closeDrawer(); switchScreen('settings'); updateSettingsPreview(); }
 function goToPlans() { closeDrawer(); switchScreen('plans'); }
-function switchScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-' + screen).classList.add('active'); document.querySelectorAll('.nav-btn').forEach((b, i) => { b.classList.toggle('active', (screen === 'home' && i === 0) || (screen === 'books' && i === 1) || (screen === 'studio' && i === 2) || (screen === 'library' && i === 3)); }); }
+function switchScreen(screen) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById('screen-' + screen).classList.add('active'); document.querySelectorAll('.nav-btn').forEach((b, i) => { b.classList.toggle('active', (screen === 'home' && i === 0) || (screen === 'books' && i === 1) || (screen === 'library' && i === 3)); }); }
 
 function loadHome() {
     const hour = new Date().getHours();
@@ -115,21 +121,6 @@ function toggleChurchMode() { document.body.classList.toggle('church'); const bt
 function toggleFont() { document.body.classList.toggle('serif'); const btn = document.getElementById('settings-font-btn'); btn.textContent = document.body.classList.contains('serif') ? 'OFF' : 'ON'; }
 
 function buildDailyVerses() { const day = new Date().getDate(); const list = document.getElementById('daily-list'); list.innerHTML = ''; const psalm = yoruba.find(v => v.book === 19 && v.chapter === day && v.verse === 1); if(psalm) { const eng = englishMap[`${psalm.book}-${psalm.chapter}-${psalm.verse}`] || ""; list.innerHTML += `<div class="daily-item"><h4>Daily Psalm</h4><p>${psalm.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[18]} ${psalm.chapter}:${psalm.verse}</div></div>`; } const gospel = yoruba.find(v => v.book === 40 && v.chapter === Math.max(1, day % 28) && v.verse === 1); if(gospel) { const eng = englishMap[`${gospel.book}-${gospel.chapter}-${gospel.verse}`] || ""; list.innerHTML += `<div class="daily-item"><h4>Daily Gospel</h4><p>${gospel.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[39]} ${gospel.chapter}:${gospel.verse}</div></div>`; } }
-
-// STUDIO LOGIC
-const templates = [];
-const colors = ['#1a237e','#b71c1c','#4a148c','#e65100','#00695c','#1565c0','#212121','#880e4f','#33691e','#0d47a1','#5d4037','#01579b','#2e7d32','#37474f','#8e24aa','#00838f','#bf360c','#3e2723','#64b5f6','#FFD700'];
-for (let i=0; i<500; i++) { const c1 = colors[i % colors.length]; const c2 = colors[(i+7) % colors.length]; templates.push(`linear-gradient(135deg, ${c1}, ${c2})`); }
-
-function buildTemplates() { const grid = document.getElementById('template-grid'); grid.innerHTML = ''; templates.forEach((bg, i) => { const div = document.createElement('div'); div.className = 'template-item' + (i === 0 ? ' selected' : ''); div.style.background = bg; div.onclick = () => { selectedTemplate = i; document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected')); div.classList.add('selected'); updateStudioPreview(); }; grid.appendChild(div); }); }
-
-function updatePickerButtons() { document.getElementById('pick-book').textContent = currentBookName; document.getElementById('pick-chapter').textContent = currentChapter; document.getElementById('pick-verse').textContent = currentVerse; }
-function openModal(type) { pickerType = type; const modal = document.getElementById('picker-modal'); const list = document.getElementById('modal-list'); const title = document.getElementById('modal-title'); list.innerHTML = ''; if (type === 'book') { title.textContent = 'Select Book'; englishNames.forEach((name, i) => { const div = document.createElement('div'); div.className = 'modal-list-item'; div.textContent = name; div.onclick = () => { currentBook = codes[i]; currentBookName = name; currentChapter = 1; currentVerse = 1; updatePickerButtons(); closeModal(); updateStudioPreview(); }; list.appendChild(div); }); } else if (type === 'chapter') { title.textContent = 'Select Chapter'; const bN = codes.indexOf(currentBook) + 1; const maxCh = Math.max(...yoruba.filter(v => v.book === bN).map(v => v.chapter)); for (let i=1; i<=maxCh; i++) { const div = document.createElement('div'); div.className = 'modal-list-item'; div.textContent = i; div.onclick = () => { currentChapter = i; currentVerse = 1; updatePickerButtons(); closeModal(); updateStudioPreview(); }; list.appendChild(div); } } else if (type === 'verse') { title.textContent = 'Select Verse'; const bN = codes.indexOf(currentBook) + 1; const maxV = yoruba.filter(v => v.book === bN && v.chapter == currentChapter).length; for (let i=1; i<=maxV; i++) { const div = document.createElement('div'); div.className = 'modal-list-item'; div.textContent = i; div.onclick = () => { currentVerse = i; updatePickerButtons(); closeModal(); updateStudioPreview(); }; list.appendChild(div); } } modal.style.display = 'flex'; }
-function closeModal() { document.getElementById('picker-modal').style.display = 'none'; }
-function toggleStudioFont() { const btn = document.getElementById('studio-font-btn'); studioFont = studioFont === 'sans' ? 'serif' : 'sans'; btn.textContent = studioFont === 'sans' ? 'Sans' : 'Serif'; updateStudioPreview(); }
-function setStudioColor(color) { studioColor = color; updateStudioPreview(); }
-function updateStudioPreview() { const bN = codes.indexOf(currentBook) + 1; const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse); const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || ""; document.getElementById('preview-ref').textContent = `${currentBookName} ${currentChapter}:${currentVerse}`; let text = ''; if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text; if (document.getElementById('img-en').checked && englishVerse) text += (text ? '<br><br>' : '') + englishVerse; const textEl = document.getElementById('preview-text'); textEl.innerHTML = text; textEl.style.fontFamily = studioFont === 'sans' ? 'sans-serif' : 'serif'; textEl.style.color = studioColor; textEl.style.fontSize = document.getElementById('studio-font-size').value + 'px'; document.getElementById('image-preview').style.background = templates[selectedTemplate]; }
-function shareStudioVerse() { const bN = codes.indexOf(currentBook) + 1; const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse); const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || ""; const text = `${yorubaVerse ? yorubaVerse.text : ''}${englishVerse ? '\n\n' + englishVerse : ''}`; if (navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}:${currentVerse}`, text: text }); else alert(text); }
 function selectPlan(plan) { alert('Plan selected: ' + plan); currentBook = 'GEN'; currentBookName = 'Genesis'; currentChapter = 1; loadChapter(); }
 
 window.onload = init;
