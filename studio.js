@@ -59,6 +59,23 @@ async function init() {
             if (eRes.ok) { english = await eRes.json(); english.forEach(v => englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text); }
         } catch (e) {}
         await document.fonts.ready;
+
+        // ---------- NEW CODE START: Parse URL parameters for Share as Image ----------
+        const urlParams = new URLSearchParams(window.location.search);
+        const bParam = urlParams.get('b');
+        const cParam = urlParams.get('c');
+        const vParam = urlParams.get('v');
+        if (bParam && cParam && vParam) {
+            const bookIndex = parseInt(bParam) - 1;
+            if (bookIndex >= 0 && bookIndex < codes.length) {
+                currentBook = codes[bookIndex];
+                currentBookName = englishNames[bookIndex];
+                currentChapter = parseInt(cParam);
+                currentVerse = parseInt(vParam);
+            }
+        }
+        // ---------- NEW CODE END ----------
+
         buildTemplates(); updatePickerButtons(); updatePreview();
         document.getElementById('pick-book').onclick = () => openModal('book');
         document.getElementById('pick-chapter').onclick = () => openModal('chapter');
