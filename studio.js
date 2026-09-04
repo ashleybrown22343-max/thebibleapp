@@ -24,7 +24,7 @@ const photoFiles = [
     "29944.webp", "29891.webp", "29960.webp", "29946.webp", "29886.webp",
     "29919.webp", "29958.webp"
 ];
-const photoUrls = photoFiles.map(file => `data/backgrounds/${file}`);
+const photoUrls = photoFiles.map(file => `backgrounds/${file}`);
 
 async function init() {
     try {
