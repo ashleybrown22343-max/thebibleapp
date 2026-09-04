@@ -13,15 +13,12 @@
         <div style="width: 50px;"></div>
     </header>
 
-    <!-- Sticky Action Bar -->
     <div class="sticky-actions">
         <button class="primary-btn" onclick="downloadImage()">Download</button>
         <button class="primary-btn share" onclick="shareImage()">Share Image</button>
     </div>
 
     <div class="studio-container">
-        
-        <!-- THE FIXED STICKY PREVIEW -->
         <div class="sticky-preview">
             <div id="image-preview" class="preview-card">
                 <h3 id="preview-ref">Psalms 23:6</h3>
@@ -29,7 +26,6 @@
             </div>
         </div>
 
-        <!-- Custom Verse Picker -->
         <div class="controls-section">
             <h3>Select Verse</h3>
             <div class="picker-buttons">
@@ -46,7 +42,6 @@
             </div>
         </div>
 
-        <!-- Killer Features: Layout & Design -->
         <div class="controls-section">
             <h3>Layout & Background</h3>
             <div class="control-row"><label>Aspect Ratio</label><div class="ratio-buttons"><button onclick="setRatio('square')">1:1</button><button onclick="setRatio('portrait')">4:5</button><button onclick="setRatio('landscape')">16:9</button></div></div>
@@ -56,10 +51,13 @@
 
         <div class="controls-section">
             <h3>Text Design</h3>
+            <div class="control-row" style="justify-content:flex-end; border-bottom:none;">
+                <button onclick="resetToAutoFit()" style="background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 14px; font-weight: bold;">Reset to Auto-Fit</button>
+            </div>
             <div class="control-row"><label>Font Style</label><button id="studio-font-btn" onclick="toggleFont()">Sans</button></div>
-            <div class="control-row"><label>Text Size</label><input type="range" id="studio-font-size" min="20" max="64" value="32" oninput="updatePreview()"></div>
-            <div class="control-row"><label>Line Spacing</label><input type="range" id="studio-line-spacing" min="1.0" max="2.5" step="0.1" value="1.7" oninput="updatePreview()"></div>
-            <div class="control-row"><label>Text Padding</label><input type="range" id="studio-padding" min="40" max="200" value="80" oninput="updatePreview()"></div>
+            <div class="control-row"><label>Font Size</label><input type="range" id="studio-font-size" min="20" max="60" value="32" oninput="manualFontSize(this.value)"></div>
+            <div class="control-row"><label>Line Spacing</label><input type="range" id="studio-line-spacing" min="1.0" max="2.5" step="0.1" value="1.7" oninput="manualLineSpacing(this.value)"></div>
+            <div class="control-row"><label>Text Padding</label><input type="range" id="studio-padding" min="10" max="60" value="20" oninput="manualPadding(this.value)"></div>
             <div class="control-row"><label>Text Shadow</label><button id="shadow-btn" onclick="toggleShadow()">ON</button></div>
             <div class="control-row"><label>Text Color</label><div class="color-buttons"><button style="background:#fff; color:#000;" onclick="setColor('white')">A</button><button style="background:#000; color:#fff;" onclick="setColor('black')">A</button><button style="background:#FFD700; color:#000;" onclick="setColor('gold')">A</button><button style="background:#1E90FF; color:#fff;" onclick="setColor('blue')">A</button></div></div>
             <div class="control-row"><label>Alignment</label><div class="align-buttons"><button onclick="setAlign('left')">Left</button><button onclick="setAlign('center')">Center</button><button onclick="setAlign('right')">Right</button></div></div>
@@ -74,4 +72,4 @@
 
     <script src="studio.js"></script>
 </body>
-                                                                    </html>
+                                                                                                                                   </html>
