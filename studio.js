@@ -125,6 +125,7 @@ function buildTemplates() {
     });
 }
 
+// FIXED PREVIEW (No overflow, proper scaling)
 function updatePreview() {
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
@@ -134,7 +135,7 @@ function updatePreview() {
     
     let text = '';
     if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text;
-    if (document.getElementById('img-en').checked && englishVerse) text += (text ? '\n\n' : '') + englishVerse;
+    if (document.getElementById('img-en').checked && englishVerse) text += (text ? ' ' : '') + englishVerse;
     
     const textEl = document.getElementById('preview-text');
     textEl.innerHTML = text;
@@ -151,12 +152,12 @@ function updatePreview() {
     else if (currentVert === 'bottom') { preview.style.justifyContent = 'flex-end'; }
     else { preview.style.justifyContent = 'center'; }
     
-    if (currentWatermark) { textEl.innerHTML += '<div style="font-size:12px; margin-top:40px; opacity:0.6; font-family:Poppins;">Bibeli Mimo</div>'; }
+    if (currentWatermark) { textEl.innerHTML += '<div style="font-size:12px; margin-top:20px; opacity:0.6;">Bibeli Mimo</div>'; }
     
     document.getElementById('image-preview').style.background = templates[selectedTemplate];
 }
 
-// WORLD-CLASS CANVAS GENERATOR
+// WORLD-CLASS CANVAS GENERATOR - FIXED MATH
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = text.split(' ');
     let line = '';
@@ -175,6 +176,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
         }
     }
     ctx.fillText(line.trim(), x, y);
+    return y; // Return the Y position of the last line
 }
 
 function generateCanvas() {
@@ -187,7 +189,7 @@ function generateCanvas() {
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     
-    // Draw Gradient
+    // 1. Draw Gradient
     const grad = ctx.createLinearGradient(0, 0, width, height);
     const parts = templates[selectedTemplate].match(/#[0-9a-fA-F]{6}/g);
     if (parts && parts.length >= 2) {
@@ -200,12 +202,18 @@ function generateCanvas() {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
-    // Determine Fonts
+    // 2. Determine Fonts (Correct scaling: 20-64 -> 60-192, not 80-256)
     const isSans = studioFont === 'sans';
     const mainFont = isSans ? 'Poppins' : 'Playfair Display';
     const refFont = isSans ? 'Poppins' : 'Playfair Display';
 
-    // Parse Text
+    const rawFontSize = parseInt(document.getElementById('studio-font-size').value);
+    const fontSize = Math.round(rawFontSize * 3); // Scale to canvas (60px - 192px)
+    const lineHeight = fontSize * parseFloat(document.getElementById('studio-line-spacing').value);
+    const padding = parseInt(document.getElementById('studio-padding').value) * 4;
+    const maxTextWidth = width - (padding * 2);
+
+    // 3. Get Text
     const bN = codes.indexOf(currentBook) + 1;
     const yorubaVerse = yoruba.find(v => v.book === bN && v.chapter == currentChapter && v.verse == currentVerse);
     const englishVerse = englishMap[`${bN}-${currentChapter}-${currentVerse}`] || "";
@@ -214,14 +222,37 @@ function generateCanvas() {
     if (document.getElementById('img-yo').checked && yorubaVerse) text += yorubaVerse.text;
     if (document.getElementById('img-en').checked && englishVerse) text += (text ? ' ' : '') + englishVerse;
 
-    const fontSize = parseInt(document.getElementById('studio-font-size').value) * 4;
-    const lineHeight = fontSize * parseFloat(document.getElementById('studio-line-spacing').value);
-    const padding = parseInt(document.getElementById('studio-padding').value) * 4;
-    const maxTextWidth = width - (padding * 2);
-    const verticalPos = currentVert === 'top' ? padding : currentVert === 'bottom' ? height - padding : height / 2;
-    const startY = verticalPos - (lineHeight * Math.ceil(text.length / (maxTextWidth / fontSize)));
+    // 4. Calculate the total height of the text block to position it perfectly
+    ctx.font = `${fontSize}px ${mainFont}`;
+    const words = text.split(' ');
+    let line = '';
+    let lineCount = 0;
+    
+    for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxTextWidth && n > 0) {
+            lineCount++;
+            line = words[n] + ' ';
+        } else {
+            line = testLine;
+        }
+    }
+    lineCount++;
 
-    // Draw Reference
+    const totalTextHeight = lineCount * lineHeight;
+    
+    // 5. Position Y based on vertical alignment
+    let y;
+    if (currentVert === 'top') {
+        y = padding + lineHeight; // Start below padding
+    } else if (currentVert === 'bottom') {
+        y = height - padding - totalTextHeight + lineHeight; // End above padding
+    } else { // Center
+        y = (height / 2) - (totalTextHeight / 2) + lineHeight;
+    }
+
+    // 6. Draw Reference (Top)
     ctx.save();
     if (currentShadow) {
         ctx.shadowColor = 'rgba(0,0,0,0.7)';
@@ -234,18 +265,17 @@ function generateCanvas() {
     ctx.textBaseline = 'middle';
     ctx.fillText(`${currentBookName} ${currentChapter}:${currentVerse}`, width / 2, padding);
 
-    // Draw Main Text
+    // 7. Draw Main Text
     ctx.font = `${fontSize}px ${mainFont}`;
     ctx.lineWidth = 10;
-    let dynamicY = startY + (lineHeight * 1.5);
-    if(currentVert === 'center') dynamicY = height / 2 - (lineHeight * 2);
+    ctx.textBaseline = 'top';
+    wrapText(ctx, text, width / 2, y, maxTextWidth, lineHeight);
     
-    wrapText(ctx, text, width / 2, dynamicY, maxTextWidth, lineHeight);
-    
-    // Watermark
+    // 8. Draw Watermark (Bottom)
     if (currentWatermark) {
         ctx.font = `${fontSize * 0.2}px Poppins`;
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.textBaseline = 'middle';
         ctx.fillText('Bibeli Mimo', width / 2, height - (padding / 2));
     }
     
