@@ -5,15 +5,28 @@ let highlights = JSON.parse(localStorage.getItem('highlights') || '{}');
 let history = JSON.parse(localStorage.getItem('history') || '[]');
 let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":""}');
 let currentBook = "GEN", currentBookName = "Genesis", currentChapter = 1;
-let currentFontSize = parseInt(localStorage.getItem('fontSize') || '100');
 let currentEnglishChapterText = '';
 let currentLibrary = 'saved';
 let activeVerse = { b: 0, c: 0, v: 0 };
 let isParallel = false;
 let currentPlan = 'one-year';
+let isRedLetter = false;
+let isItalic = true;
+let currentLineSpacing = parseFloat(localStorage.getItem('lineSpacing') || '1.5');
 
 const codes = ["GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI","2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SNG","ISA","JER","LAM","EZK","DAN","HOS","JOL","AMO","OBA","JON","MIC","NAM","HAB","ZEP","HAG","ZEC","MAL","MAT","MRK","LUK","JHN","ACT","ROM","1CO","2CO","GAL","EPH","PHP","COL","1TH","2TH","1TI","2TI","TIT","PHM","HEB","JAS","1PE","2PE","1JN","2JN","3JN","JUD","REV"];
 const englishNames = ["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+
+// Red Letter Verses (Simplified: Book/Chapter/Verse of Jesus' words in Gospels)
+const redLetterMap = {};
+// Add key red letter verses (This is a small sample; expand later)
+const redLetterList = [
+    {b:40,c:5,v:3},{b:40,c:5,v:4},{b:40,c:5,v:5},{b:40,c:5,v:6},{b:40,c:5,v:7},{b:40,c:5,v:8},{b:40,c:5,v:9},{b:40,c:5,v:10},
+    {b:40,c:6,v:5},{b:40,c:6,v:6},{b:40,c:6,v:7},{b:40,c:6,v:8},{b:40,c:6,v:9},{b:40,c:6,v:10},
+    {b:43,c:3,v:3},{b:43,c:3,v:4},{b:43,c:3,v:5},{b:43,c:3,v:6},{b:43,c:3,v:7},{b:43,c:3,v:8},
+    {b:43,c:14,v:1},{b:43,c:14,v:2},{b:43,c:14,v:3},{b:43,c:14,v:4},{b:43,c:14,v:5},{b:43,c:14,v:6}
+];
+redLetterList.forEach(v => redLetterMap[`${v.b}-${v.c}-${v.v}`] = true);
 
 async function init() {
     try {
@@ -26,8 +39,15 @@ async function init() {
         } catch (e) {}
         document.getElementById('splash-screen').style.display = 'none';
         document.getElementById('app-container').style.display = 'block';
-        loadHome(); buildBooks();
-        attachEvents();
+        
+        // Load settings
+        const savedFontSize = localStorage.getItem('fontSize') || '100';
+        document.getElementById('font-size-slider').value = savedFontSize;
+        document.getElementById('font-size-label').textContent = savedFontSize + '%';
+        document.getElementById('line-spacing-slider').value = currentLineSpacing;
+        document.getElementById('line-spacing-label').textContent = currentLineSpacing;
+        
+        loadHome(); buildBooks(); buildDailyVerses(); buildTemplates(); attachEvents();
     } catch(e) { document.getElementById('splash-screen').innerHTML = "<h3>Error: " + e.message + "</h3>"; }
 }
 
@@ -37,10 +57,16 @@ function attachEvents() {
     document.getElementById('search-btn').onclick = toggleSearch;
     document.getElementById('audio-btn').onclick = playAudio;
     document.getElementById('share-btn').onclick = shareChapter;
+    
     document.getElementById('settings-theme-btn').onclick = toggleDarkMode;
     document.getElementById('settings-church-btn').onclick = toggleChurchMode;
     document.getElementById('settings-parallel-btn').onclick = toggleParallel;
     document.getElementById('settings-font-btn').onclick = toggleFont;
+    document.getElementById('settings-red-btn').onclick = toggleRedLetter;
+    document.getElementById('settings-italic-btn').onclick = toggleItalic;
+    
+    document.getElementById('font-size-slider').addEventListener('input', changeFontSize);
+    document.getElementById('line-spacing-slider').addEventListener('input', changeLineSpacing);
 }
 
 function openDrawer() { document.getElementById('side-drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('show'); }
@@ -48,14 +74,15 @@ function closeDrawer() { document.getElementById('side-drawer').classList.remove
 function goToHome() { closeDrawer(); switchScreen('home'); }
 function goToBooks() { closeDrawer(); switchScreen('books'); }
 function goToLibrary() { closeDrawer(); switchScreen('library'); }
+function goToDailyVerses() { closeDrawer(); switchScreen('daily'); }
+function goToSettings() { closeDrawer(); switchScreen('settings'); }
+function goToPlans() { closeDrawer(); switchScreen('plans'); }
 
 function switchScreen(screen) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + screen).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach((b, i) => { b.classList.toggle('active', (screen === 'home' && i === 0) || (screen === 'books' && i === 1) || (screen === 'library' && i === 2)); });
 }
-
-function switchTab(tab) { currentLibrary = tab; document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', (tab === 'saved' && i === 0) || (tab === 'notes' && i === 1))); loadLibrary(); }
 
 function loadHome() {
     const hour = new Date().getHours();
@@ -64,23 +91,25 @@ function loadHome() {
     document.getElementById('last-read').textContent = `${englishNames[codes.indexOf(last.b)]} ${last.c}`;
     const day = new Date().getDate();
     if(yoruba[day * 500]) document.getElementById('votd').textContent = yoruba[day * 500].text;
+    
     const today = new Date().toDateString();
     if(streak.lastDate !== today) { const yesterday = new Date(Date.now() - 86400000).toDateString(); if(streak.lastDate === yesterday) streak.days++; else streak.days = 1; streak.lastDate = today; localStorage.setItem('streak', JSON.stringify(streak)); }
     document.getElementById('streak-count').textContent = streak.days + " Days";
-    let allChapters;
-    if(currentPlan === 'one-year') allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))];
-    else if(currentPlan === 'nt-90') allChapters = [...new Set(yoruba.filter(v => v.book >= 40).map(v => `${v.book}-${v.chapter}`))];
-    else allChapters = [...new Set(yoruba.filter(v => v.book === 19 || v.book === 20).map(v => `${v.book}-${v.chapter}`))];
-    const now = new Date(), start = new Date(now.getFullYear(), 0, 0);
-    const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-    const target = allChapters[dayOfYear % allChapters.length].split('-');
-    document.getElementById('plan-text').textContent = `${englishNames[parseInt(target[0]) - 1]} ${target[1]}`;
-    const histContainer = document.getElementById('history-list'); histContainer.innerHTML = '';
-    history.forEach(h => { const div = document.createElement('div'); div.className = 'history-item'; div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`; div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); }; histContainer.appendChild(div); });
-}
+    
+    // Reading Progress
+    const readChapters = new Set(saved.map(k => k.split('-').slice(0,2).join('-')));
+    const totalChapters = new Set(yoruba.map(v => `${v.book}-${v.chapter}`)).size;
+    const progress = Math.round((readChapters.size / totalChapters) * 100);
+    document.getElementById('reading-progress-bar').style.width = progress + '%';
+    document.getElementById('progress-text').textContent = progress + '% Complete';
 
-function updatePlanType() { currentPlan = document.getElementById('plan-select').value; loadHome(); }
-function loadPlanChapter() { let allChapters; if(currentPlan === 'one-year') allChapters = [...new Set(yoruba.map(v => `${v.book}-${v.chapter}`))]; else if(currentPlan === 'nt-90') allChapters = [...new Set(yoruba.filter(v => v.book >= 40).map(v => `${v.book}-${v.chapter}`))]; else allChapters = [...new Set(yoruba.filter(v => v.book === 19 || v.book === 20).map(v => `${v.book}-${v.chapter}`))]; const now = new Date(), start = new Date(now.getFullYear(), 0, 0); const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24)); const target = allChapters[dayOfYear % allChapters.length].split('-'); currentBook = codes[parseInt(target[0]) - 1]; currentBookName = englishNames[parseInt(target[0]) - 1]; currentChapter = parseInt(target[1]); loadChapter(); }
+    const histContainer = document.getElementById('history-list'); histContainer.innerHTML = '';
+    history.forEach(h => {
+        const div = document.createElement('div'); div.className = 'history-item'; div.textContent = `${englishNames[codes.indexOf(h.b)]} ${h.c}`;
+        div.onclick = () => { currentBook = h.b; currentBookName = englishNames[codes.indexOf(h.b)]; currentChapter = h.c; loadChapter(); };
+        histContainer.appendChild(div);
+    });
+}
 
 function buildBooks() {
     const otGrid = document.getElementById('ot-grid'); const ntGrid = document.getElementById('nt-grid');
@@ -110,10 +139,21 @@ function loadChapter() {
     let html = ''; currentEnglishChapterText = '';
     verses.forEach(v => {
         const eng = englishMap[`${v.book}-${v.chapter}-${v.verse}`] || ""; currentEnglishChapterText += eng + ' ';
-        const key = `${v.book}-${v.chapter}-${v.verse}`; const note = notes[key]; const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
-        html += `<div class="verse-container ${highlightClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})"><span class="verse-number">${v.verse}</span><p class="yoruba-text">${v.text}</p><p class="english-text">${eng}</p>${note ? `<div class="note-text">${note}</div>` : ''}</div>`;
+        const key = `${v.book}-${v.chapter}-${v.verse}`; const note = notes[key];
+        const highlightClass = highlights[key] ? `highlight-${highlights[key]}` : '';
+        const redClass = isRedLetter && redLetterMap[key] ? 'red-letter' : '';
+        const italicClass = isItalic ? 'italic-word' : '';
+        html += `<div class="verse-container ${highlightClass} ${redClass}" onclick="openActionSheet(${v.book}, ${v.chapter}, ${v.verse})">
+            <span class="verse-number">${v.verse}</span>
+            <p class="yoruba-text ${italicClass}">${v.text}</p>
+            <p class="english-text">${eng}</p>
+            ${note ? `<div class="note-text">${note}</div>` : ''}
+        </div>`;
     });
-    document.getElementById('bible-text').innerHTML = html; document.getElementById('bible-text').style.fontSize = currentFontSize + '%';
+    document.getElementById('bible-text').innerHTML = html;
+    document.getElementById('bible-text').style.fontSize = localStorage.getItem('fontSize') + '%';
+    document.getElementById('bible-text').style.lineHeight = currentLineSpacing;
+    
     const currentHistory = { b: currentBook, c: currentChapter };
     history = history.filter(h => h.b !== currentHistory.b || h.c !== currentHistory.c); history.unshift(currentHistory); if (history.length > 10) history.pop();
     localStorage.setItem('history', JSON.stringify(history)); localStorage.setItem('lastRead', JSON.stringify({b: currentBook, c: currentChapter}));
@@ -125,7 +165,11 @@ function loadChapter() {
 function nextChapter() { if(currentChapter < 150) { currentChapter++; loadChapter(); } }
 function prevChapter() { if(currentChapter > 1) { currentChapter--; loadChapter(); } }
 function continueReading() { const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}'); currentBook = last.b; currentBookName = englishNames[codes.indexOf(currentBook)]; currentChapter = last.c; loadChapter(); }
-function changeFont(delta) { currentFontSize += delta * 10; if (currentFontSize < 80) currentFontSize = 80; if (currentFontSize > 150) currentFontSize = 150; localStorage.setItem('fontSize', currentFontSize); document.getElementById('bible-text').style.fontSize = currentFontSize + '%'; document.getElementById('font-size-label').textContent = currentFontSize + '%'; }
+function changeFontSize(e) { const val = e.target.value; localStorage.setItem('fontSize', val); document.getElementById('font-size-label').textContent = val + '%'; document.getElementById('bible-text').style.fontSize = val + '%'; }
+function changeLineSpacing(e) { currentLineSpacing = e.target.value; localStorage.setItem('lineSpacing', currentLineSpacing); document.getElementById('line-spacing-label').textContent = currentLineSpacing; document.getElementById('bible-text').style.lineHeight = currentLineSpacing; }
+
+function toggleRedLetter() { isRedLetter = !isRedLetter; const btn = document.getElementById('settings-red-btn'); btn.textContent = isRedLetter ? 'ON' : 'OFF'; btn.classList.toggle('active', isRedLetter); loadChapter(); }
+function toggleItalic() { isItalic = !isItalic; const btn = document.getElementById('settings-italic-btn'); btn.textContent = isItalic ? 'ON' : 'OFF'; btn.classList.toggle('active', isItalic); loadChapter(); }
 
 function openActionSheet(b, c, v) {
     activeVerse = { b: b, c: c, v: v };
@@ -141,6 +185,8 @@ function saveVerse() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVe
 function openNoteModal() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; document.getElementById('note-input').value = notes[key] || ""; document.getElementById('note-overlay').style.display = 'block'; document.getElementById('note-modal').style.display = 'block'; }
 function closeNoteModal() { document.getElementById('note-overlay').style.display = 'none'; document.getElementById('note-modal').style.display = 'none'; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').classList.add('show'); }
 function saveNote() { const key = `${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`; const text = document.getElementById('note-input').value; if (text.trim() === "") delete notes[key]; else notes[key] = text; localStorage.setItem('notes', JSON.stringify(notes)); closeNoteModal(); loadChapter(); }
+
+function switchLibrary(type) { currentLibrary = type; document.querySelectorAll('.tab-btn').forEach((btn, i) => btn.classList.toggle('active', (type === 'saved' && i === 0) || (type === 'notes' && i === 1))); loadLibrary(); }
 function loadLibrary() { const list = document.getElementById('library-list'); list.innerHTML = ''; if (currentLibrary === 'saved') { saved.forEach(key => { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p>`; div.onclick = () => { removeBookmark(key); }; list.appendChild(div); } }); if (list.innerHTML === '') list.innerHTML = '<p>Tap any verse to save it.</p>'; } else { for (const key in notes) { const [b,c,v] = key.split('-').map(Number); const verse = yoruba.find(x => x.book === b && x.chapter === c && x.verse === v); if(verse) { const div = document.createElement('div'); div.className = 'card'; div.innerHTML = `<strong>${englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p class="note-text">${notes[key]}</p>`; div.onclick = () => { delete notes[key]; localStorage.setItem('notes', JSON.stringify(notes)); loadLibrary(); }; list.appendChild(div); } } if (list.innerHTML === '') list.innerHTML = '<p>Tap the pencil icon to add a note.</p>'; } }
 function removeBookmark(key) { saved = saved.filter(k => k !== key); localStorage.setItem('saved', JSON.stringify(saved)); loadLibrary(); }
 
@@ -160,15 +206,109 @@ function jumpToVerse(b,c,v) { currentBook = codes[b-1]; currentBookName = englis
 function playAudio() { if (speechSynthesis.speaking) { speechSynthesis.cancel(); return; } const u = new SpeechSynthesisUtterance(currentEnglishChapterText); u.lang = 'en-US'; speechSynthesis.speak(u); }
 function shareChapter() { const text = document.getElementById('bible-text').innerText; if(navigator.share) navigator.share({ title: `${currentBookName} ${currentChapter}`, text: text }); else alert(text); }
 
-// Drawer Settings
 function toggleDarkMode() { document.body.classList.toggle('dark'); const btn = document.getElementById('settings-theme-btn'); btn.textContent = document.body.classList.contains('dark') ? 'ON' : 'OFF'; btn.classList.toggle('active', document.body.classList.contains('dark')); }
 function toggleChurchMode() { document.body.classList.toggle('church'); const btn = document.getElementById('settings-church-btn'); btn.textContent = document.body.classList.contains('church') ? 'ON' : 'OFF'; btn.classList.toggle('active', document.body.classList.contains('church')); }
 function toggleParallel() { isParallel = !isParallel; document.getElementById('bible-text').classList.toggle('parallel-mode', isParallel); const btn = document.getElementById('settings-parallel-btn'); btn.textContent = isParallel ? 'ON' : 'OFF'; btn.classList.toggle('active', isParallel); }
-function toggleFont() { document.body.classList.toggle('serif'); const btn = document.getElementById('settings-font-btn'); btn.textContent = document.body.classList.contains('serif') ? 'Serif' : 'Sans'; }
+function toggleFont() { document.body.classList.toggle('serif'); const btn = document.getElementById('settings-font-btn'); btn.textContent = document.body.classList.contains('serif') ? 'OFF' : 'ON'; }
+
+// Daily Verses
+function buildDailyVerses() {
+    const day = new Date().getDate();
+    const dailyList = document.getElementById('daily-list'); dailyList.innerHTML = '';
+    
+// Daily Psalm (book 19)
+    const psalm = yoruba.find(v => v.book === 19 && v.chapter === day && v.verse === 1);
+    if(psalm) {
+        const eng = englishMap[`${psalm.book}-${psalm.chapter}-${psalm.verse}`] || "";
+        dailyList.innerHTML += `<div class="daily-item"><h4>Daily Psalm</h4><p>${psalm.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[18]} ${psalm.chapter}:${psalm.verse}</div></div>`;
+    }
+    
+    // Daily Gospel (book 40-43, chapter 1-12)
+    const gospel = yoruba.find(v => v.book === 40 && v.chapter === Math.max(1, day % 28) && v.verse === 1);
+    if(gospel) {
+        const eng = englishMap[`${gospel.book}-${gospel.chapter}-${gospel.verse}`] || "";
+        dailyList.innerHTML += `<div class="daily-item"><h4>Daily Gospel</h4><p>${gospel.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[39]} ${gospel.chapter}:${gospel.verse}</div></div>`;
+    }
+    
+    // Daily Verse (book 60 - 1 Peter, chapter 5, verse 13)
+    const dailyVerse = yoruba.find(v => v.book === 60 && v.chapter === 5 && v.verse === 13);
+    if(dailyVerse) {
+        const eng = englishMap[`${dailyVerse.book}-${dailyVerse.chapter}-${dailyVerse.verse}`] || "";
+        dailyList.innerHTML += `<div class="daily-item"><h4>Daily Verse</h4><p>${dailyVerse.text}<br><em>${eng}</em></p><div class="daily-ref">${englishNames[59]} ${dailyVerse.chapter}:${dailyVerse.verse}</div></div>`;
+    }
+}
 
 // Image Generator
-function generateImage() { closeActionSheet(); const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v); const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || ""; document.getElementById('image-ref').textContent = `${englishNames[activeVerse.b-1]} ${activeVerse.c}:${activeVerse.v}`; document.getElementById('image-text').innerHTML = `${verseObj.text}<br><br><em style="opacity:0.8; font-size:14px;">${eng}</em>`; document.getElementById('image-modal').style.display = 'flex'; }
+const templates = [
+    'linear-gradient(135deg, #1a237e, #0f172a)',
+    'linear-gradient(135deg, #1b5e20, #000)',
+    'linear-gradient(135deg, #b71c1c, #000)',
+    'linear-gradient(135deg, #4a148c, #000)',
+    'linear-gradient(135deg, #e65100, #000)',
+    'linear-gradient(135deg, #00695c, #000)',
+    'linear-gradient(135deg, #1565c0, #000)',
+    'linear-gradient(135deg, #212121, #000)',
+    'linear-gradient(135deg, #880e4f, #000)',
+    'linear-gradient(135deg, #33691e, #000)',
+    'linear-gradient(135deg, #0d47a1, #000)',
+    'linear-gradient(135deg, #5d4037, #000)',
+    'linear-gradient(135deg, #01579b, #000)',
+    'linear-gradient(135deg, #2e7d32, #000)',
+    'linear-gradient(135deg, #37474f, #000)',
+    'linear-gradient(135deg, #8e24aa, #000)',
+    'linear-gradient(135deg, #00838f, #000)',
+    'linear-gradient(135deg, #bf360c, #000)',
+    'linear-gradient(135deg, #3e2723, #000)',
+    'linear-gradient(135deg, #1a237e, #64b5f6)',
+    'linear-gradient(135deg, #4caf50, #1b5e20)',
+    'linear-gradient(135deg, #f44336, #000)',
+    'linear-gradient(135deg, #ff9800, #000)',
+    'linear-gradient(135deg, #9c27b0, #000)'
+];
+let selectedTemplate = 0;
+let currentImageVerse = null;
+
+function buildTemplates() {
+    const grid = document.getElementById('image-templates'); grid.innerHTML = '';
+    templates.forEach((bg, i) => {
+        const div = document.createElement('div'); div.className = 'template-item' + (i === 0 ? ' selected' : ''); div.style.background = bg;
+        div.onclick = () => { selectedTemplate = i; document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected')); div.classList.add('selected'); updateImagePreview(); };
+        grid.appendChild(div);
+    });
+}
+
+function generateImage() {
+    closeActionSheet();
+    currentImageVerse = activeVerse;
+    const verseObj = yoruba.find(x => x.book === activeVerse.b && x.chapter === activeVerse.c && x.verse === activeVerse.v);
+    const eng = englishMap[`${activeVerse.b}-${activeVerse.c}-${activeVerse.v}`] || "";
+    document.getElementById('preview-ref').textContent = `${englishNames[activeVerse.b-1]} ${activeVerse.c}:${activeVerse.v}`;
+    let text = '';
+    if(document.getElementById('img-yo').checked) text += verseObj.text;
+    if(document.getElementById('img-en').checked) text += (text ? '<br><br>' : '') + eng;
+    document.getElementById('preview-text').innerHTML = text;
+    document.getElementById('image-modal').style.display = 'flex';
+    updateImagePreview();
+}
+
+function updateImagePreview() {
+    const card = document.getElementById('image-preview');
+    card.style.background = templates[selectedTemplate];
+}
+
 function closeImage() { document.getElementById('image-modal').style.display = 'none'; }
-function downloadImage() { const text = document.getElementById('image-text').innerText; if(navigator.share) navigator.share({ title: 'Bibeli Mimo', text: text }); else alert(text); }
+function downloadImage() {
+    const text = document.getElementById('preview-text').innerText;
+    if(navigator.share) navigator.share({ title: 'Bibeli Mimo', text: text });
+    else alert(text);
+}
+
+// Reading Plans
+function selectPlan(plan) {
+    currentPlan = plan;
+    alert('Plan selected: ' + plan + '. Reading plan will start from Genesis 1.');
+    currentBook = 'GEN'; currentBookName = 'Genesis'; currentChapter = 1;
+    loadChapter();
+}
 
 window.onload = init;
