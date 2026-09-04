@@ -130,3 +130,18 @@ button { outline: none; border-radius: 8px; cursor: pointer; font-weight: bold; 
 .daily-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
 .daily-item h4 { margin: 0 0 5px 0; color: var(--accent); }
 .daily-ref { text-align: right; font-size: 12px; opacity: 0.6; margin-top: 10px; font-weight: bold; }
+
+
+/* SEARCH SCROLL & HIGHLIGHT */
+#search-results {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+}
+.search-highlight {
+    background-color: #f59e0b;
+    color: #fff;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
