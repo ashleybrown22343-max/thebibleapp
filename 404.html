@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Page Not Found - Bibeli Mimo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #f59e0b;
+            --text: #ffffff;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            letter-spacing: 2px;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .logo span {
+            color: var(--text);
+            font-weight: 700;
+        }
+        .error-code {
+            font-family: 'Playfair Display', serif;
+            font-size: 120px;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--accent);
+            margin: 30px 0 10px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .error-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+        .error-desc {
+            font-size: 16px;
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            background: var(--accent);
+            color: #0f172a;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Bibeli <span>Mimo</span></div>
+        <div class="error-code">404</div>
+        <div class="error-text">Page Not Found</div>
+        <p class="error-desc">The page you are looking for does not exist or has been moved. Let's take you back to your Bible reading.</p>
+        <a href="/" class="btn">Go to Home</a>
+        <div class="footer">Yoruba & English Bible App</div>
+    </div>
+</body>
+</html>
