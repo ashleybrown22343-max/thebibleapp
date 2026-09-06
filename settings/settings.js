@@ -16,13 +16,18 @@ document.getElementById('line-spacing-label').textContent = currentLineSpacing;
 document.getElementById('verse-spacing-slider').value = currentVerseSpacing;
 document.getElementById('verse-spacing-label').textContent = currentVerseSpacing;
 
-// Update functions
+// Update preview (applies to both Yoruba and English)
 function updateSettingsPreview() {
     const p = document.getElementById('settings-preview-text');
+    const en = document.getElementById('settings-preview-english');
     const val = localStorage.getItem('fontSize') || '100';
     const spacing = localStorage.getItem('lineSpacing') || '1.5';
     p.style.fontSize = val + '%';
     p.style.lineHeight = spacing;
+    if(en) {
+        en.style.fontSize = val + '%';
+        en.style.lineHeight = spacing;
+    }
 }
 
 // Font Style
