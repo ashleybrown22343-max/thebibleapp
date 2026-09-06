@@ -29,33 +29,36 @@
     <div id="drawer-overlay"></div>
 
     <main style="padding:20px;">
-        <div class="live-preview-box"><h3>Preview</h3><p id="settings-preview-text"><strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.</p></div>
+        <div class="live-preview-box">
+            <h3>Preview</h3>
+            <p id="settings-preview-text">
+                <strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.
+                <br>
+                <em id="settings-preview-english" style="opacity:0.8;">In the beginning God created the heaven and the earth.</em>
+            </p>
+        </div>
 
+        <!-- Rest of settings same as before -->
         <div class="setting-section">
             <h3>Font Style</h3>
             <div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div>
         </div>
-
         <div class="setting-section">
             <h3>Font Size</h3>
             <div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div>
         </div>
-
         <div class="setting-section">
             <h3>Line Spacing</h3>
             <div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div>
         </div>
-
         <div class="setting-section">
             <h3>Verse Spacing</h3>
             <div class="slider-row"><input type="range" id="verse-spacing-slider" min="0.5" max="3" step="0.1" value="1.5"><span id="verse-spacing-label">1.5</span></div>
         </div>
-
         <div class="setting-section">
             <h3>Reading Settings</h3>
             <div class="setting-row"><span>Red Letters Mode</span><button id="settings-red-btn" class="toggle-switch">OFF</button></div>
         </div>
-
         <div class="setting-section">
             <h3>Display</h3>
             <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
