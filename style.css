@@ -13,13 +13,13 @@ body.church { --bg: #000; --text: #ffff00; --card: #000; --border: #ffff00; --he
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); padding-bottom: 70px; transition: 0.3s; }
 
-/* ===== HEADER ===== */
+/* Header */
 .header { background: var(--header); color: #fff; padding: 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
 .header h1 { font-size: 20px; margin: 0; }
 .icon-btn { background: none; border: none; color: inherit; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
 .icon { width: 24px; height: 24px; }
 
-/* ===== SIDEBAR DRAWER ===== */
+/* Drawer */
 .drawer { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card); z-index: 500; transition: left 0.3s; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
 .drawer.open { left: 0; }
 .drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
@@ -31,52 +31,58 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); padd
 #drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 499; display: none; }
 #drawer-overlay.show { display: block; }
 
-/* ===== BOTTOM NAVIGATION ===== */
+/* Bottom Nav */
 .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 100; }
 .nav-btn { background: none; border: none; color: var(--text); opacity: 0.6; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; text-decoration: none; }
 .nav-btn svg { width: 24px; height: 24px; }
 .nav-btn.active { color: var(--accent); opacity: 1; }
 
-/* ===== CARDS ===== */
+/* Cards & Sections */
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .card h3 { margin-bottom: 8px; }
 .card p { color: var(--text); opacity: 0.8; line-height: 1.6; }
 .continue-card { border-left: 5px solid var(--accent); }
 .votd-card { background: linear-gradient(135deg, #1a237e, #0f172a); color: #fff; }
 .progress-card { display: block; }
+.section-title { font-weight: 700; margin: 20px 0 10px; font-size: 18px; }
 
-/* ===== PROGRESS BAR ===== */
-.progress-bar-container { background: var(--border); height: 8px; border-radius: 4px; margin: 10px 0; }
-.progress-bar { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; }
-
-/* ===== BUTTONS ===== */
+/* Buttons */
 .btn { background: var(--accent); color: #fff; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
 .btn:hover { opacity: 0.9; }
 
-/* ===== GRIDS ===== */
+/* Progress Bar */
+.progress-bar-container { background: var(--border); height: 8px; border-radius: 4px; margin: 10px 0; }
+.progress-bar { height: 100%; background: var(--accent); border-radius: 4px; width: 0%; }
+
+/* Grids */
 .book-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .grid-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; font-weight: 600; }
 .grid-item.red { color: #d32f2f; }
 
-/* ===== READING VIEW ===== */
+/* Reading View */
 .reading-container { max-width: 700px; margin: 0 auto; padding: 20px; }
 .verse { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .verse-num { font-weight: 800; color: var(--accent); font-size: 22px; display: block; margin-bottom: 5px; }
 .yoruba { font-weight: 600; font-size: 1.2em; margin: 5px 0; }
 .english { opacity: 0.8; font-size: 1em; }
+.red-letter { color: #d32f2f !important; }
+.verse-container { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.verse-number { font-weight: 800; color: var(--accent); font-size: 24px; display: block; margin-bottom: 5px; }
+.yoruba-text { font-weight: 600; font-size: 1.2em; margin: 8px 0; }
+.english-text { opacity: 0.7; font-size: 0.95em; margin: 0; }
+.highlight-yellow { background-color: #fff9c4; }
+.highlight-green { background-color: #c8e6c9; }
+.highlight-blue { background-color: #bbdefb; }
+.note-text { font-style: italic; color: #555; background: var(--bg); padding: 5px; border-radius: 4px; margin-top: 8px; }
 
-/* ===== SEARCH ===== */
+/* Search */
 .search-bar { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; }
 .filters { display: flex; gap: 10px; margin: 10px 0; align-items: center; }
 .filters label { display: flex; align-items: center; gap: 5px; font-size: 14px; }
 .search-highlight { background: var(--accent); color: #fff; padding: 1px 3px; border-radius: 3px; }
+#search-results { padding: 20px; overflow-y: auto; max-height: calc(100vh - 150px); }
 
-/* ===== LIBRARY TABS ===== */
-.tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-.tab-btn { flex: 1; padding: 12px; background: none; border: none; font-weight: bold; color: var(--text); border-bottom: 3px solid transparent; }
-.tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
-
-/* ===== ACTION SHEET (Bottom Modal) ===== */
+/* Action Sheet */
 .sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 400; display: none; }
 .action-sheet { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-radius: 20px 20px 0 0; z-index: 401; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease; }
 .action-sheet.show { transform: translateY(0); }
@@ -85,29 +91,48 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); padd
 .sheet-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 5px; background: var(--bg); border-radius: 10px; cursor: pointer; font-size: 12px; }
 .cancel-btn { width: 100%; padding: 15px; background: var(--bg); border: none; border-radius: 10px; font-weight: bold; color: var(--text); cursor: pointer; }
 
-/* ===== NOTE MODAL ===== */
+/* Note Modal */
 .note-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card); border-radius: 12px; z-index: 401; padding: 20px; display: none; }
 .note-modal textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; font-size: 16px; }
 .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
 .modal-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; background: var(--bg); color: var(--text); }
 .modal-buttons .save-btn { background: var(--accent); color: #fff; }
 
-/* ===== SEARCH RESULTS SCROLL ===== */
-#search-results { padding: 20px; overflow-y: auto; max-height: calc(100vh - 150px); }
+/* Library */
+.tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab-btn { flex: 1; padding: 12px; background: none; border: none; font-weight: bold; color: var(--text); border-bottom: 3px solid transparent; }
+.tab-btn.active { border-bottom-color: var(--accent); color: var(--accent); }
 
-/* ===== HISTORY LIST ===== */
+/* History */
 .history-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; }
 .history-item { min-width: 120px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; font-weight: 600; }
 
-/* ===== SETTINGS ===== */
-.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+/* Settings */
+.live-preview-box { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid var(--accent); }
+.setting-section { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+.setting-section h3 { font-size: 14px; color: var(--accent); margin: 0 0 10px 0; text-transform: uppercase; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
 .toggle-switch { padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-weight: bold; }
-
-/* ===== SLIDERS ===== */
+.toggle-switch.active { background: var(--accent); color: white; border-color: var(--accent); }
 .slider-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
 .slider-row input[type="range"] { flex-grow: 1; }
 
-/* ===== RESPONSIVE ===== */
+/* Daily */
+.daily-item { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+.daily-item h4 { margin: 0 0 5px 0; color: var(--accent); }
+.daily-ref { text-align: right; font-size: 12px; opacity: 0.6; margin-top: 10px; font-weight: bold; }
+
+/* Plans */
+.plan-section { margin-bottom: 20px; padding: 15px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); }
+.plan-section p { margin-bottom: 10px; }
+.plan-buttons { display: flex; gap: 10px; }
+.plan-buttons button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: var(--bg); border: 1px solid var(--border); }
+.calendar-section { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+.calendar-day { width: 100%; aspect-ratio: 1; border-radius: 5px; background: var(--bg); border: 1px solid var(--border); font-size: 10px; display: flex; justify-content: center; align-items: center; }
+.calendar-day.read { background-color: #4caf50; color: white; border-color: #4caf50; }
+
+/* Responsive */
 @media (max-width: 600px) {
     .book-grid { grid-template-columns: repeat(2, 1fr); }
-                   }
+         }
