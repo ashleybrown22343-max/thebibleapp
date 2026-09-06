@@ -8,6 +8,7 @@ async function initLibrary() {
     await data.loadAllData();
     loadLibrary();
 }
+
 function loadLibrary() {
     const list = document.getElementById('library-list');
     list.innerHTML = '';
@@ -19,11 +20,18 @@ function loadLibrary() {
             if(verse) {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.innerHTML = `<strong>${data.englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p>`;
-                div.onclick = () => { location.href = `/books?book=${data.codes[b-1]}&chapter=${c}`; };
+                div.innerHTML = `<strong>${data.englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p style="font-size:12px;opacity:0.5;margin-top:8px;">Tap to delete</p>`;
+                div.onclick = () => {
+                    // Remove bookmark
+                    let savedArr = JSON.parse(localStorage.getItem('saved') || '[]');
+                    savedArr = savedArr.filter(k => k !== key);
+                    localStorage.setItem('saved', JSON.stringify(savedArr));
+                    loadLibrary();
+                };
                 list.appendChild(div);
             }
         });
+        if (list.innerHTML === '') list.innerHTML = '<p>Tap any verse to save it.</p>';
     } else {
         const notes = JSON.parse(localStorage.getItem('notes') || '{}');
         for (const key in notes) {
@@ -32,13 +40,21 @@ function loadLibrary() {
             if(verse) {
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.innerHTML = `<strong>${data.englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p style="font-style:italic;">${notes[key]}</p>`;
-                div.onclick = () => { location.href = `/books?book=${data.codes[b-1]}&chapter=${c}`; };
+                div.innerHTML = `<strong>${data.englishNames[b-1]} ${c}:${v}</strong><p>${verse.text}</p><p style="font-style:italic;">${notes[key]}</p><p style="font-size:12px;opacity:0.5;margin-top:8px;">Tap to delete</p>`;
+                div.onclick = () => {
+                    // Delete note
+                    let notesObj = JSON.parse(localStorage.getItem('notes') || '{}');
+                    delete notesObj[key];
+                    localStorage.setItem('notes', JSON.stringify(notesObj));
+                    loadLibrary();
+                };
                 list.appendChild(div);
             }
         }
+        if (list.innerHTML === '') list.innerHTML = '<p>Tap the pencil icon to add a note.</p>';
     }
 }
+
 function showSaved() { currentMode = 'saved'; loadLibrary(); }
 function showNotes() { currentMode = 'notes'; loadLibrary(); }
 initLibrary();
