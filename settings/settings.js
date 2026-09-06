@@ -1,76 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bibeli Mimo – Settings</title>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body>
-    <header class="header">
-        <button class="icon-btn" id="menu-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <h1>Settings</h1>
-        <div style="width:40px;"></div>
-    </header>
+// Settings Page Logic (All Features from Original app.js)
+document.getElementById('menu-btn').onclick = () => { document.getElementById('drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('show'); };
+document.getElementById('close-drawer').onclick = () => { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('show'); };
+document.getElementById('drawer-overlay').onclick = () => { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('show'); };
 
-    <div class="drawer" id="drawer">
-        <div class="drawer-header"><h3>Menu</h3><button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-        <div class="drawer-menu">
-            <a href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
-            <a href="/books"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg> Books</a>
-            <a href="/search"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg> Search</a>
-            <a href="/library"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg> Library</a>
-            <a href="/plans"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Plans</a>
-            <a href="/daily"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Daily</a>
-            <a href="/settings" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Settings</a>
-            <a href="/studio"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Studio</a>
-        </div>
-    </div>
-    <div id="drawer-overlay"></div>
+// State from localStorage
+let currentLineSpacing = parseFloat(localStorage.getItem('lineSpacing') || '1.5');
+let currentVerseSpacing = parseFloat(localStorage.getItem('verseSpacing') || '1.5');
+let isRedLetter = localStorage.getItem('redLetter') === 'true';
 
-    <main style="padding:20px;">
-        <div class="live-preview-box"><h3>Preview</h3><p id="settings-preview-text"><strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.</p></div>
+// Load initial values
+document.getElementById('font-size-slider').value = localStorage.getItem('fontSize') || '100';
+document.getElementById('font-size-label').textContent = localStorage.getItem('fontSize') + '%' || '100%';
+document.getElementById('line-spacing-slider').value = currentLineSpacing;
+document.getElementById('line-spacing-label').textContent = currentLineSpacing;
+document.getElementById('verse-spacing-slider').value = currentVerseSpacing;
+document.getElementById('verse-spacing-label').textContent = currentVerseSpacing;
 
-        <div class="setting-section">
-            <h3>Font Style</h3>
-            <div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div>
-        </div>
+// Update functions
+function updateSettingsPreview() {
+    const p = document.getElementById('settings-preview-text');
+    const val = localStorage.getItem('fontSize') || '100';
+    const spacing = localStorage.getItem('lineSpacing') || '1.5';
+    p.style.fontSize = val + '%';
+    p.style.lineHeight = spacing;
+}
 
-        <div class="setting-section">
-            <h3>Font Size</h3>
-            <div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div>
-        </div>
+// Font Style
+document.getElementById('settings-font-btn').onclick = function(){
+    document.body.classList.toggle('serif');
+    this.textContent = document.body.classList.contains('serif') ? 'OFF' : 'ON';
+};
 
-        <div class="setting-section">
-            <h3>Line Spacing</h3>
-            <div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div>
-        </div>
+// Font Size
+document.getElementById('font-size-slider').addEventListener('input', (e) => {
+    const val = e.target.value;
+    localStorage.setItem('fontSize', val);
+    document.getElementById('font-size-label').textContent = val + '%';
+    updateSettingsPreview();
+});
 
-        <div class="setting-section">
-            <h3>Verse Spacing</h3>
-            <div class="slider-row"><input type="range" id="verse-spacing-slider" min="0.5" max="3" step="0.1" value="1.5"><span id="verse-spacing-label">1.5</span></div>
-        </div>
+// Line Spacing
+document.getElementById('line-spacing-slider').addEventListener('input', (e) => {
+    const val = e.target.value;
+    localStorage.setItem('lineSpacing', val);
+    document.getElementById('line-spacing-label').textContent = val;
+    updateSettingsPreview();
+});
 
-        <div class="setting-section">
-            <h3>Reading Settings</h3>
-            <div class="setting-row"><span>Red Letters Mode</span><button id="settings-red-btn" class="toggle-switch">OFF</button></div>
-        </div>
+// Verse Spacing
+document.getElementById('verse-spacing-slider').addEventListener('input', (e) => {
+    const val = e.target.value;
+    localStorage.setItem('verseSpacing', val);
+    document.getElementById('verse-spacing-label').textContent = val;
+});
 
-        <div class="setting-section">
-            <h3>Display</h3>
-            <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
-            <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
-        </div>
-    </main>
+// Red Letter Mode
+document.getElementById('settings-red-btn').onclick = function(){
+    isRedLetter = !isRedLetter;
+    localStorage.setItem('redLetter', isRedLetter);
+    this.textContent = isRedLetter ? 'ON' : 'OFF';
+    this.classList.toggle('active', isRedLetter);
+};
 
-    <nav class="bottom-nav">
-        <a href="/" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></a>
-        <a href="/books" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span>Books</span></a>
-        <a href="/studio" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Studio</span></a>
-        <a href="/library" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg><span>Library</span></a>
-    </nav>
+// Dark Mode
+document.getElementById('settings-theme-btn').onclick = function(){
+    document.body.classList.toggle('dark');
+    this.textContent = document.body.classList.contains('dark') ? 'ON' : 'OFF';
+    this.classList.toggle('active', document.body.classList.contains('dark'));
+};
 
-    <script src="/shared.js"></script>
-    <script src="/settings/settings.js"></script>
-</body>
-</html>
+// Church Mode
+document.getElementById('settings-church-btn').onclick = function(){
+    document.body.classList.toggle('church');
+    this.textContent = document.body.classList.contains('church') ? 'ON' : 'OFF';
+};
+
+// Initialize Preview
+updateSettingsPreview();
