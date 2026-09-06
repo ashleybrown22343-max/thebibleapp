@@ -14,10 +14,7 @@
     </header>
 
     <div class="drawer" id="drawer">
-        <div class="drawer-header">
-            <h3>Menu</h3>
-            <button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
+        <div class="drawer-header"><h3>Menu</h3><button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="drawer-menu">
             <a href="/" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
             <a href="/books"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg> Books</a>
@@ -38,6 +35,9 @@
         <div class="card votd-card">
             <h3>Verse of the Day</h3>
             <p id="votd">Loading...</p>
+        </div>
+        <div class="card streak-card">
+            <div class="card-content"><h3>Reading Streak</h3><p id="streak-count">0 Days</p><p id="best-streak" style="opacity:0.7;">Best: 0 Days</p></div>
         </div>
         <div class="card">
             <h3>Reading Progress</h3>
@@ -64,16 +64,38 @@
 
         async function initHome() {
             await data.loadAllData();
+
+            // Continue Reading
             const last = JSON.parse(localStorage.getItem('lastRead') || '{"b":"GEN","c":1}');
             document.getElementById('last-read').textContent = `${data.getEnglishName(last.b)} ${last.c}`;
+
+            // Verse of the Day
             const day = new Date().getDate();
             const verse = data.yoruba[day * 500];
             if (verse) document.getElementById('votd').textContent = verse.text;
+
+            // Streak & Best Streak
+            let streak = JSON.parse(localStorage.getItem('streak') || '{"days":0,"lastDate":"","best":0}');
+            const today = new Date().toDateString();
+            if(streak.lastDate !== today) {
+                const yesterday = new Date(Date.now() - 86400000).toDateString();
+                if(streak.lastDate === yesterday) streak.days++;
+                else streak.days = 1;
+                streak.lastDate = today;
+                if(streak.days > streak.best) streak.best = streak.days;
+                localStorage.setItem('streak', JSON.stringify(streak));
+            }
+            document.getElementById('streak-count').textContent = streak.days + " Days";
+            document.getElementById('best-streak').textContent = "Best: " + streak.best + " Days";
+
+            // Progress
             const completed = JSON.parse(localStorage.getItem('completedChapters') || '[]');
             const total = new Set(data.yoruba.map(v => `${v.book}-${v.chapter}`)).size;
             const pct = Math.round((completed.length / total) * 100);
             document.getElementById('progress-bar').style.width = pct + '%';
             document.getElementById('progress-text').textContent = pct + '% Complete';
+
+            // History
             const history = JSON.parse(localStorage.getItem('history') || '[]');
             const histEl = document.getElementById('history-list');
             histEl.innerHTML = '';
@@ -84,9 +106,11 @@
                 btn.onclick = () => { location.href = `/books?book=${h.b}&chapter=${h.c}`; };
                 histEl.appendChild(btn);
             });
+
+            // Continue Reading Click
             document.getElementById('continue-card').onclick = () => { location.href = `/books?book=${last.b}&chapter=${last.c}`; };
         }
         initHome();
     </script>
 </body>
-    </html>
+                                                                                               </html>
