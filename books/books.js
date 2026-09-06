@@ -1,3 +1,6 @@
+window.onerror = function(msg, url, line) {
+    document.body.innerHTML = '<div style="color:red;padding:20px;font-size:16px;">Error: ' + msg + '<br>File: ' + url + '<br>Line: ' + line + '</div>';
+};
 const params = new URLSearchParams(window.location.search);
 const bookParam = params.get('book');
 const chapterParam = params.get('chapter');
