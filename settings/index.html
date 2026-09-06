@@ -12,11 +12,9 @@
         <h1>Settings</h1>
         <div style="width:40px;"></div>
     </header>
+
     <div class="drawer" id="drawer">
-        <div class="drawer-header">
-            <h3>Menu</h3>
-            <button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-        </div>
+        <div class="drawer-header"><h3>Menu</h3><button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
         <div class="drawer-menu">
             <a href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
             <a href="/books"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg> Books</a>
@@ -31,9 +29,38 @@
     <div id="drawer-overlay"></div>
 
     <main style="padding:20px;">
-        <div class="card"><h3>Dark Mode</h3><button class="btn" id="theme-btn">OFF</button></div>
-        <div class="card"><h3>Church Mode</h3><button class="btn" id="church-btn">OFF</button></div>
-        <div class="card"><h3>Font Style</h3><button class="btn" id="font-btn">Sans</button></div>
+        <div class="live-preview-box"><h3>Preview</h3><p id="settings-preview-text"><strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.</p></div>
+
+        <div class="setting-section">
+            <h3>Font Style</h3>
+            <div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div>
+        </div>
+
+        <div class="setting-section">
+            <h3>Font Size</h3>
+            <div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div>
+        </div>
+
+        <div class="setting-section">
+            <h3>Line Spacing</h3>
+            <div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div>
+        </div>
+
+        <div class="setting-section">
+            <h3>Verse Spacing</h3>
+            <div class="slider-row"><input type="range" id="verse-spacing-slider" min="0.5" max="3" step="0.1" value="1.5"><span id="verse-spacing-label">1.5</span></div>
+        </div>
+
+        <div class="setting-section">
+            <h3>Reading Settings</h3>
+            <div class="setting-row"><span>Red Letters Mode</span><button id="settings-red-btn" class="toggle-switch">OFF</button></div>
+        </div>
+
+        <div class="setting-section">
+            <h3>Display</h3>
+            <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
+            <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
+        </div>
     </main>
 
     <nav class="bottom-nav">
@@ -46,4 +73,4 @@
     <script src="/shared.js"></script>
     <script src="/settings/settings.js"></script>
 </body>
-                                   </html>
+    </html>
