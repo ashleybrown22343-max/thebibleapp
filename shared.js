@@ -20,6 +20,10 @@ async function loadAllData() {
         english.forEach(v => {
             englishMap[`${v.book}-${v.chapter}-${v.verse}`] = v.text;
         });
+        // CRITICAL UPDATE: Update the window object with the loaded data
+        window.bibleData.yoruba = yoruba;
+        window.bibleData.english = english;
+        window.bibleData.englishMap = englishMap;
     } catch (e) {
         console.error(e);
         alert('Error loading Bible data. Check data files.');
@@ -33,4 +37,14 @@ function getEnglishName(code) {
 }
 function getBookIndex(code) { return codes.indexOf(code); }
 
-window.bibleData = { yoruba, english, englishMap, codes, englishNames, loadAllData, getBookCode, getEnglishName, getBookIndex };
+window.bibleData = {
+    yoruba: yoruba,
+    english: english,
+    englishMap: englishMap,
+    codes: codes,
+    englishNames: englishNames,
+    loadAllData: loadAllData,
+    getBookCode: getBookCode,
+    getEnglishName: getEnglishName,
+    getBookIndex: getBookIndex
+};
