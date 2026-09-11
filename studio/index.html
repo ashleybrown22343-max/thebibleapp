@@ -11,23 +11,19 @@
 </head>
 <body>
 
-    <!-- HEADER -->
     <header class="header">
         <a href="/" class="icon-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></a>
         <h1>Image Studio</h1>
         <button class="icon-btn" id="save-preset-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></button>
     </header>
 
-    <!-- STICKY ACTIONS -->
     <div class="sticky-actions">
         <button class="action-btn" id="download-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download</button>
         <button class="action-btn primary" id="share-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</button>
     </div>
 
-    <!-- CONTAINER -->
     <div class="studio-container">
 
-        <!-- STICKY PREVIEW -->
         <div class="sticky-preview">
             <div id="preview-card" class="preview-card ratio-square">
                 <div id="preview-bg" class="preview-bg"></div>
@@ -50,7 +46,6 @@
             </div>
         </div>
 
-        <!-- TAB BAR -->
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="verse"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span>Verse</span></button>
             <button class="tab-btn" data-tab="templates"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg><span>Templates</span></button>
@@ -59,23 +54,30 @@
             <button class="tab-btn" data-tab="presets"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><span>Presets</span></button>
         </div>
 
-        <!-- PANEL: VERSE -->
         <div class="panel active" id="panel-verse">
             <h3 class="panel-title">Select Verse</h3>
             <div class="picker-row">
-                <button id="pick-book" class="picker-btn">Genesis</button>
-                <button id="pick-chapter" class="picker-btn">1</button>
-                <button id="pick-verse" class="picker-btn">1</button>
+                <button id="pick-book" class="picker-btn">Isaiah</button>
+                <button id="pick-chapter" class="picker-btn">35</button>
+                <button id="pick-verse" class="picker-btn">10</button>
             </div>
             <div class="picker-row">
                 <button id="random-verse" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Random</button>
                 <button id="votd-fill" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg> Today</button>
             </div>
+            <h4 class="panel-subtitle">Language</h4>
+            <div class="toggle-row">
+                <span>Show Yoruba</span>
+                <button class="switch active" id="lang-yo-toggle"></button>
+            </div>
+            <div class="toggle-row">
+                <span>Show English</span>
+                <button class="switch active" id="lang-en-toggle"></button>
+            </div>
             <h4 class="panel-subtitle">Recently Used</h4>
             <div id="recent-verses" class="recent-list"></div>
         </div>
 
-        <!-- PANEL: TEMPLATES -->
         <div class="panel" id="panel-templates">
             <h3 class="panel-title">Templates</h3>
             <div class="template-tabs">
@@ -87,7 +89,6 @@
             <div id="template-grid" class="template-grid"></div>
         </div>
 
-        <!-- PANEL: DESIGN -->
         <div class="panel" id="panel-design">
 
             <h3 class="panel-title">Layout</h3>
@@ -166,7 +167,7 @@
             </div>
 
             <h3 class="panel-title">Reference</h3>
-            <div class="toggle-row"><span>Show Reference</span><button class="switch" id="ref-toggle"></button></div>
+            <div class="toggle-row"><span>Show Reference</span><button class="switch active" id="ref-toggle"></button></div>
             <label class="field-label">Position</label>
             <div class="button-grid-3" id="refpos-group">
                 <button class="opt-btn active" data-refpos="top">Top</button>
@@ -181,9 +182,7 @@
             </div>
         </div>
 
-        <!-- PANEL: EXTRAS -->
         <div class="panel" id="panel-extras">
-
             <h3 class="panel-title">Secondary Text</h3>
             <input type="text" id="secondary-input" class="text-input" placeholder="e.g. @yourchurch" maxlength="40">
             <label class="field-label">Position</label>
@@ -228,7 +227,6 @@
             <span class="hint-text">Separate multiple verses with commas</span>
         </div>
 
-        <!-- PANEL: PRESETS -->
         <div class="panel" id="panel-presets">
             <h3 class="panel-title">My Presets</h3>
             <p class="hint-text">Save your current font, size, color, shadow, and layout as a preset.</p>
@@ -237,7 +235,6 @@
 
     </div>
 
-    <!-- MODAL: VERSE PICKER -->
     <div id="verse-modal" class="modal-overlay" onclick="if(event.target.id==='verse-modal') closeVerseModal()">
         <div class="modal-content">
             <div class="modal-header">
@@ -248,7 +245,6 @@
         </div>
     </div>
 
-    <!-- MODAL: COLOR PICKER -->
     <div id="color-modal" class="modal-overlay" onclick="if(event.target.id==='color-modal') closeColorModal()">
         <div class="modal-content">
             <div class="modal-header">
@@ -270,8 +266,7 @@
         </div>
     </div>
 
-   <!-- MODAL: PRESET SAVE -->
-    <div id="preset-modal" class="modal-overlay" onclick="if(event.target.id==='preset-modal') closePresetModal()">
+<div id="preset-modal" class="modal-overlay" onclick="if(event.target.id==='preset-modal') closePresetModal()">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Save Preset</h3>
@@ -282,7 +277,6 @@
         </div>
     </div>
 
-    <!-- MODAL: FONT PICKER -->
     <div id="font-modal" class="modal-overlay" onclick="if(event.target.id==='font-modal') closeFontModal()">
         <div class="modal-content">
             <div class="modal-header">
@@ -296,4 +290,4 @@
     <script src="/shared.js"></script>
     <script src="/studio/studio.js"></script>
 </body>
-</html>
+                                                                          </html>                                                                          
