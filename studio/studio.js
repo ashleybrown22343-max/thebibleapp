@@ -1,38 +1,27 @@
 // ============================================================
-// BIBELI MIMO – IMAGE STUDIO LOGIC
-// Complete, no placeholders
+// BIBELI MIMO – IMAGE STUDIO LOGIC (Complete, Fixed)
 // ============================================================
 
 const data = window.bibleData;
 
-// ---------- STATE ----------
 const state = {
-    // Verse
-    currentBook: 'GEN',
-    currentChapter: 1,
-    currentVerse: 1,
+    currentBook: 'ISA',
+    currentChapter: 35,
+    currentVerse: 10,
     stackText: '',
-
-    // Template
     currentCategory: 'photos',
     selectedTemplate: 0,
-
-    // Layout
     ratio: 'square',
     safezone: false,
     borderWidth: 0,
     borderColor: '#ffffff',
     radius: 0,
-
-    // Background effects
     blur: 0,
     darkOverlay: 0,
     gradientOverlay: false,
     gradientColor: '#1a237e',
     gradientOpacity: 40,
     vignette: 0,
-
-    // Text
     fontFamily: 'Poppins',
     fontSize: 24,
     lineSpacing: 1.7,
@@ -42,39 +31,28 @@ const state = {
     vpos: 'center',
     textColor: '#ffffff',
     shadow: 'strong',
-
-    // Reference
-    refShow: false,
+    refShow: true,
     refPos: 'top',
     refSize: 14,
     refColor: '#f59e0b',
-
-    // Secondary
     secText: '',
     secPos: 'above',
     secSize: 12,
-
-    // Logo
     logoData: null,
     logoPos: 'br',
     logoSize: 60,
     logoOpacity: 100,
-
-    // QR
     qrOn: false,
     qrUrl: '',
     qrPos: 'bl',
-
-    // Stack
     stackOn: false,
-
-    // Storage
+    showYoruba: true,
+    showEnglish: true,
     favorites: JSON.parse(localStorage.getItem('studio_favorites') || '[]'),
     recentVerses: JSON.parse(localStorage.getItem('studio_recents_verse') || '[]'),
     presets: JSON.parse(localStorage.getItem('studio_presets') || '[]')
 };
 
-// ---------- DATA: FONTS ----------
 const FONTS = [
     { name: 'Poppins', css: "'Poppins', sans-serif" },
     { name: 'Playfair Display', css: "'Playfair Display', serif" },
@@ -86,48 +64,31 @@ const FONTS = [
     { name: 'Great Vibes', css: "'Great Vibes', cursive" }
 ];
 
-// ---------- DATA: TEMPLATES ----------
 const gradients = [
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-    'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
-    'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
-    'linear-gradient(135deg, #c79081 0%, #dfa579 100%)',
-    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-    'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)',
-    'linear-gradient(135deg, #f83600 0%, #f9d423 100%)',
-    'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
-    'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)',
-    'linear-gradient(135deg, #1a2980 0%, #26d0ce 100%)',
-    'linear-gradient(135deg, #0f2027 0%, #203a43 100%, #2c5364 100%)'
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)','linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)','linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)','linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)','linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)','linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+    'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)','linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+    'linear-gradient(135deg, #c79081 0%, #dfa579 100%)','linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)','linear-gradient(135deg, #f83600 0%, #f9d423 100%)',
+    'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)','linear-gradient(135deg, #4b6cb7 0%, #182848 100%)',
+    'linear-gradient(135deg, #1a2980 0%, #26d0ce 100%)','linear-gradient(135deg, #0f2027 0%, #203a43 100%, #2c5364 100%)'
 ];
 
 const solids = ['#1a237e','#b71c1c','#4a148c','#e65100','#00695c','#1565c0','#212121','#880e4f','#33691e','#0d47a1','#5d4037','#01579b','#2e7d32','#37474f','#8e24aa','#00838f','#bf360c','#3e2723','#64b5f6','#FFD700'];
 
 const photoFiles = [
-    "29897.webp","29903.webp","29873.webp","29921.webp","29935.webp",
-    "29882.webp","29899.webp","29905.webp","29838.webp","29871.webp",
-    "29942.webp","29937.webp","29917.webp","29878.webp","29929.webp",
-    "29866.webp","29939.webp","29933.webp","29966.webp","29964.webp",
-    "29974.webp","29893.webp","29931.webp","29915.webp","29884.webp",
-    "29876.webp","29901.webp","29880.webp","29865.webp","29970.webp",
-    "29925.webp","29907.webp","29968.webp","29895.webp","29927.webp",
-    "29875.webp","29972.webp","29868.webp","29913.webp","29889.webp",
-    "29956.webp","29909.webp","29911.webp","29923.webp","29962.webp",
-    "29944.webp","29891.webp","29960.webp","29946.webp","29886.webp",
+    "29897.webp","29903.webp","29873.webp","29921.webp","29935.webp","29882.webp","29899.webp","29905.webp","29838.webp","29871.webp",
+    "29942.webp","29937.webp","29917.webp","29878.webp","29929.webp","29866.webp","29939.webp","29933.webp","29966.webp","29964.webp",
+    "29974.webp","29893.webp","29931.webp","29915.webp","29884.webp","29876.webp","29901.webp","29880.webp","29865.webp","29970.webp",
+    "29925.webp","29907.webp","29968.webp","29895.webp","29927.webp","29875.webp","29972.webp","29868.webp","29913.webp","29889.webp",
+    "29956.webp","29909.webp","29911.webp","29923.webp","29962.webp","29944.webp","29891.webp","29960.webp","29946.webp","29886.webp",
     "29919.webp","29958.webp"
 ];
 const photoUrls = photoFiles.map(f => `/backgrounds/${f}`);
 
-// ---------- COLOR SWATCHES ----------
 const COLOR_PRESETS = [
     '#ffffff','#000000','#f59e0b','#ef4444','#10b981','#3b82f6','#8b5cf6','#ec4899',
     '#fbbf24','#14b8a6','#6366f1','#ec4899','#84cc16','#06b6d4','#f97316','#a855f7',
@@ -142,39 +103,54 @@ async function initStudio() {
         await data.loadAllData();
         await document.fonts.ready;
 
-        // Load logo if saved
         const savedLogo = localStorage.getItem('studio_logo');
         if (savedLogo) {
             state.logoData = savedLogo;
-            showPreviewLogo();
         }
 
-        // Update picker buttons
-        state.currentBook = 'GEN';
-        state.currentChapter = 1;
-        state.currentVerse = 1;
-
-        // Attach events
+        attachTabEvents();
         attachVerseEvents();
         attachTemplateEvents();
         attachDesignEvents();
         attachExtrasEvents();
         attachPresetEvents();
         attachColorPickerEvents();
-        attachFontModalEvents();
         attachActionEvents();
 
-        // Initial render
         updatePickerButtons();
         renderRecentVerses();
         renderTemplates();
         renderPresets();
         updatePreview();
-
+        showPreviewLogo();
+        syncToggles();
     } catch (e) {
         console.error(e);
         document.getElementById('preview-text').textContent = 'Error: ' + e.message;
     }
+}
+
+function syncToggles() {
+    // Reference toggle
+    const refToggle = document.getElementById('ref-toggle');
+    refToggle.classList.toggle('active', state.refShow);
+    // Language toggles
+    document.getElementById('lang-yo-toggle').classList.toggle('active', state.showYoruba);
+    document.getElementById('lang-en-toggle').classList.toggle('active', state.showEnglish);
+}
+
+// ============================================================
+// TAB SWITCHING (THIS WAS MISSING!)
+// ============================================================
+function attachTabEvents() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+        };
+    });
 }
 
 // ============================================================
@@ -184,6 +160,7 @@ function attachVerseEvents() {
     document.getElementById('pick-book').onclick = () => openVerseModal('book');
     document.getElementById('pick-chapter').onclick = () => openVerseModal('chapter');
     document.getElementById('pick-verse').onclick = () => openVerseModal('verse');
+
     document.getElementById('random-verse').onclick = () => {
         const total = data.yoruba.length;
         const v = data.yoruba[Math.floor(Math.random() * total)];
@@ -194,6 +171,7 @@ function attachVerseEvents() {
         updatePreview();
         saveRecentVerse();
     };
+
     document.getElementById('votd-fill').onclick = () => {
         const day = new Date().getDate();
         const v = data.yoruba.find(x => x.book === 19 && x.chapter === day && x.verse === 1) || data.yoruba[day * 500];
@@ -205,6 +183,20 @@ function attachVerseEvents() {
             updatePreview();
             saveRecentVerse();
         }
+    };
+
+    const langYoToggle = document.getElementById('lang-yo-toggle');
+    langYoToggle.onclick = () => {
+        state.showYoruba = !state.showYoruba;
+        langYoToggle.classList.toggle('active', state.showYoruba);
+        updatePreview();
+    };
+
+    const langEnToggle = document.getElementById('lang-en-toggle');
+    langEnToggle.onclick = () => {
+        state.showEnglish = !state.showEnglish;
+        langEnToggle.classList.toggle('active', state.showEnglish);
+        updatePreview();
     };
 }
 
@@ -363,19 +355,13 @@ function buildTemplateItem(tplId) {
     const div = document.createElement('div');
     div.className = 'template-item';
 
-    let bg = '';
-    let idx = 0;
-    let cat = '';
+    let bg = '', idx = 0, cat = '';
     if (tplId.startsWith('photo_')) { cat = 'photos'; idx = parseInt(tplId.split('_')[1]); bg = `url('${photoUrls[idx]}') center/cover`; }
     else if (tplId.startsWith('grad_')) { cat = 'gradients'; idx = parseInt(tplId.split('_')[1]); bg = gradients[idx]; }
     else if (tplId.startsWith('solid_')) { cat = 'solids'; idx = parseInt(tplId.split('_')[1]); bg = solids[idx]; }
-    else {
-        // Legacy format - check if in favorites
-        return null;
-    }
+    else return null;
 
     div.style.background = bg;
-    div.dataset.tplId = tplId;
 
     if (state.currentCategory === cat && state.selectedTemplate === idx) {
         div.classList.add('selected');
@@ -408,10 +394,9 @@ function buildTemplateItem(tplId) {
 }
 
 // ============================================================
-// DESIGN / EFFECTS
+// DESIGN
 // ============================================================
 function attachDesignEvents() {
-    // Ratio
     document.querySelectorAll('#ratio-group .opt-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('#ratio-group .opt-btn').forEach(b => b.classList.remove('active'));
@@ -421,7 +406,6 @@ function attachDesignEvents() {
         };
     });
 
-    // Safe zone
     const safezoneToggle = document.getElementById('safezone-toggle');
     safezoneToggle.onclick = () => {
         state.safezone = !state.safezone;
@@ -429,7 +413,6 @@ function attachDesignEvents() {
         document.getElementById('preview-safezone').style.display = state.safezone ? 'block' : 'none';
     };
 
-    // Border
     document.getElementById('border-slider').oninput = (e) => {
         state.borderWidth = parseInt(e.target.value);
         document.getElementById('border-label').textContent = state.borderWidth;
@@ -437,28 +420,24 @@ function attachDesignEvents() {
     };
     document.getElementById('border-color-btn').onclick = () => openColorPicker('border');
 
-    // Radius
     document.getElementById('radius-slider').oninput = (e) => {
         state.radius = parseInt(e.target.value);
         document.getElementById('radius-label').textContent = state.radius;
         updatePreview();
     };
 
-    // Blur
     document.getElementById('blur-slider').oninput = (e) => {
         state.blur = parseFloat(e.target.value);
         document.getElementById('blur-label').textContent = state.blur;
         updatePreview();
     };
 
-    // Dark overlay
     document.getElementById('dark-slider').oninput = (e) => {
         state.darkOverlay = parseInt(e.target.value);
         document.getElementById('dark-label').textContent = state.darkOverlay;
         updatePreview();
     };
 
-    // Gradient overlay
     const gradToggle = document.getElementById('gradient-overlay-toggle');
     gradToggle.onclick = () => {
         state.gradientOverlay = !state.gradientOverlay;
@@ -471,45 +450,38 @@ function attachDesignEvents() {
         updatePreview();
     };
 
-    // Vignette
     document.getElementById('vignette-slider').oninput = (e) => {
         state.vignette = parseInt(e.target.value);
         document.getElementById('vignette-label').textContent = state.vignette;
         updatePreview();
     };
 
-    // Font family
     document.getElementById('font-family-btn').onclick = openFontModal;
 
-    // Font size
     document.getElementById('font-size-slider').oninput = (e) => {
         state.fontSize = parseInt(e.target.value);
         document.getElementById('font-size-label').textContent = state.fontSize;
         updatePreview();
     };
 
-    // Line spacing
     document.getElementById('line-spacing-slider').oninput = (e) => {
         state.lineSpacing = parseFloat(e.target.value);
         document.getElementById('line-spacing-label').textContent = state.lineSpacing;
         updatePreview();
     };
 
-    // Letter spacing
     document.getElementById('letter-spacing-slider').oninput = (e) => {
         state.letterSpacing = parseInt(e.target.value);
         document.getElementById('letter-spacing-label').textContent = state.letterSpacing;
         updatePreview();
     };
 
-    // Padding
     document.getElementById('padding-slider').oninput = (e) => {
         state.padding = parseInt(e.target.value);
         document.getElementById('padding-label').textContent = state.padding;
         updatePreview();
     };
 
-    // Alignment
     document.querySelectorAll('#align-group .opt-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('#align-group .opt-btn').forEach(b => b.classList.remove('active'));
@@ -519,7 +491,6 @@ function attachDesignEvents() {
         };
     });
 
-    // Vertical position
     document.querySelectorAll('#vpos-group .opt-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('#vpos-group .opt-btn').forEach(b => b.classList.remove('active'));
@@ -529,10 +500,8 @@ function attachDesignEvents() {
         };
     });
 
-    // Text color
     document.getElementById('text-color-btn').onclick = () => openColorPicker('text');
 
-    // Shadow
     document.querySelectorAll('#shadow-group .opt-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('#shadow-group .opt-btn').forEach(b => b.classList.remove('active'));
@@ -542,7 +511,6 @@ function attachDesignEvents() {
         };
     });
 
-   // Reference
     const refToggle = document.getElementById('ref-toggle');
     refToggle.onclick = () => {
         state.refShow = !state.refShow;
@@ -569,7 +537,6 @@ function attachDesignEvents() {
 // EXTRAS
 // ============================================================
 function attachExtrasEvents() {
-    // Secondary text
     document.getElementById('secondary-input').oninput = (e) => {
         state.secText = e.target.value;
         updatePreview();
@@ -588,7 +555,6 @@ function attachExtrasEvents() {
         updatePreview();
     };
 
-    // Logo
     document.getElementById('logo-upload-btn').onclick = () => document.getElementById('logo-input').click();
     document.getElementById('logo-input').onchange = (e) => {
         const file = e.target.files[0];
@@ -627,7 +593,6 @@ function attachExtrasEvents() {
         updatePreview();
     };
 
-    // QR
     const qrToggle = document.getElementById('qr-toggle');
     qrToggle.onclick = () => {
         state.qrOn = !state.qrOn;
@@ -647,7 +612,6 @@ function attachExtrasEvents() {
         };
     });
 
-    // Stack
     const stackToggle = document.getElementById('stack-toggle');
     stackToggle.onclick = () => {
         state.stackOn = !state.stackOn;
@@ -661,13 +625,12 @@ function attachExtrasEvents() {
 }
 
 function showPreviewLogo() {
+    const el = document.getElementById('preview-logo');
     if (!state.logoData) {
-        document.getElementById('preview-logo').style.display = 'none';
+        el.style.display = 'none';
         return;
     }
-    const el = document.getElementById('preview-logo');
-    const img = document.getElementById('preview-logo-img');
-    img.src = state.logoData;
+    document.getElementById('preview-logo-img').src = state.logoData;
     el.style.display = 'flex';
 }
 
@@ -682,27 +645,16 @@ function attachPresetEvents() {
     document.getElementById('preset-confirm-btn').onclick = () => {
         const name = document.getElementById('preset-name-input').value.trim() || 'Untitled';
         const preset = {
-            id: Date.now(),
-            name: name,
-            fontFamily: state.fontFamily,
-            fontSize: state.fontSize,
-            lineSpacing: state.lineSpacing,
-            letterSpacing: state.letterSpacing,
-            padding: state.padding,
-            align: state.align,
-            vpos: state.vpos,
-            textColor: state.textColor,
-            shadow: state.shadow,
-            refShow: state.refShow,
-            refPos: state.refPos,
-            refSize: state.refSize,
-            refColor: state.refColor,
-            borderWidth: state.borderWidth,
-            borderColor: state.borderColor,
-            radius: state.radius,
-            darkOverlay: state.darkOverlay,
-            vignette: state.vignette,
-            ratio: state.ratio
+            id: Date.now(), name,
+            fontFamily: state.fontFamily, fontSize: state.fontSize,
+            lineSpacing: state.lineSpacing, letterSpacing: state.letterSpacing,
+            padding: state.padding, align: state.align, vpos: state.vpos,
+            textColor: state.textColor, shadow: state.shadow,
+            refShow: state.refShow, refPos: state.refPos,
+            refSize: state.refSize, refColor: state.refColor,
+            borderWidth: state.borderWidth, borderColor: state.borderColor,
+            radius: state.radius, darkOverlay: state.darkOverlay,
+            vignette: state.vignette, ratio: state.ratio
         };
         state.presets.unshift(preset);
         state.presets = state.presets.slice(0, 20);
@@ -744,28 +696,13 @@ function renderPresets() {
 
 function loadPreset(p) {
     Object.assign(state, {
-        fontFamily: p.fontFamily,
-        fontSize: p.fontSize,
-        lineSpacing: p.lineSpacing,
-        letterSpacing: p.letterSpacing,
-        padding: p.padding,
-        align: p.align,
-        vpos: p.vpos,
-        textColor: p.textColor,
-        shadow: p.shadow,
-        refShow: p.refShow,
-        refPos: p.refPos,
-        refSize: p.refSize,
-        refColor: p.refColor,
-        borderWidth: p.borderWidth,
-        borderColor: p.borderColor,
-        radius: p.radius,
-        darkOverlay: p.darkOverlay,
-        vignette: p.vignette,
-        ratio: p.ratio
+        fontFamily: p.fontFamily, fontSize: p.fontSize, lineSpacing: p.lineSpacing,
+        letterSpacing: p.letterSpacing, padding: p.padding, align: p.align, vpos: p.vpos,
+        textColor: p.textColor, shadow: p.shadow, refShow: p.refShow, refPos: p.refPos,
+        refSize: p.refSize, refColor: p.refColor, borderWidth: p.borderWidth,
+        borderColor: p.borderColor, radius: p.radius, darkOverlay: p.darkOverlay,
+        vignette: p.vignette, ratio: p.ratio
     });
-
-    // Update UI controls
     document.getElementById('font-family-btn').textContent = p.fontFamily;
     document.getElementById('font-size-slider').value = p.fontSize;
     document.getElementById('font-size-label').textContent = p.fontSize;
@@ -785,20 +722,15 @@ function loadPreset(p) {
     document.getElementById('vignette-label').textContent = p.vignette;
     document.getElementById('ref-size-slider').value = p.refSize;
     document.getElementById('ref-size-label').textContent = p.refSize;
-
     document.getElementById('border-color-btn').style.background = p.borderColor;
     document.getElementById('text-color-btn').style.background = p.textColor;
     document.getElementById('ref-color-btn').style.background = p.refColor;
-
     document.querySelectorAll('#align-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.align === p.align));
     document.querySelectorAll('#vpos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.vpos === p.vpos));
     document.querySelectorAll('#shadow-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.shadow === p.shadow));
     document.querySelectorAll('#ratio-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.ratio === p.ratio));
     document.querySelectorAll('#refpos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.refpos === p.refPos));
-
-    const refToggle = document.getElementById('ref-toggle');
-    refToggle.classList.toggle('active', p.refShow);
-
+    document.getElementById('ref-toggle').classList.toggle('active', p.refShow);
     updatePreview();
 }
 
@@ -823,19 +755,17 @@ function openColorPicker(target) {
     else if (target === 'gradient') current = state.gradientColor;
 
     const rgb = hexToRgb(current);
-    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-    pickedColor = hsl;
+    pickedColor = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-    document.getElementById('hue-slider').value = hsl.h;
-    document.getElementById('sat-slider').value = hsl.s;
-    document.getElementById('light-slider').value = hsl.l;
-    document.getElementById('hue-label').textContent = hsl.h;
-    document.getElementById('sat-label').textContent = hsl.s;
-    document.getElementById('light-label').textContent = hsl.l;
+    document.getElementById('hue-slider').value = pickedColor.h;
+    document.getElementById('sat-slider').value = pickedColor.s;
+    document.getElementById('light-slider').value = pickedColor.l;
+    document.getElementById('hue-label').textContent = pickedColor.h;
+    document.getElementById('sat-label').textContent = pickedColor.s;
+    document.getElementById('light-label').textContent = pickedColor.l;
     document.getElementById('hex-input').value = current;
     updateColorPreview();
 
-    // Render swatches
     const swatchEl = document.getElementById('color-swatches');
     swatchEl.innerHTML = '';
     COLOR_PRESETS.forEach(c => {
@@ -901,19 +831,10 @@ function updateColorPreview() {
 }
 
 function applyColor(target, hex) {
-    if (target === 'text') {
-        state.textColor = hex;
-        document.getElementById('text-color-btn').style.background = hex;
-    } else if (target === 'ref') {
-        state.refColor = hex;
-        document.getElementById('ref-color-btn').style.background = hex;
-    } else if (target === 'border') {
-        state.borderColor = hex;
-        document.getElementById('border-color-btn').style.background = hex;
-    } else if (target === 'gradient') {
-        state.gradientColor = hex;
-        document.getElementById('gradient-color-btn').style.background = hex;
-    }
+    if (target === 'text') { state.textColor = hex; document.getElementById('text-color-btn').style.background = hex; }
+    else if (target === 'ref') { state.refColor = hex; document.getElementById('ref-color-btn').style.background = hex; }
+    else if (target === 'border') { state.borderColor = hex; document.getElementById('border-color-btn').style.background = hex; }
+    else if (target === 'gradient') { state.gradientColor = hex; document.getElementById('gradient-color-btn').style.background = hex; }
     updatePreview();
 }
 
@@ -955,18 +876,13 @@ function hslToHex(h, s, l) {
     else if (h < 240) { g = x; b = c; }
     else if (h < 300) { r = x; b = c; }
     else { r = c; b = x; }
-    const toHex = (v) => {
-        const h2 = Math.round((v + m) * 255).toString(16).padStart(2, '0');
-        return h2;
-    };
+    const toHex = (v) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-                }
+}
+
 // ============================================================
 // FONT PICKER
 // ============================================================
-function attachFontModalEvents() {
-    // rendered on open
-}
 function openFontModal() {
     const list = document.getElementById('font-list');
     list.innerHTML = '';
@@ -1005,39 +921,26 @@ function updatePreview() {
     const deco = document.getElementById('preview-decoration');
     const content = card.querySelector('.preview-content');
 
-    // Ratio
     card.className = 'preview-card ratio-' + state.ratio;
 
     // Background
-    if (state.currentCategory === 'photos') {
-        const url = photoUrls[state.selectedTemplate] || photoUrls[0];
-        bg.style.background = `url('${url}') center/cover`;
-    } else if (state.currentCategory === 'gradients') {
-        bg.style.background = gradients[state.selectedTemplate] || gradients[0];
-    } else if (state.currentCategory === 'solids') {
-        bg.style.background = solids[state.selectedTemplate] || solids[0];
-    } else if (state.currentCategory === 'favorites') {
-        // Load favorite template
+    let bgStyle = '';
+    if (state.currentCategory === 'photos') bgStyle = `url('${photoUrls[state.selectedTemplate]}') center/cover`;
+    else if (state.currentCategory === 'gradients') bgStyle = gradients[state.selectedTemplate];
+    else if (state.currentCategory === 'solids') bgStyle = solids[state.selectedTemplate];
+    else if (state.currentCategory === 'favorites') {
         const tplId = state.favorites[state.selectedTemplate];
         if (tplId) {
-            if (tplId.startsWith('photo_')) {
-                const i = parseInt(tplId.split('_')[1]);
-                bg.style.background = `url('${photoUrls[i]}') center/cover`;
-            } else if (tplId.startsWith('grad_')) {
-                bg.style.background = gradients[parseInt(tplId.split('_')[1])];
-            } else if (tplId.startsWith('solid_')) {
-                bg.style.background = solids[parseInt(tplId.split('_')[1])];
-            }
+            if (tplId.startsWith('photo_')) bgStyle = `url('${photoUrls[parseInt(tplId.split('_')[1])]}') center/cover`;
+            else if (tplId.startsWith('grad_')) bgStyle = gradients[parseInt(tplId.split('_')[1])];
+            else if (tplId.startsWith('solid_')) bgStyle = solids[parseInt(tplId.split('_')[1])];
         }
     }
-
-    // Blur
+    bg.style.background = bgStyle;
     bg.style.filter = state.blur > 0 ? `blur(${state.blur}px)` : 'none';
 
-    // Dark overlay
     darkOv.style.background = `rgba(0,0,0,${state.darkOverlay / 100})`;
 
-    // Gradient overlay
     if (state.gradientOverlay) {
         gradOv.style.display = 'block';
         gradOv.style.background = hexToRgba(state.gradientColor, state.gradientOpacity / 100);
@@ -1045,22 +948,16 @@ function updatePreview() {
         gradOv.style.display = 'none';
     }
 
-    // Vignette
     if (state.vignette > 0) {
         vig.style.boxShadow = `inset 0 0 ${Math.round(state.vignette * 2.5)}px ${Math.round(state.vignette * 1.5)}px rgba(0,0,0,${state.vignette / 100})`;
     } else {
         vig.style.boxShadow = 'none';
     }
 
-    // Border + radius
-    if (state.borderWidth > 0) {
-        deco.style.border = `${state.borderWidth}px solid ${state.borderColor}`;
-    } else {
-        deco.style.border = 'none';
-    }
+    if (state.borderWidth > 0) deco.style.border = `${state.borderWidth}px solid ${state.borderColor}`;
+    else deco.style.border = 'none';
     card.style.borderRadius = state.radius + 'px';
 
-    // Text
     const fontCss = FONTS.find(f => f.name === state.fontFamily)?.css || "'Poppins', sans-serif";
     textEl.style.fontFamily = fontCss;
     textEl.style.fontSize = state.fontSize + 'px';
@@ -1070,14 +967,11 @@ function updatePreview() {
     textEl.style.textAlign = state.align;
     textEl.style.textShadow = getShadowCSS(state.shadow);
 
-    // Text content
     textEl.innerHTML = buildTextHTML();
 
-    // Reference
     if (state.refShow) {
         refEl.style.display = 'block';
-        const refText = `${data.englishNames[data.codes.indexOf(state.currentBook)]} ${state.currentChapter}:${state.currentVerse}`;
-        refEl.textContent = refText;
+        refEl.textContent = `${data.englishNames[data.codes.indexOf(state.currentBook)]} ${state.currentChapter}:${state.currentVerse}`;
         refEl.style.fontFamily = fontCss;
         refEl.style.fontSize = state.refSize + 'px';
         refEl.style.color = state.refColor;
@@ -1086,15 +980,12 @@ function updatePreview() {
         refEl.style.display = 'none';
     }
 
-    // Content padding
     content.style.padding = state.padding + 'px';
 
-    // Vertical position
     if (state.vpos === 'top') content.style.justifyContent = 'flex-start';
     else if (state.vpos === 'bottom') content.style.justifyContent = 'flex-end';
     else content.style.justifyContent = 'center';
 
-    // Secondary text
     if (state.secText) {
         secEl.style.display = 'block';
         secEl.textContent = state.secText;
@@ -1104,7 +995,6 @@ function updatePreview() {
         secEl.style.display = 'none';
     }
 
-    // Logo
     if (state.logoData) {
         logoEl.style.display = 'flex';
         logoEl.dataset.pos = state.logoPos;
@@ -1116,7 +1006,6 @@ function updatePreview() {
         logoEl.style.display = 'none';
     }
 
-    // QR
     if (state.qrOn && state.qrUrl) {
         qrEl.style.display = 'block';
         qrEl.dataset.pos = state.qrPos;
@@ -1127,27 +1016,18 @@ function updatePreview() {
 }
 
 function buildTextHTML() {
-    let baseText = '';
-    if (state.stackOn && state.stackText) {
-        // Parse stack text: "GEN-1-1, JHN-3-16"
-        const keys = state.stackText.split(',').map(s => s.trim()).filter(Boolean);
-        const parts = [];
-        keys.forEach(k => {
-            const [b, c, v] = k.split('-');
-            if (!b || !c || !v) return;
-            const bookIdx = data.codes.indexOf(b.toUpperCase());
-            if (bookIdx === -1) return;
-            const bookNum = bookIdx + 1;
-            const verse = data.yoruba.find(x => x.book === bookNum && x.chapter === parseInt(c) && x.verse === parseInt(v));
-            if (verse) parts.push(verse.text);
-        });
-        baseText = parts.join('<br><br>');
-    } else {
-        const bookNum = data.codes.indexOf(state.currentBook) + 1;
-        const verse = data.yoruba.find(x => x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse);
-        baseText = verse ? verse.text : 'Verse not found';
+    const bookNum = data.codes.indexOf(state.currentBook) + 1;
+    const yorubaVerse = data.yoruba.find(x => x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse);
+    const englishText = data.englishMap[`${bookNum}-${state.currentChapter}-${state.currentVerse}`] || '';
+
+    let html = '';
+    if (state.showYoruba && yorubaVerse) {
+        html += `<div class="text-yo">${yorubaVerse.text}</div>`;
     }
-    return baseText;
+    if (state.showEnglish && englishText) {
+        html += `<div class="text-en">${englishText}</div>`;
+    }
+    return html || 'Verse not found';
 }
 
 function getShadowCSS(style) {
@@ -1167,7 +1047,7 @@ function hexToRgba(hex, alpha) {
 }
 
 // ============================================================
-// ACTION: DOWNLOAD & SHARE
+// ACTIONS
 // ============================================================
 function attachActionEvents() {
     document.getElementById('download-btn').onclick = downloadImage;
@@ -1175,7 +1055,7 @@ function attachActionEvents() {
 }
 
 // ============================================================
-// CANVAS: GENERATE IMAGE
+// CANVAS GENERATION
 // ============================================================
 async function generateCanvas() {
     await document.fonts.ready;
@@ -1186,70 +1066,65 @@ async function generateCanvas() {
     else if (state.ratio === 'portrait') { W = 1080; H = 1350; }
     else if (state.ratio === 'story') { W = 1080; H = 1920; }
     else if (state.ratio === 'landscape') { W = 1920; H = 1080; }
-    else { W = 1080; H = 1440; } // pin
+    else { W = 1080; H = 1440; }
 
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // 1) Background
-    if (state.currentCategory === 'photos' || (state.currentCategory === 'favorites' && state.favorites[state.selectedTemplate]?.startsWith('photo_'))) {
-        let url;
-        if (state.currentCategory === 'photos') url = photoUrls[state.selectedTemplate];
-        else {
-            const idx = parseInt(state.favorites[state.selectedTemplate].split('_')[1]);
-            url = photoUrls[idx];
+    // Background
+    let bgStyle = '';
+    if (state.currentCategory === 'photos') bgStyle = photoUrls[state.selectedTemplate];
+    else if (state.currentCategory === 'gradients') bgStyle = gradients[state.selectedTemplate];
+    else if (state.currentCategory === 'solids') bgStyle = solids[state.selectedTemplate];
+    else if (state.currentCategory === 'favorites') {
+        const tplId = state.favorites[state.selectedTemplate];
+        if (tplId) {
+            if (tplId.startsWith('photo_')) bgStyle = photoUrls[parseInt(tplId.split('_')[1])];
+            else if (tplId.startsWith('grad_')) bgStyle = gradients[parseInt(tplId.split('_')[1])];
+            else if (tplId.startsWith('solid_')) bgStyle = solids[parseInt(tplId.split('_')[1])];
         }
-        try {
-            const img = await loadImage(url);
-            if (state.blur > 0) ctx.filter = `blur(${state.blur * 4}px)`;
-            const scale = Math.max(W / img.width, H / img.height) * 1.05;
-            const sw = W / scale, sh = H / scale;
-            const sx = (img.width - sw) / 2;
-            const sy = (img.height - sh) / 2;
-            ctx.drawImage(img, sx, sy, sw, sh, -W * 0.025, -H * 0.025, W * 1.05, H * 1.05);
-            ctx.filter = 'none';
-        } catch (e) {
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(0, 0, W, H);
-        }
-    } else if (state.currentCategory === 'gradients' || (state.currentCategory === 'favorites' && state.favorites[state.selectedTemplate]?.startsWith('grad_'))) {
-        let g;
-        if (state.currentCategory === 'gradients') g = gradients[state.selectedTemplate];
-        else {
-            const idx = parseInt(state.favorites[state.selectedTemplate].split('_')[1]);
-            g = gradients[idx];
-        }
-        const parts = g.match(/#[0-9a-fA-F]{6}/g);
+    }
+
+    if (bgStyle.startsWith('linear-gradient')) {
+        const parts = bgStyle.match(/#[0-9a-fA-F]{6}/g);
         const grad = ctx.createLinearGradient(0, 0, W, H);
         grad.addColorStop(0, parts[0]);
         grad.addColorStop(1, parts[1]);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
-    } else {
-        let color;
-        if (state.currentCategory === 'solids') color = solids[state.selectedTemplate];
-        else {
-            const idx = parseInt(state.favorites[state.selectedTemplate].split('_')[1]);
-            color = solids[idx];
-        }
-        ctx.fillStyle = color;
+    } else if (bgStyle.startsWith('#')) {
+        ctx.fillStyle = bgStyle;
         ctx.fillRect(0, 0, W, H);
+    } else {
+        try {
+            const img = await loadImage(bgStyle);
+            if (state.blur > 0) ctx.filter = `blur(${state.blur * 4}px)`;
+            const scale = Math.max(W / img.width, H / img.height) * 1.06;
+            const sw = W / scale, sh = H / scale;
+            const sx = (img.width - sw) / 2;
+            const sy = (img.height - sh) / 2;
+            ctx.drawImage(img, sx, sy, sw, sh, -W * 0.03, -H * 0.03, W * 1.06, H * 1.06);
+            ctx.filter = 'none';
+        } catch (e) {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, W, H);
+        }
     }
 
-    // 2) Dark overlay
+    // Dark overlay
     if (state.darkOverlay > 0) {
         ctx.fillStyle = `rgba(0,0,0,${state.darkOverlay / 100})`;
         ctx.fillRect(0, 0, W, H);
     }
 
-    // 3) Gradient overlay
+    // Gradient overlay
     if (state.gradientOverlay) {
         ctx.fillStyle = hexToRgba(state.gradientColor, state.gradientOpacity / 100);
         ctx.fillRect(0, 0, W, H);
     }
 
-    // 4) Vignette
+    // Vignette
     if (state.vignette > 0) {
         const vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.2, W / 2, H / 2, Math.max(W, H) * 0.75);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
@@ -1258,81 +1133,74 @@ async function generateCanvas() {
         ctx.fillRect(0, 0, W, H);
     }
 
-    // 5) Text
-    const fontFamily = state.fontFamily;
-    const fontCss = `${fontFamily}, sans-serif`;
-
-    // Compute font size scaled up from preview
+    // Font
+    const fontCss = `${state.fontFamily}, sans-serif`;
     const scaleFactor = W / 400;
-    const fontSize = state.fontSize * scaleFactor * 0.75;
-    const lineHeight = fontSize * state.lineSpacing;
+    const fontSize = state.fontSize * scaleFactor * 0.8;
     const padding = state.padding * scaleFactor * 0.9;
     const maxWidth = W - (padding * 2);
-
-    // Reference
+    const refFontSize = state.refSize * scaleFactor * 0.8;
     const refText = `${data.englishNames[data.codes.indexOf(state.currentBook)]} ${state.currentChapter}:${state.currentVerse}`;
-    const refFontSize = state.refSize * scaleFactor * 0.75;
 
-    // Get main text
-    let mainText = '';
-    if (state.stackOn && state.stackText) {
-        const keys = state.stackText.split(',').map(s => s.trim()).filter(Boolean);
-        const parts = [];
-        keys.forEach(k => {
-            const [b, c, v] = k.split('-');
-            if (!b || !c || !v) return;
-            const bookIdx = data.codes.indexOf(b.toUpperCase());
-            if (bookIdx === -1) return;
-            const bookNum = bookIdx + 1;
-            const verse = data.yoruba.find(x => x.book === bookNum && x.chapter === parseInt(c) && x.verse === parseInt(v));
-            if (verse) parts.push(verse.text);
-        });
-        mainText = parts.join('\n\n');
-    } else {
-        const bookNum = data.codes.indexOf(state.currentBook) + 1;
-        const verse = data.yoruba.find(x => x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse);
-        mainText = verse ? verse.text : '';
-    }
-
-    // Reference drawing
+    // Reference at top
     ctx.save();
     ctx.font = `700 ${refFontSize}px ${fontCss}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = state.refColor;
-    applyShadow(ctx, state.shadow === 'soft' ? 'soft' : 'strong');
+    applyShadow(ctx, 'strong');
     if (state.refShow && state.refPos === 'top') {
         ctx.fillText(refText, W / 2, padding);
     }
     ctx.restore();
 
-    // Auto-fit main text
-    const fontStack = `700 ${fontSize}px ${fontCss}`;
-    ctx.font = fontStack;
+    // Main text (Yoruba + English)
+    const bookNum = data.codes.indexOf(state.currentBook) + 1;
+    const yorubaVerse = data.yoruba.find(x => x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse);
+    const englishText = data.englishMap[`${bookNum}-${state.currentChapter}-${state.currentVerse}`] || '';
 
-    // Wrap into lines
-    const lines = wrapText(ctx, mainText, maxWidth);
+    const segments = [];
+    if (state.showYoruba && yorubaVerse) segments.push({ text: yorubaVerse.text, weight: 700, scale: 1, opacity: 1 });
+    if (state.showEnglish && englishText) segments.push({ text: englishText, weight: 400, scale: 0.78, opacity: 0.92 });
 
-    // Draw main text
-    ctx.save();
-    ctx.font = fontStack;
+    // Precompute all lines to know total height
+    const allBlocks = [];
+    let totalHeight = 0;
+    segments.forEach(seg => {
+        const segSize = fontSize * seg.scale;
+        const segLineHeight = segSize * state.lineSpacing;
+        ctx.font = `${seg.weight} ${segSize}px ${fontCss}`;
+        const lines = wrapText(ctx, seg.text, maxWidth);
+        const blockHeight = lines.length * segLineHeight;
+        allBlocks.push({ lines, segSize, segLineHeight, weight: seg.weight, opacity: seg.opacity });
+        totalHeight += blockHeight;
+    });
+    const gap = fontSize * 0.6;
+    if (allBlocks.length > 1) totalHeight += gap;
+
+    let startY;
+    if (state.vpos === 'top') startY = padding + (state.refShow && state.refPos === 'top' ? refFontSize * 2 : 0);
+    else if (state.vpos === 'bottom') startY = H - padding - totalHeight - (state.refShow && state.refPos === 'bottom' ? refFontSize * 2 : 0);
+    else startY = (H - totalHeight) / 2 + (state.refShow && state.refPos === 'top' ? refFontSize / 2 : 0);
+
+    let textX = state.align === 'center' ? W / 2 : state.align === 'left' ? padding : W - padding;
+
     ctx.textAlign = state.align === 'center' ? 'center' : state.align === 'left' ? 'left' : 'right';
     ctx.textBaseline = 'top';
     ctx.fillStyle = state.textColor;
     applyShadow(ctx, state.shadow);
 
-    const totalTextHeight = lines.length * lineHeight;
-    let startY;
-    const textX = state.align === 'center' ? W / 2 : state.align === 'left' ? padding : W - padding;
-
-    if (state.vpos === 'top') startY = padding + (state.refShow && state.refPos === 'top' ? refFontSize * 2 : 0);
-    else if (state.vpos === 'bottom') startY = H - padding - totalTextHeight - (state.refShow && state.refPos === 'bottom' ? refFontSize * 2 : 0);
-    else startY = (H - totalTextHeight) / 2 + (state.refShow && state.refPos === 'top' ? refFontSize : 0);
-
-    lines.forEach((line, i) => {
-        ctx.fillText(line, textX, startY + i * lineHeight);
+    let cursorY = startY;
+    allBlocks.forEach((block, bi) => {
+        ctx.globalAlpha = block.opacity;
+        ctx.font = `${block.weight} ${block.segSize}px ${fontCss}`;
+        block.lines.forEach((line, i) => {
+            ctx.fillText(line, textX, cursorY);
+            cursorY += block.segLineHeight;
+        });
+        if (bi < allBlocks.length - 1) cursorY += gap;
     });
-    ctx.restore();
+    ctx.globalAlpha = 1;
 
     // Reference at bottom
     if (state.refShow && state.refPos === 'bottom') {
@@ -1346,22 +1214,22 @@ async function generateCanvas() {
         ctx.restore();
     }
 
-    // 6) Secondary text
+    // Secondary text
     if (state.secText) {
         ctx.save();
-        const secFontSize = state.secSize * scaleFactor * 0.75;
+        const secFontSize = state.secSize * scaleFactor * 0.8;
         ctx.font = `600 ${secFontSize}px ${fontCss}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = state.textColor;
         ctx.globalAlpha = 0.85;
         applyShadow(ctx, 'strong');
-        let secY = state.secPos === 'top' ? padding * 2.5 : state.secPos === 'bottom' ? H - padding * 2 : H / 2 - totalTextHeight / 2 - 40;
+        let secY = state.secPos === 'top' ? padding * 2.5 : state.secPos === 'bottom' ? H - padding * 2 : H / 2 - totalHeight / 2 - 40;
         ctx.fillText(state.secText, W / 2, secY);
         ctx.restore();
     }
 
-    // 7) Border
+    // Border
     if (state.borderWidth > 0) {
         const bw = state.borderWidth * scaleFactor * 0.9;
         ctx.save();
@@ -1371,50 +1239,48 @@ async function generateCanvas() {
         ctx.restore();
     }
 
-    // 8) Logo
+    // Logo
     if (state.logoData) {
         try {
             const logoImg = await loadImage(state.logoData);
             const size = state.logoSize * scaleFactor * 0.9;
-            const gap = padding * 0.7;
+            const g = padding * 0.7;
             let lx, ly;
-            if (state.logoPos === 'tl') { lx = gap; ly = gap; }
-            else if (state.logoPos === 'tr') { lx = W - gap - size; ly = gap; }
-            else if (state.logoPos === 'bl') { lx = gap; ly = H - gap - size; }
-            else { lx = W - gap - size; ly = H - gap - size; }
-
+            if (state.logoPos === 'tl') { lx = g; ly = g; }
+            else if (state.logoPos === 'tr') { lx = W - g - size; ly = g; }
+            else if (state.logoPos === 'bl') { lx = g; ly = H - g - size; }
+            else { lx = W - g - size; ly = H - g - size; }
             ctx.save();
             ctx.globalAlpha = state.logoOpacity / 100;
-            const logoScale = Math.min(size / logoImg.width, size / logoImg.height);
-            const lw = logoImg.width * logoScale;
-            const lh = logoImg.height * logoScale;
+            const s = Math.min(size / logoImg.width, size / logoImg.height);
+            const lw = logoImg.width * s;
+            const lh = logoImg.height * s;
             ctx.drawImage(logoImg, lx + (size - lw) / 2, ly + (size - lh) / 2, lw, lh);
             ctx.restore();
-        } catch (e) { /* ignore logo error */ }
+        } catch (e) {}
     }
 
-    // 9) QR
+    // QR
     if (state.qrOn && state.qrUrl) {
         try {
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(state.qrUrl)}`;
             const qrImg = await loadImage(qrUrl, true);
             const size = 100 * scaleFactor * 0.5;
-            const gap = padding * 0.7;
+            const g = padding * 0.7;
             let qx, qy;
-            if (state.qrPos === 'tl') { qx = gap; qy = gap; }
-            else if (state.qrPos === 'tr') { qx = W - gap - size; qy = gap; }
-            else if (state.qrPos === 'bl') { qx = gap; qy = H - gap - size; }
-            else { qx = W - gap - size; qy = H - gap - size; }
-
+            if (state.qrPos === 'tl') { qx = g; qy = g; }
+            else if (state.qrPos === 'tr') { qx = W - g - size; qy = g; }
+            else if (state.qrPos === 'bl') { qx = g; qy = H - g - size; }
+            else { qx = W - g - size; qy = H - g - size; }
             ctx.save();
             ctx.fillStyle = 'white';
             ctx.fillRect(qx - 4, qy - 4, size + 8, size + 8);
             ctx.drawImage(qrImg, qx, qy, size, size);
             ctx.restore();
-        } catch (e) { /* ignore QR error */ }
+        } catch (e) {}
     }
 
-    // 10) Watermark
+    // Watermark
     ctx.save();
     ctx.font = `400 ${Math.round(W * 0.018)}px 'Poppins', sans-serif`;
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
@@ -1434,8 +1300,7 @@ function wrapText(ctx, text, maxWidth) {
         let line = '';
         words.forEach(word => {
             const test = line ? line + ' ' + word : word;
-            const w = ctx.measureText(test).width;
-            if (w > maxWidth && line) {
+            if (ctx.measureText(test).width > maxWidth && line) {
                 allLines.push(line);
                 line = word;
             } else {
@@ -1479,7 +1344,8 @@ function loadImage(src, crossOrigin = true) {
         img.onerror = reject;
         img.src = src;
     });
-                                         }
+}
+
 // ============================================================
 // DOWNLOAD & SHARE
 // ============================================================
@@ -1487,6 +1353,7 @@ async function downloadImage() {
     try {
         const canvas = await generateCanvas();
         canvas.toBlob((blob) => {
+            if (!blob) { alert('Failed to generate image'); return; }
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1497,7 +1364,7 @@ async function downloadImage() {
             URL.revokeObjectURL(url);
         }, 'image/png', 1.0);
     } catch (e) {
-        alert('Failed to generate image: ' + e.message);
+        alert('Failed: ' + e.message);
     }
 }
 
@@ -1505,25 +1372,20 @@ async function shareImage() {
     try {
         const canvas = await generateCanvas();
         canvas.toBlob(async (blob) => {
+            if (!blob) { alert('Failed to generate image'); return; }
             const file = new File([blob], `bible-${Date.now()}.png`, { type: 'image/png' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Bible Verse',
-                        text: 'Shared from Bibeli Mimo'
-                    });
+                    await navigator.share({ files: [file], title: 'Bible Verse', text: 'Shared from Bibeli Mimo' });
                 } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        downloadImage();
-                    }
+                    if (err.name !== 'AbortError') downloadImage();
                 }
             } else {
                 downloadImage();
             }
-        }, 'image/png', 1.0);
+       }, 'image/png', 1.0);
     } catch (e) {
-        alert('Failed to share image: ' + e.message);
+        alert('Failed: ' + e.message);
     }
 }
 
@@ -1531,4 +1393,3 @@ async function shareImage() {
 // START
 // ============================================================
 initStudio();
-            
