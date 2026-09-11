@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Image Studio – Bibeli Mimo</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/studio/studio.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' font-size='60' font-family='Arial' font-weight='bold' fill='%23f59e0b' text-anchor='middle'>B</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;600&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <a href="/" class="icon-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></a>
+        <h1>Image Studio</h1>
+        <button class="icon-btn" id="save-preset-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg></button>
+    </header>
+
+    <!-- STICKY ACTIONS -->
+    <div class="sticky-actions">
+        <button class="action-btn" id="download-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> Download</button>
+        <button class="action-btn primary" id="share-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg> Share</button>
+    </div>
+
+    <!-- CONTAINER -->
+    <div class="studio-container">
+
+        <!-- STICKY PREVIEW -->
+        <div class="sticky-preview">
+            <div id="preview-card" class="preview-card ratio-square">
+                <div id="preview-bg" class="preview-bg"></div>
+                <div id="preview-dark-overlay" class="preview-dark-overlay"></div>
+                <div id="preview-gradient-overlay" class="preview-gradient-overlay"></div>
+                <div id="preview-vignette" class="preview-vignette"></div>
+                <div class="preview-content">
+                    <div id="preview-ref" class="preview-ref" style="display:none;">Genesis 1:1</div>
+                    <div id="preview-text" class="preview-text">Loading...</div>
+                    <div id="preview-secondary" class="preview-secondary" style="display:none;"></div>
+                </div>
+                <div id="preview-logo" class="preview-logo" style="display:none;"><img id="preview-logo-img" alt="logo"></div>
+                <div id="preview-qr" class="preview-qr" style="display:none;"></div>
+                <div id="preview-decoration" class="preview-decoration"></div>
+                <div id="preview-watermark" class="preview-watermark">Bibeli Mimo</div>
+                <div id="preview-safezone" class="preview-safezone" style="display:none;">
+                    <div class="safe-top"></div>
+                    <div class="safe-bottom"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB BAR -->
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="verse"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span>Verse</span></button>
+            <button class="tab-btn" data-tab="templates"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg><span>Templates</span></button>
+            <button class="tab-btn" data-tab="design"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg><span>Design</span></button>
+            <button class="tab-btn" data-tab="extras"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg><span>Extras</span></button>
+            <button class="tab-btn" data-tab="presets"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><span>Presets</span></button>
+        </div>
+
+        <!-- PANEL: VERSE -->
+        <div class="panel active" id="panel-verse">
+            <h3 class="panel-title">Select Verse</h3>
+            <div class="picker-row">
+                <button id="pick-book" class="picker-btn">Genesis</button>
+                <button id="pick-chapter" class="picker-btn">1</button>
+                <button id="pick-verse" class="picker-btn">1</button>
+            </div>
+            <div class="picker-row">
+                <button id="random-verse" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Random</button>
+                <button id="votd-fill" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg> Today</button>
+            </div>
+            <h4 class="panel-subtitle">Recently Used</h4>
+            <div id="recent-verses" class="recent-list"></div>
+        </div>
+
+        <!-- PANEL: TEMPLATES -->
+        <div class="panel" id="panel-templates">
+            <h3 class="panel-title">Templates</h3>
+            <div class="template-tabs">
+                <button class="tpl-tab active" data-cat="photos">Photos</button>
+                <button class="tpl-tab" data-cat="gradients">Gradients</button>
+                <button class="tpl-tab" data-cat="solids">Solids</button>
+                <button class="tpl-tab" data-cat="favorites">Favorites</button>
+            </div>
+            <div id="template-grid" class="template-grid"></div>
+        </div>
+
+        <!-- PANEL: DESIGN -->
+        <div class="panel" id="panel-design">
+
+            <h3 class="panel-title">Layout</h3>
+            <label class="field-label">Aspect Ratio</label>
+            <div class="button-grid-3" id="ratio-group">
+                <button class="opt-btn active" data-ratio="square">1:1</button>
+                <button class="opt-btn" data-ratio="portrait">4:5</button>
+                <button class="opt-btn" data-ratio="story">9:16</button>
+                <button class="opt-btn" data-ratio="landscape">16:9</button>
+                <button class="opt-btn" data-ratio="pin">3:4</button>
+            </div>
+            <div class="toggle-row">
+                <span>Safe Zone Guides</span>
+                <button class="switch" id="safezone-toggle"></button>
+            </div>
+            <label class="field-label">Border Width <span id="border-label">0</span>px</label>
+            <input type="range" id="border-slider" min="0" max="30" value="0" class="slider">
+            <div class="inline-row">
+                <button class="color-pick-btn" id="border-color-btn" style="background:#ffffff"></button>
+                <span class="inline-label">Border Color</span>
+            </div>
+            <label class="field-label">Corner Radius <span id="radius-label">0</span>px</label>
+            <input type="range" id="radius-slider" min="0" max="60" value="0" class="slider">
+
+            <h3 class="panel-title">Background Effects</h3>
+            <label class="field-label">Blur <span id="blur-label">0</span>px</label>
+            <input type="range" id="blur-slider" min="0" max="20" step="0.5" value="0" class="slider">
+            <label class="field-label">Dark Overlay <span id="dark-label">0</span>%</label>
+            <input type="range" id="dark-slider" min="0" max="80" value="0" class="slider">
+            <div class="toggle-row">
+                <span>Gradient Overlay</span>
+                <button class="switch" id="gradient-overlay-toggle"></button>
+            </div>
+            <div class="inline-row">
+                <button class="color-pick-btn" id="gradient-color-btn" style="background:#1a237e"></button>
+                <span class="inline-label">Gradient Color</span>
+                <input type="range" id="gradient-opacity-slider" min="0" max="100" value="40" class="slider-small">
+            </div>
+            <label class="field-label">Vignette <span id="vignette-label">0</span>%</label>
+            <input type="range" id="vignette-slider" min="0" max="100" value="0" class="slider">
+
+            <h3 class="panel-title">Text</h3>
+            <label class="field-label">Font Family</label>
+            <button class="opt-btn wide" id="font-family-btn">Poppins</button>
+            <label class="field-label">Font Size <span id="font-size-label">24</span>px</label>
+            <input type="range" id="font-size-slider" min="12" max="80" value="24" class="slider">
+            <label class="field-label">Line Spacing <span id="line-spacing-label">1.7</span></label>
+            <input type="range" id="line-spacing-slider" min="1.0" max="2.5" step="0.1" value="1.7" class="slider">
+            <label class="field-label">Letter Spacing <span id="letter-spacing-label">0</span>px</label>
+            <input type="range" id="letter-spacing-slider" min="-2" max="10" value="0" class="slider">
+            <label class="field-label">Text Padding <span id="padding-label">20</span>px</label>
+            <input type="range" id="padding-slider" min="5" max="60" value="20" class="slider">
+            <label class="field-label">Alignment</label>
+            <div class="button-grid-3" id="align-group">
+                <button class="opt-btn" data-align="left">Left</button>
+                <button class="opt-btn active" data-align="center">Center</button>
+                <button class="opt-btn" data-align="right">Right</button>
+            </div>
+            <label class="field-label">Vertical Position</label>
+            <div class="button-grid-3" id="vpos-group">
+                <button class="opt-btn" data-vpos="top">Top</button>
+                <button class="opt-btn active" data-vpos="center">Center</button>
+                <button class="opt-btn" data-vpos="bottom">Bottom</button>
+            </div>
+            <div class="inline-row">
+                <button class="color-pick-btn" id="text-color-btn" style="background:#ffffff"></button>
+                <span class="inline-label">Text Color</span>
+            </div>
+            <label class="field-label">Text Shadow</label>
+            <div class="button-grid-3" id="shadow-group">
+                <button class="opt-btn" data-shadow="none">None</button>
+                <button class="opt-btn" data-shadow="soft">Soft</button>
+                <button class="opt-btn active" data-shadow="strong">Strong</button>
+                <button class="opt-btn" data-shadow="glow">Glow</button>
+                <button class="opt-btn" data-shadow="outline">Outline</button>
+            </div>
+
+            <h3 class="panel-title">Reference</h3>
+            <div class="toggle-row"><span>Show Reference</span><button class="switch" id="ref-toggle"></button></div>
+            <label class="field-label">Position</label>
+            <div class="button-grid-3" id="refpos-group">
+                <button class="opt-btn active" data-refpos="top">Top</button>
+                <button class="opt-btn" data-refpos="bottom">Bottom</button>
+                <button class="opt-btn" data-refpos="under">Under Verse</button>
+            </div>
+            <label class="field-label">Reference Size <span id="ref-size-label">14</span>px</label>
+            <input type="range" id="ref-size-slider" min="10" max="40" value="14" class="slider">
+            <div class="inline-row">
+                <button class="color-pick-btn" id="ref-color-btn" style="background:#f59e0b"></button>
+                <span class="inline-label">Reference Color</span>
+            </div>
+        </div>
+
+        <!-- PANEL: EXTRAS -->
+        <div class="panel" id="panel-extras">
+
+            <h3 class="panel-title">Secondary Text</h3>
+            <input type="text" id="secondary-input" class="text-input" placeholder="e.g. @yourchurch" maxlength="40">
+            <label class="field-label">Position</label>
+            <div class="button-grid-3" id="secpos-group">
+                <button class="opt-btn" data-secpos="top">Top</button>
+                <button class="opt-btn" data-secpos="bottom">Bottom</button>
+                <button class="opt-btn active" data-secpos="above">Above Verse</button>
+            </div>
+            <label class="field-label">Size <span id="sec-size-label">12</span>px</label>
+            <input type="range" id="sec-size-slider" min="10" max="30" value="12" class="slider">
+
+            <h3 class="panel-title">Logo / Watermark</h3>
+            <input type="file" id="logo-input" accept="image/*" class="hidden-input">
+            <button class="opt-btn wide" id="logo-upload-btn">Upload Logo</button>
+            <label class="field-label">Logo Position</label>
+            <div class="button-grid-3" id="logo-pos-group">
+                <button class="opt-btn" data-logopos="tl">Top Left</button>
+                <button class="opt-btn" data-logopos="tr">Top Right</button>
+                <button class="opt-btn" data-logopos="bl">Bottom Left</button>
+                <button class="opt-btn active" data-logopos="br">Bottom Right</button>
+            </div>
+            <label class="field-label">Logo Size <span id="logo-size-label">60</span>px</label>
+            <input type="range" id="logo-size-slider" min="30" max="200" value="60" class="slider">
+            <label class="field-label">Logo Opacity <span id="logo-opacity-label">100</span>%</label>
+            <input type="range" id="logo-opacity-slider" min="10" max="100" value="100" class="slider">
+            <button class="opt-btn wide" id="logo-remove-btn" style="background:#dc2626;color:white;">Remove Logo</button>
+
+            <h3 class="panel-title">QR Code</h3>
+            <div class="toggle-row"><span>Add QR Code</span><button class="switch" id="qr-toggle"></button></div>
+            <input type="text" id="qr-url" class="text-input" placeholder="https://yourchurch.com" maxlength="200">
+            <label class="field-label">Position</label>
+            <div class="button-grid-3" id="qr-pos-group">
+                <button class="opt-btn" data-qrpos="tl">Top Left</button>
+                <button class="opt-btn" data-qrpos="tr">Top Right</button>
+                <button class="opt-btn active" data-qrpos="bl">Bottom Left</button>
+                <button class="opt-btn" data-qrpos="br">Bottom Right</button>
+            </div>
+
+            <h3 class="panel-title">Verse Stack</h3>
+            <div class="toggle-row"><span>Enable Multi-Verse</span><button class="switch" id="stack-toggle"></button></div>
+            <input type="text" id="stack-input" class="text-input" placeholder="e.g. GEN-1-1, JHN-3-16" maxlength="200">
+            <span class="hint-text">Separate multiple verses with commas</span>
+        </div>
+
+        <!-- PANEL: PRESETS -->
+        <div class="panel" id="panel-presets">
+            <h3 class="panel-title">My Presets</h3>
+            <p class="hint-text">Save your current font, size, color, shadow, and layout as a preset.</p>
+            <div id="presets-list" class="presets-list"></div>
+        </div>
+
+    </div>
+
+    <!-- MODAL: VERSE PICKER -->
+    <div id="verse-modal" class="modal-overlay" onclick="if(event.target.id==='verse-modal') closeVerseModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="verse-modal-title">Select Book</h3>
+                <button class="icon-btn" onclick="closeVerseModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div id="verse-modal-list" class="modal-list"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: COLOR PICKER -->
+    <div id="color-modal" class="modal-overlay" onclick="if(event.target.id==='color-modal') closeColorModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pick Color</h3>
+                <button class="icon-btn" onclick="closeColorModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="color-preview" id="color-preview"></div>
+            <label class="field-label">Hue <span id="hue-label">0</span></label>
+            <input type="range" id="hue-slider" min="0" max="360" value="0" class="slider hue-slider">
+            <label class="field-label">Saturation <span id="sat-label">0</span>%</label>
+            <input type="range" id="sat-slider" min="0" max="100" value="0" class="slider">
+            <label class="field-label">Lightness <span id="light-label">100</span>%</label>
+            <input type="range" id="light-slider" min="0" max="100" value="100" class="slider">
+            <label class="field-label">Hex Code</label>
+            <input type="text" id="hex-input" class="text-input" placeholder="#ffffff" maxlength="7">
+            <label class="field-label">Presets</label>
+            <div class="color-swatches" id="color-swatches"></div>
+            <button class="action-btn primary wide" id="color-confirm-btn">Apply Color</button>
+        </div>
+    </div>
+
+   <!-- MODAL: PRESET SAVE -->
+    <div id="preset-modal" class="modal-overlay" onclick="if(event.target.id==='preset-modal') closePresetModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save Preset</h3>
+                <button class="icon-btn" onclick="closePresetModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <input type="text" id="preset-name-input" class="text-input" placeholder="Preset name" maxlength="30">
+            <button class="action-btn primary wide" id="preset-confirm-btn">Save Preset</button>
+        </div>
+    </div>
+
+    <!-- MODAL: FONT PICKER -->
+    <div id="font-modal" class="modal-overlay" onclick="if(event.target.id==='font-modal') closeFontModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Font Family</h3>
+                <button class="icon-btn" onclick="closeFontModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div id="font-list" class="font-list"></div>
+        </div>
+    </div>
+
+    <script src="/shared.js"></script>
+    <script src="/studio/studio.js"></script>
+</body>
+</html>
