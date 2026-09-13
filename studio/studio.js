@@ -1996,4 +1996,12 @@ function hexToRgba(hex, alpha) {
 // ============================================================
 // START
 // ============================================================
-initStudio();
+console.log('[Studio] calling initStudio...');
+initStudio()
+    .then(function() { console.log('[Studio] initStudio resolved'); })
+    .catch(function(err) {
+        var d = document.createElement('div');
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:15px;font-size:13px;z-index:99999;font-family:monospace;word-break:break-all;';
+        d.textContent = 'INIT FAILED: ' + err.message + ' | ' + (err.stack || '').substring(0, 200);
+        document.body.appendChild(d);
+    });
