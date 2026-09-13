@@ -1,5 +1,5 @@
 // ============================================================
-// BIBELI MIMO – EXPORT PAGE LOGIC
+// BIBELI MIMO – EXPORT PAGE LOGIC (Pixel-Perfect)
 // ============================================================
 
 const data = window.bibleData;
@@ -9,7 +9,6 @@ let generatedBlob = null;
 let generatedFilename = '';
 let generatedCanvas = null;
 
-// ---------- VIEW SWITCHER ----------
 function showView(id) {
     document.querySelectorAll('.export-view').forEach(function (v) { v.classList.remove('active'); });
     document.getElementById(id).classList.add('active');
@@ -29,18 +28,10 @@ function delay(ms) {
 // INIT
 // ============================================================
 async function initExport() {
-    document.getElementById('back-btn').onclick = function () {
-        window.location.href = '/studio';
-    };
-    document.getElementById('error-back-action').onclick = function () {
-        window.location.href = '/studio';
-    };
-    document.getElementById('back-studio-action').onclick = function () {
-        window.location.href = '/studio';
-    };
-    document.getElementById('retry-action').onclick = function () {
-        runExportFlow();
-    };
+    document.getElementById('back-btn').onclick = function () { window.location.href = '/studio'; };
+    document.getElementById('error-back-action').onclick = function () { window.location.href = '/studio'; };
+    document.getElementById('back-studio-action').onclick = function () { window.location.href = '/studio'; };
+    document.getElementById('retry-action').onclick = function () { runExportFlow(); };
     document.getElementById('save-again-action').onclick = function () {
         if (generatedBlob && generatedFilename) triggerDownload(generatedBlob, generatedFilename);
     };
@@ -75,7 +66,7 @@ async function runExportFlow() {
     setProgress(0, 'Starting...');
     await delay(200);
 
-    // STEP 1: Load Bible data (if not yet loaded)
+    // Load Bible data if needed
     try {
         setProgress(5, 'Loading Bible data...');
         if (!data.yoruba || data.yoruba.length === 0) {
@@ -88,7 +79,7 @@ async function runExportFlow() {
         return;
     }
 
-    // STEP 2: Load fonts
+    // Load fonts
     try {
         setProgress(25, 'Loading fonts...');
         await Promise.race([
@@ -98,20 +89,20 @@ async function runExportFlow() {
         await delay(200);
     } catch (e) {}
 
-    // STEP 3: Determine target dimensions
+    // Determine target dimensions
     setProgress(35, 'Preparing canvas...');
     const targetWidth = parseInt(exportData.exportRes);
-    let targetHeight;
     const ratio = exportData.settings.ratio;
+    let targetHeight;
     if (ratio === 'square') targetHeight = targetWidth;
     else if (ratio === 'portrait') targetHeight = Math.round(targetWidth * 5 / 4);
     else if (ratio === 'story') targetHeight = Math.round(targetWidth * 16 / 9);
     else if (ratio === 'landscape') targetHeight = Math.round(targetWidth * 9 / 16);
-    else targetHeight = Math.round(targetWidth * 4 / 3); // pin
+    else targetHeight = Math.round(targetWidth * 4 / 3);
 
     await delay(200);
 
-    // STEP 4: Load background image if needed
+    // Preload background image if needed
     setProgress(50, 'Loading background...');
     let bgImageLoaded = false;
     if (exportData.backgroundURL) {
@@ -124,37 +115,45 @@ async function runExportFlow() {
     }
     await delay(200);
 
-    // STEP 5: Build the full-size preview DOM
+    // Build the preview DOM at the ORIGINAL studio size
     setProgress(65, 'Rendering image...');
     const hiddenContainer = document.getElementById('hidden-preview-container');
     hiddenContainer.innerHTML = '';
 
-    const previewEl = buildPreviewElement(targetWidth, targetHeight, bgImageLoaded);
+    const previewW = exportData.previewW || 350;
+    const previewH = exportData.previewH || 350;
+
+    const previewEl = buildPreviewElement(previewW, previewH, bgImageLoaded);
     hiddenContainer.appendChild(previewEl);
     await delay(300);
 
-    // STEP 6: Render with html2canvas
+    // Compute html2canvas scale factor
+    const canvasScale = targetWidth / previewW;
+
+    // Render with html2canvas — this does the upscale natively
     setProgress(75, 'Rendering...');
     let canvas;
     try {
         canvas = await html2canvas(previewEl, {
             backgroundColor: null,
-            scale: 1,
+            scale: canvasScale,
             logging: false,
             useCORS: true,
             allowTaint: true,
-            width: targetWidth,
-            height: targetHeight
+            width: previewW,
+            height: previewH,
+            windowWidth: previewW,
+            windowHeight: previewH
         });
     } catch (e) {
-        showError('Image rendering failed. Please try a smaller resolution.');
+        showError('Image rendering failed. Please try again.');
         return;
     }
 
     generatedCanvas = canvas;
     await delay(200);
 
-    // STEP 7: Convert to blob
+    // Convert to blob
     setProgress(88, 'Preparing file...');
     const format = exportData.exportFormat || 'png';
     const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
@@ -171,7 +170,7 @@ async function runExportFlow() {
 
     generatedBlob = blob;
 
-    // STEP 8: Build filename
+    // Filename
     const bookIdx = data.codes.indexOf(exportData.settings.currentBook);
     const bookName = (data.englishNames[bookIdx] || 'Verse').replace(/\s+/g, '-');
     const ch = exportData.settings.currentChapter;
@@ -181,31 +180,26 @@ async function runExportFlow() {
     const ext = format === 'jpg' ? 'jpg' : 'png';
     generatedFilename = 'bible-' + bookName + '-' + ch + '-' + vs + '-' + stamp + '.' + ext;
 
-    // STEP 9: Trigger download
+    // Trigger download
     setProgress(95, 'Saving to device...');
     await delay(200);
     triggerDownload(blob, generatedFilename);
 
-    // STEP 10: Show success
+    // Show success
     setProgress(100, 'Done!');
     await delay(400);
 
-    // Create preview thumbnail
     const thumbURL = URL.createObjectURL(blob);
     document.getElementById('preview-thumb').src = thumbURL;
     document.getElementById('filename-display').textContent = generatedFilename;
-
     showView('success-view');
 
-    // Cleanup hidden container after a delay
     setTimeout(function () {
         document.getElementById('hidden-preview-container').innerHTML = '';
     }, 2000);
 }
 
-function pad2(n) {
-    return (n < 10 ? '0' : '') + n;
-}
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
 function triggerDownload(blob, filename) {
     try {
@@ -218,7 +212,6 @@ function triggerDownload(blob, filename) {
         document.body.removeChild(a);
         setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
     } catch (e) {
-        // Fallback for in-app browsers
         const reader = new FileReader();
         reader.onload = function () {
             const a = document.createElement('a');
@@ -243,18 +236,16 @@ function preloadImage(url) {
 }
 
 // ============================================================
-// BUILD FULL-SIZE PREVIEW DOM
+// BUILD PREVIEW AT STUDIO SIZE (NO SCALING ANYWHERE)
 // ============================================================
 function buildPreviewElement(W, H, bgLoaded) {
     const s = exportData.settings;
-    const scale = W / 350; // Studio preview is ~350px wide
 
-    // Root
     const card = document.createElement('div');
     card.className = 'export-preview-card';
     card.style.width = W + 'px';
     card.style.height = H + 'px';
-    card.style.borderRadius = (s.radius * scale) + 'px';
+    card.style.borderRadius = s.radius + 'px';
 
     // Background
     const bg = document.createElement('div');
@@ -270,10 +261,10 @@ function buildPreviewElement(W, H, bgLoaded) {
         bg.style.background = '#1a237e';
     }
 
-    if (s.blur > 0) bg.style.filter = 'blur(' + (s.blur * scale) + 'px)';
+    if (s.blur > 0) bg.style.filter = 'blur(' + s.blur + 'px)';
     card.appendChild(bg);
 
-    // Background filter (brightness, saturation)
+    // Filter layer
     const bgFilter = document.createElement('div');
     bgFilter.className = 'export-preview-bg-filter';
     const filters = [];
@@ -314,7 +305,7 @@ function buildPreviewElement(W, H, bgLoaded) {
     if (s.vignette > 0) {
         const vig = document.createElement('div');
         vig.className = 'export-preview-vignette';
-        vig.style.boxShadow = 'inset 0 0 ' + Math.round(s.vignette * scale * 2.5) + 'px ' + Math.round(s.vignette * scale * 1.5) + 'px rgba(0,0,0,' + (s.vignette / 100) + ')';
+        vig.style.boxShadow = 'inset 0 0 ' + Math.round(s.vignette * 2.5) + 'px ' + Math.round(s.vignette * 1.5) + 'px rgba(0,0,0,' + (s.vignette / 100) + ')';
         card.appendChild(vig);
     }
 
@@ -323,24 +314,20 @@ function buildPreviewElement(W, H, bgLoaded) {
     content.className = 'export-preview-content';
     content.style.padding = s.padding + '%';
 
-    // Vertical alignment
     if (s.vpos === 'top') content.style.justifyContent = 'flex-start';
     else if (s.vpos === 'bottom') content.style.justifyContent = 'flex-end';
     else content.style.justifyContent = 'center';
 
-    // Font family
     const fontCss = getFontCss(s.fontFamily);
 
-    // Reference (top)
+    // Reference top
     if (s.refShow && s.refPos === 'top') {
-        const ref = createRefEl(s, fontCss, scale);
-        content.appendChild(ref);
+        content.appendChild(createRefEl(s, fontCss));
     }
 
-    // Secondary text (top)
+    // Secondary top
     if (s.secText && s.secPos === 'top') {
-        const sec = createSecondaryEl(s, scale);
-        content.appendChild(sec);
+        content.appendChild(createSecondaryEl(s));
     }
 
     // Main text
@@ -349,14 +336,13 @@ function buildPreviewElement(W, H, bgLoaded) {
     if (s.textCase === 'upper') textEl.classList.add('upper');
     if (s.textCase === 'title') textEl.classList.add('title');
     textEl.style.fontFamily = fontCss;
-    textEl.style.fontSize = (s.fontSize * scale) + 'px';
+    textEl.style.fontSize = s.fontSize + 'px';
     textEl.style.lineHeight = s.lineSpacing;
-    textEl.style.letterSpacing = (s.letterSpacing * scale) + 'px';
+    textEl.style.letterSpacing = s.letterSpacing + 'px';
     textEl.style.color = s.textColor;
     textEl.style.textAlign = s.align;
-    textEl.style.textShadow = getShadowCSS(s.shadow, scale);
+    textEl.style.textShadow = getShadowCSS(s.shadow);
 
-    // Build text content
     const word = s.highlightWord ? s.highlightWord.trim() : '';
     function hl(text) {
         if (!word || !text) return escapeHtml(text || '');
@@ -367,10 +353,7 @@ function buildPreviewElement(W, H, bgLoaded) {
         let pos = 0;
         while (true) {
             const idx = lowerText.indexOf(lowerWord, pos);
-            if (idx < 0) {
-                result += escaped.substring(pos);
-                break;
-            }
+            if (idx < 0) { result += escaped.substring(pos); break; }
             result += escaped.substring(pos, idx);
             result += '<span class="hl" style="background:' + s.highlightColor + ';color:#fff;">' + escaped.substring(idx, idx + word.length) + '</span>';
             pos = idx + word.length;
@@ -378,7 +361,7 @@ function buildPreviewElement(W, H, bgLoaded) {
         return result;
     }
 
-    const gapPx = s.fontSize * s.blockGap * 0.5 * scale;
+    const gapPx = s.fontSize * s.blockGap * 0.5;
 
     if (s.showYoruba && exportData.verseYoruba) {
         const yo = document.createElement('div');
@@ -398,21 +381,18 @@ function buildPreviewElement(W, H, bgLoaded) {
 
     content.appendChild(textEl);
 
-    // Secondary text (above/below)
     if (s.secText && s.secPos === 'above') {
-        const sec = createSecondaryEl(s, scale);
+        const sec = createSecondaryEl(s);
         sec.style.marginTop = gapPx + 'px';
         content.appendChild(sec);
     }
     if (s.secText && s.secPos === 'bottom') {
-        const sec = createSecondaryEl(s, scale);
+        const sec = createSecondaryEl(s);
         sec.style.marginTop = gapPx + 'px';
         content.appendChild(sec);
     }
-
-    // Reference (bottom)
     if (s.refShow && s.refPos === 'bottom') {
-        const ref = createRefEl(s, fontCss, scale);
+        const ref = createRefEl(s, fontCss);
         ref.style.marginTop = gapPx + 'px';
         content.appendChild(ref);
     }
@@ -424,14 +404,12 @@ function buildPreviewElement(W, H, bgLoaded) {
         const logoWrap = document.createElement('div');
         logoWrap.className = 'export-preview-logo-wrap';
         logoWrap.dataset.pos = s.logoPos;
-        const sizePx = s.logoSize * scale;
-        const gap = (s.padding / 100) * W * 0.5;
-        logoWrap.style.width = sizePx + 'px';
-        logoWrap.style.height = sizePx + 'px';
+        logoWrap.style.width = s.logoSize + 'px';
+        logoWrap.style.height = s.logoSize + 'px';
         logoWrap.style.opacity = s.logoOpacity / 100;
-        if (s.logoBorderOn) logoWrap.style.border = (2 * scale) + 'px solid ' + s.logoBorderColor;
+        if (s.logoBorderOn) logoWrap.style.border = '2px solid ' + s.logoBorderColor;
 
-        // Position
+        const gap = (s.padding / 100) * W * 0.5;
         if (s.logoPos === 'tl') { logoWrap.style.top = gap + 'px'; logoWrap.style.left = gap + 'px'; }
         else if (s.logoPos === 'tr') { logoWrap.style.top = gap + 'px'; logoWrap.style.right = gap + 'px'; }
         else if (s.logoPos === 'bl') { logoWrap.style.bottom = gap + 'px'; logoWrap.style.left = gap + 'px'; }
@@ -455,43 +433,43 @@ function buildPreviewElement(W, H, bgLoaded) {
     if (s.borderWidth > 0) {
         const deco = document.createElement('div');
         deco.className = 'export-preview-decoration';
-        deco.style.border = (s.borderWidth * scale) + 'px solid ' + s.borderColor;
-        deco.style.borderRadius = (s.radius * scale) + 'px';
+        deco.style.border = s.borderWidth + 'px solid ' + s.borderColor;
+        deco.style.borderRadius = s.radius + 'px';
         card.appendChild(deco);
     }
 
     // Watermark
     const watermark = document.createElement('div');
     watermark.className = 'export-preview-watermark';
-    watermark.style.fontSize = (11 * scale) + 'px';
-    watermark.style.bottom = (10 * scale) + 'px';
+    watermark.style.fontSize = '11px';
+    watermark.style.bottom = '10px';
     watermark.textContent = 'Bibeli Mimo';
     card.appendChild(watermark);
 
     return card;
 }
 
-function createRefEl(s, fontCss, scale) {
+function createRefEl(s, fontCss) {
     const ref = document.createElement('div');
     ref.className = 'export-preview-ref';
     const refFontCss = s.refMatchFont ? fontCss : getFontCss(s.refFontFamily);
     ref.style.fontFamily = refFontCss;
-    ref.style.fontSize = (s.refSize * scale) + 'px';
+    ref.style.fontSize = s.refSize + 'px';
     ref.style.color = s.refColor;
-    ref.style.textShadow = getShadowCSS(s.refShadow, scale);
-    ref.style.marginBottom = (10 * scale) + 'px';
+    ref.style.textShadow = getShadowCSS(s.refShadow);
+    ref.style.marginBottom = '10px';
     ref.textContent = exportData.referenceText;
     return ref;
 }
 
-function createSecondaryEl(s, scale) {
+function createSecondaryEl(s) {
     const sec = document.createElement('div');
     sec.className = 'export-preview-secondary';
     sec.style.fontFamily = getFontCss(s.fontFamily);
-    sec.style.fontSize = (s.secSize * scale) + 'px';
+    sec.style.fontSize = s.secSize + 'px';
     sec.style.color = s.secColor;
     sec.style.opacity = s.secOpacity / 100;
-    sec.style.textShadow = getShadowCSS('soft', scale);
+    sec.style.textShadow = getShadowCSS('soft');
     sec.textContent = s.secText;
     return sec;
 }
@@ -510,15 +488,12 @@ function getFontCss(fontName) {
     return fonts[fontName] || "'Poppins', sans-serif";
 }
 
-function getShadowCSS(style, scale) {
+function getShadowCSS(style) {
     if (style === 'none') return 'none';
-    if (style === 'soft') return '0 ' + (2 * scale) + 'px ' + (8 * scale) + 'px rgba(0,0,0,0.4)';
-    if (style === 'strong') return '0 ' + (4 * scale) + 'px ' + (15 * scale) + 'px rgba(0,0,0,0.75)';
-    if (style === 'glow') return '0 0 ' + (25 * scale) + 'px rgba(255,255,255,0.7), 0 0 ' + (50 * scale) + 'px rgba(255,255,255,0.3)';
-    if (style === 'outline') {
-        const w = Math.max(1, scale);
-        return '-' + w + 'px -' + w + 'px 0 #000, ' + w + 'px -' + w + 'px 0 #000, -' + w + 'px ' + w + 'px 0 #000, ' + w + 'px ' + w + 'px 0 #000';
-    }
+    if (style === 'soft') return '0 2px 8px rgba(0,0,0,0.4)';
+    if (style === 'strong') return '0 4px 15px rgba(0,0,0,0.75)';
+    if (style === 'glow') return '0 0 25px rgba(255,255,255,0.7), 0 0 50px rgba(255,255,255,0.3)';
+    if (style === 'outline') return '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
     return 'none';
 }
 
@@ -554,16 +529,12 @@ async function shareGenerated() {
     const file = new File([generatedBlob], generatedFilename, { type: generatedBlob.type });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
-            await navigator.share({
-                files: [file],
-                title: 'Bible Verse',
-                text: 'Shared from Bibeli Mimo'
-            });
+            await navigator.share({ files: [file], title: 'Bible Verse', text: 'Shared from Bibeli Mimo' });
         } catch (e) {
             if (e.name !== 'AbortError') alert('Sharing failed. Try saving again.');
         }
     } else {
-        alert('Sharing is not supported on this browser. The image has already been saved.');
+        alert('Sharing is not supported on this browser. The image is already saved.');
     }
 }
 
@@ -578,11 +549,10 @@ async function copyGenerated() {
             alert('Copy is not supported on this browser.');
         }
     } catch (e) {
-        alert('Copy failed. The image is already saved to your device.');
+        alert('Copy failed. The image is already saved.');
     }
 }
 
-// ============================================================
-// START
-// ============================================================
 window.addEventListener('load', initExport);
+
+
