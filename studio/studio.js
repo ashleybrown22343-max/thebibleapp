@@ -1,14 +1,5 @@
-// ===== DIAGNOSTIC (Remove later) =====
-window.addEventListener('error', function(e) {
-    var d = document.createElement('div');
-    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:15px;font-size:13px;z-index:99999;font-family:monospace;word-break:break-all;';
-    d.textContent = 'JS ERROR: ' + e.message + ' | Line: ' + e.lineno + ' | File: ' + (e.filename || '').split('/').pop();
-    document.body.appendChild(d);
-});
-console.log('[Studio] studio.js loaded successfully');
-// ===== END DIAGNOSTIC =====
 // ============================================================
-// BIBELI MIMO – IMAGE STUDIO LOGIC (Complete)
+// BIBELI MIMO – IMAGE STUDIO LOGIC (FINAL – MOBILE-SAFE)
 // ============================================================
 
 const data = window.bibleData;
@@ -48,7 +39,7 @@ const PHOTO_FILES = [
     "29956.webp","29909.webp","29911.webp","29923.webp","29962.webp","29944.webp","29891.webp","29960.webp","29946.webp","29886.webp",
     "29919.webp","29958.webp"
 ];
-const PHOTO_URLS = PHOTO_FILES.map(f => `/backgrounds/${f}`);
+const PHOTO_URLS = PHOTO_FILES.map(function (f) { return '/backgrounds/' + f; });
 
 const COLOR_PRESETS = [
     '#ffffff','#000000','#f59e0b','#ef4444','#10b981','#3b82f6','#8b5cf6','#ec4899',
@@ -75,34 +66,30 @@ const TOPICS = {
 };
 
 const QUICK_PRESETS = [
-    { name: 'Clean',    font: 'Inter',            fontSize: 26, lineSpacing: 1.7, letterSpacing: 0, padding: 12, align: 'center', vpos: 'center', shadow: 'none',   textColor: '#ffffff', refShow: true, refPos: 'top', refShadow: 'none',   borderWidth: 0, radius: 0 },
-    { name: 'Bold',     font: 'Poppins',          fontSize: 32, lineSpacing: 1.6, letterSpacing: 0, padding: 10, align: 'center', vpos: 'center', shadow: 'strong', textColor: '#ffffff', refShow: true, refPos: 'top', refShadow: 'soft',   borderWidth: 0, radius: 0 },
-    { name: 'Classic',  font: 'Playfair Display', fontSize: 28, lineSpacing: 1.8, letterSpacing: 0, padding: 12, align: 'center', vpos: 'center', shadow: 'soft',   textColor: '#ffffff', refShow: true, refPos: 'top', refShadow: 'none',   borderWidth: 0, radius: 0 },
-    { name: 'Modern',   font: 'Poppins',          fontSize: 24, lineSpacing: 1.7, letterSpacing: 0, padding: 14, align: 'left',   vpos: 'bottom', shadow: 'soft',   textColor: '#ffffff', refShow: true, refPos: 'bottom', refShadow: 'none', borderWidth: 0, radius: 20 },
-    { name: 'Elegant',  font: 'Cormorant Garamond',fontSize: 30,lineSpacing: 1.6, letterSpacing: 1, padding: 14, align: 'center', vpos: 'center', shadow: 'soft',   textColor: '#ffffff', refShow: true, refPos: 'top', refShadow: 'none',   borderWidth: 2, radius: 0 },
-    { name: 'Minimal',  font: 'Inter',            fontSize: 22, lineSpacing: 1.6, letterSpacing: 0, padding: 16, align: 'center', vpos: 'center', shadow: 'none',   textColor: '#ffffff', refShow: false, refPos: 'top', refShadow: 'none',   borderWidth: 0, radius: 0 }
+    { name: 'Clean',    font: 'Inter',             fontSize: 26, lineSpacing: 1.7, letterSpacing: 0, padding: 12, align: 'center', vpos: 'center', shadow: 'none',   textColor: '#ffffff', refShow: true,  refPos: 'top',    refShadow: 'none', borderWidth: 0, radius: 0 },
+    { name: 'Bold',     font: 'Poppins',           fontSize: 32, lineSpacing: 1.6, letterSpacing: 0, padding: 10, align: 'center', vpos: 'center', shadow: 'strong', textColor: '#ffffff', refShow: true,  refPos: 'top',    refShadow: 'soft', borderWidth: 0, radius: 0 },
+    { name: 'Classic',  font: 'Playfair Display',  fontSize: 28, lineSpacing: 1.8, letterSpacing: 0, padding: 12, align: 'center', vpos: 'center', shadow: 'soft',   textColor: '#ffffff', refShow: true,  refPos: 'top',    refShadow: 'none', borderWidth: 0, radius: 0 },
+    { name: 'Modern',   font: 'Poppins',           fontSize: 24, lineSpacing: 1.7, letterSpacing: 0, padding: 14, align: 'left',   vpos: 'bottom', shadow: 'soft',   textColor: '#ffffff', refShow: true,  refPos: 'bottom', refShadow: 'none', borderWidth: 0, radius: 20 },
+    { name: 'Elegant',  font: 'Cormorant Garamond',fontSize: 30, lineSpacing: 1.6, letterSpacing: 1, padding: 14, align: 'center', vpos: 'center', shadow: 'soft',   textColor: '#ffffff', refShow: true,  refPos: 'top',    refShadow: 'none', borderWidth: 2, radius: 0 },
+    { name: 'Minimal',  font: 'Inter',             fontSize: 22, lineSpacing: 1.6, letterSpacing: 0, padding: 16, align: 'center', vpos: 'center', shadow: 'none',   textColor: '#ffffff', refShow: false, refPos: 'top',    refShadow: 'none', borderWidth: 0, radius: 0 }
 ];
 
-// ---------- STATE (Clean Defaults) ----------
+// ---------- STATE FACTORY ----------
 function createDefaultState() {
     return {
-        // Verse
         currentBook: 'GEN',
         currentChapter: 1,
         currentVerse: 1,
 
-        // Templates
         currentCategory: 'photos',
         selectedTemplate: 0,
 
-        // Layout
         ratio: 'square',
         safezone: false,
         borderWidth: 0,
         borderColor: '#ffffff',
         radius: 0,
 
-        // Background Effects
         blur: 0,
         darkOverlay: 0,
         brightness: 100,
@@ -115,13 +102,12 @@ function createDefaultState() {
         gradientOpacity: 40,
         vignette: 0,
 
-        // Typography
         fontFamily: 'Poppins',
         fontSize: 24,
         lineSpacing: 1.7,
         letterSpacing: 0,
-        padding: 10,          // now in %
-        blockGap: 1.5,        // multiplier of line height
+        padding: 10,
+        blockGap: 1.5,
         align: 'center',
         vpos: 'center',
         textColor: '#ffffff',
@@ -130,11 +116,9 @@ function createDefaultState() {
         yoOpacity: 100,
         enOpacity: 85,
 
-        // Word Highlight
         highlightWord: '',
         highlightColor: '#f59e0b',
 
-        // Reference
         refShow: true,
         refPos: 'top',
         refSize: 14,
@@ -143,14 +127,12 @@ function createDefaultState() {
         refMatchFont: true,
         refFontFamily: 'Playfair Display',
 
-        // Secondary Text
         secText: '',
         secPos: 'above',
         secSize: 12,
         secOpacity: 85,
         secColor: '#ffffff',
 
-        // Logo
         logoData: null,
         logoPos: 'br',
         logoSize: 60,
@@ -160,32 +142,35 @@ function createDefaultState() {
         logoBgOn: false,
         logoBgColor: '#ffffff',
 
-        // Languages
         showYoruba: true,
         showEnglish: true,
 
-        // Export preferences
         exportFormat: 'png',
         exportQuality: 90,
         exportRes: '1080'
     };
 }
 
+// ---------- GLOBAL STATE ----------
 let state = createDefaultState();
-let undoHistory = [];
+let undoStack = [];
 let currentModalType = null;
 let colorTarget = null;
 let pickedColor = { h: 0, s: 0, l: 100 };
 let fontTarget = 'main';
 let confirmCallback = null;
 
-// Persistent items (kept across sessions)
-let favorites = JSON.parse(localStorage.getItem('studio_favorites') || '[]');
-let recentVerses = JSON.parse(localStorage.getItem('studio_recents_verse') || '[]');
-let recentTemplates = JSON.parse(localStorage.getItem('studio_recent_templates') || '[]');
-let presets = JSON.parse(localStorage.getItem('studio_presets') || '[]');
-let brandColors = JSON.parse(localStorage.getItem('studio_brand_colors') || '[]');
-let undoStack = [];
+let favorites = [];
+let recentVerses = [];
+let recentTemplates = [];
+let presets = [];
+let brandColors = [];
+
+try { favorites = JSON.parse(localStorage.getItem('studio_favorites') || '[]'); } catch (e) { favorites = []; }
+try { recentVerses = JSON.parse(localStorage.getItem('studio_recents_verse') || '[]'); } catch (e) { recentVerses = []; }
+try { recentTemplates = JSON.parse(localStorage.getItem('studio_recent_templates') || '[]'); } catch (e) { recentTemplates = []; }
+try { presets = JSON.parse(localStorage.getItem('studio_presets') || '[]'); } catch (e) { presets = []; }
+try { brandColors = JSON.parse(localStorage.getItem('studio_brand_colors') || '[]'); } catch (e) { brandColors = []; }
 
 // ============================================================
 // INIT
@@ -193,59 +178,62 @@ let undoStack = [];
 async function initStudio() {
     try {
         await data.loadAllData();
-        await Promise.race([
-    document.fonts.ready,
-    new Promise(resolve => setTimeout(resolve, 2000))
-]);
-
-        // URL prefill
-        applyUrlParams();
-
-        // Load saved logo
-        const savedLogo = localStorage.getItem('studio_logo');
-        if (savedLogo) state.logoData = savedLogo;
-
-        // Load export preferences
-        state.exportFormat = localStorage.getItem('studio_export_format') || 'png';
-        state.exportQuality = parseInt(localStorage.getItem('studio_export_quality') || '90');
-        state.exportRes = localStorage.getItem('studio_export_res') || '1080';
-
-        // Attach all events
-        attachHeaderEvents();
-        attachTabEvents();
-        attachVerseEvents();
-        attachTemplateEvents();
-        attachDesignEvents();
-        attachExtrasEvents();
-        attachPresetEvents();
-        attachColorPickerEvents();
-        attachFontModalEvents();
-        attachExportModalEvents();
-        attachZoomEvents();
-        attachOnboardingEvents();
-        attachConfirmModalEvents();
-
-        // Sync UI with state
-        syncAllUI();
-        renderRecentVerses();
-        renderRecentTemplates();
-        renderTemplates();
-        renderPresets();
-        renderBrandColors();
-        renderQuickPresets();
-        showPreviewLogo();
-        updatePreview();
-
-        // Auto-save drafts
-        setInterval(saveDraft, 5000);
-
-        // Onboarding
-        if (!localStorage.getItem('studio_onboarded')) {
-            document.getElementById('onboarding-overlay').classList.add('show');
-        }
     } catch (e) {
-        console.error(e);
-        document.getElementById('preview-text').textContent = 'Error: ' + e.message;
+        document.getElementById('preview-text').textContent = 'Failed to load Bible data.';
+        return;
+    }
+
+    // Wait max 2s for fonts
+    try {
+        await Promise.race([
+            document.fonts.ready,
+            new Promise(function (resolve) { setTimeout(resolve, 2000); })
+        ]);
+    } catch (e) {}
+
+    // Apply URL params
+    applyUrlParams();
+
+    // Load saved logo
+    const savedLogo = localStorage.getItem('studio_logo');
+    if (savedLogo) state.logoData = savedLogo;
+
+    // Load export prefs
+    state.exportFormat = localStorage.getItem('studio_export_format') || 'png';
+    state.exportQuality = parseInt(localStorage.getItem('studio_export_quality') || '90');
+    state.exportRes = localStorage.getItem('studio_export_res') || '1080';
+
+    // Attach all events
+    attachHeaderEvents();
+    attachTabEvents();
+    attachVerseEvents();
+    attachTemplateEvents();
+    attachDesignEvents();
+    attachExtrasEvents();
+    attachPresetEvents();
+    attachColorPickerEvents();
+    attachExportModalEvents();
+    attachZoomEvents();
+    attachOnboardingEvents();
+    attachConfirmModalEvents();
+
+    // Sync everything
+    syncAllUI();
+    renderRecentVerses();
+    renderRecentTemplates();
+    renderTemplates();
+    renderPresets();
+    renderBrandColors();
+    renderQuickPresets();
+    showPreviewLogo();
+    updatePreview();
+
+    // Auto-save drafts
+    setInterval(saveDraft, 5000);
+
+    // Onboarding
+    if (!localStorage.getItem('studio_onboarded')) {
+        document.getElementById('onboarding-overlay').classList.add('show');
     }
 }
 
@@ -265,28 +253,25 @@ function applyUrlParams() {
 }
 
 function saveDraft() {
+    try { localStorage.setItem('studio_draft', JSON.stringify(state)); } catch (e) {}
+}
+
+// ============================================================
+// UNDO
+// ============================================================
+function pushUndo() {
     try {
-        localStorage.setItem('studio_draft', JSON.stringify(state));
+        undoStack.push(JSON.parse(JSON.stringify(state)));
+        if (undoStack.length > 5) undoStack.shift();
     } catch (e) {}
 }
 
-// ============================================================
-// STATE SNAPSHOT (UNDO)
-// ============================================================
-function pushUndo() {
-    undoStack.push(JSON.parse(JSON.stringify(state)));
-    if (undoStack.length > 5) undoStack.shift();
-}
-
 function performUndo() {
-    if (undoStack.length === 0) {
-        showToast('Nothing to undo', 'info');
-        return;
-    }
-    const prev = undoStack.pop();
-    state = prev;
+    if (undoStack.length === 0) { showToast('Nothing to undo', 'info'); return; }
+    state = undoStack.pop();
     syncAllUI();
     updatePreview();
+    showPreviewLogo();
     showToast('Undone', 'info');
 }
 
@@ -294,24 +279,18 @@ function performUndo() {
 // SYNC UI
 // ============================================================
 function syncAllUI() {
-    // Verse picker
     updatePickerButtons();
 
-    // Aspect ratio
-    document.querySelectorAll('#ratio-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.ratio === state.ratio));
-
-    // Safe zone
+    document.querySelectorAll('#ratio-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.ratio === state.ratio); });
     document.getElementById('safezone-toggle').classList.toggle('active', state.safezone);
     document.getElementById('preview-safezone').style.display = state.safezone ? 'block' : 'none';
 
-    // Border
     document.getElementById('border-slider').value = state.borderWidth;
     document.getElementById('border-label').textContent = state.borderWidth;
     document.getElementById('border-color-btn').style.background = state.borderColor;
     document.getElementById('radius-slider').value = state.radius;
     document.getElementById('radius-label').textContent = state.radius;
 
-    // Background effects
     document.getElementById('blur-slider').value = state.blur;
     document.getElementById('blur-label').textContent = state.blur;
     document.getElementById('dark-slider').value = state.darkOverlay;
@@ -329,7 +308,6 @@ function syncAllUI() {
     document.getElementById('vignette-slider').value = state.vignette;
     document.getElementById('vignette-label').textContent = state.vignette;
 
-    // Typography
     document.getElementById('font-family-btn').textContent = state.fontFamily;
     document.getElementById('font-size-slider').value = state.fontSize;
     document.getElementById('font-size-label').textContent = state.fontSize;
@@ -349,33 +327,30 @@ function syncAllUI() {
     document.getElementById('highlight-word-input').value = state.highlightWord;
     document.getElementById('highlight-color-btn').style.background = state.highlightColor;
 
-    document.querySelectorAll('#align-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.align === state.align));
-    document.querySelectorAll('#vpos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.vpos === state.vpos));
-    document.querySelectorAll('#shadow-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.shadow === state.shadow));
-    document.querySelectorAll('#case-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.case === state.textCase));
+    document.querySelectorAll('#align-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.align === state.align); });
+    document.querySelectorAll('#vpos-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.vpos === state.vpos); });
+    document.querySelectorAll('#shadow-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.shadow === state.shadow); });
+    document.querySelectorAll('#case-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.case === state.textCase); });
 
-    // Reference
     document.getElementById('ref-toggle').classList.toggle('active', state.refShow);
-    document.querySelectorAll('#refpos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.refpos === state.refPos));
+    document.querySelectorAll('#refpos-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.refpos === state.refPos); });
     document.getElementById('ref-size-slider').value = state.refSize;
     document.getElementById('ref-size-label').textContent = state.refSize;
     document.getElementById('ref-color-btn').style.background = state.refColor;
-    document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.refshadow === state.refShadow));
+    document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.refshadow === state.refShadow); });
     document.getElementById('ref-match-font-toggle').classList.toggle('active', state.refMatchFont);
     document.getElementById('ref-font-btn').style.display = state.refMatchFont ? 'none' : 'block';
     document.getElementById('ref-font-btn').textContent = state.refFontFamily;
 
-    // Secondary
     document.getElementById('secondary-input').value = state.secText;
-    document.querySelectorAll('#secpos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.secpos === state.secPos));
+    document.querySelectorAll('#secpos-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.secpos === state.secPos); });
     document.getElementById('sec-size-slider').value = state.secSize;
     document.getElementById('sec-size-label').textContent = state.secSize;
     document.getElementById('sec-opacity-slider').value = state.secOpacity;
     document.getElementById('sec-opacity-label').textContent = state.secOpacity;
     document.getElementById('sec-color-btn').style.background = state.secColor;
 
-    // Logo
-    document.querySelectorAll('#logo-pos-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.logopos === state.logoPos));
+    document.querySelectorAll('#logo-pos-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.logopos === state.logoPos); });
     document.getElementById('logo-size-slider').value = state.logoSize;
     document.getElementById('logo-size-label').textContent = state.logoSize;
     document.getElementById('logo-opacity-slider').value = state.logoOpacity;
@@ -385,7 +360,6 @@ function syncAllUI() {
     document.getElementById('logo-bg-toggle').classList.toggle('active', state.logoBgOn);
     document.getElementById('logo-bg-color-btn').style.background = state.logoBgColor;
 
-    // Language toggles
     document.getElementById('lang-yo-toggle').classList.toggle('active', state.showYoruba);
     document.getElementById('lang-en-toggle').classList.toggle('active', state.showEnglish);
 }
@@ -395,22 +369,21 @@ function syncAllUI() {
 // ============================================================
 function attachHeaderEvents() {
     document.getElementById('undo-btn').onclick = performUndo;
-    document.getElementById('reset-all-btn').onclick = () => {
-        openConfirm(
-            'Reset All?',
-            'All your current edits will be cleared. This cannot be undone.',
-            () => {
-                pushUndo();
-                state = createDefaultState();
-                if (state.logoData === null) state.logoData = localStorage.getItem('studio_logo');
-                syncAllUI();
-                updatePreview();
-                showPreviewLogo();
-                showToast('Reset to defaults', 'success');
-            }
-        );
+
+    document.getElementById('reset-all-btn').onclick = function () {
+        openConfirm('Reset All?', 'All your current edits will be cleared. This cannot be undone.', function () {
+            pushUndo();
+            state = createDefaultState();
+            var savedLogo = localStorage.getItem('studio_logo');
+            if (savedLogo) state.logoData = savedLogo;
+            syncAllUI();
+            updatePreview();
+            showPreviewLogo();
+            showToast('Reset to defaults', 'success');
+        });
     };
-    document.getElementById('save-preset-btn').onclick = () => {
+
+    document.getElementById('save-preset-btn').onclick = function () {
         document.getElementById('preset-name-input').value = '';
         document.getElementById('preset-modal').classList.add('show');
     };
@@ -420,10 +393,10 @@ function attachHeaderEvents() {
 // TAB SWITCHING
 // ============================================================
 function attachTabEvents() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+            document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
             btn.classList.add('active');
             document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
         };
@@ -431,15 +404,15 @@ function attachTabEvents() {
 }
 
 // ============================================================
-// VERSE
+// VERSE EVENTS
 // ============================================================
 function attachVerseEvents() {
-    document.getElementById('pick-book').onclick = () => openVerseModal('book');
-    document.getElementById('pick-chapter').onclick = () => openVerseModal('chapter');
-    document.getElementById('pick-verse').onclick = () => openVerseModal('verse');
+    document.getElementById('pick-book').onclick = function () { openVerseModal('book'); };
+    document.getElementById('pick-chapter').onclick = function () { openVerseModal('chapter'); };
+    document.getElementById('pick-verse').onclick = function () { openVerseModal('verse'); };
 
-    document.getElementById('random-verse').onclick = () => {
-        const v = data.yoruba[Math.floor(Math.random() * data.yoruba.length)];
+    document.getElementById('random-verse').onclick = function () {
+        var v = data.yoruba[Math.floor(Math.random() * data.yoruba.length)];
         pushUndo();
         state.currentBook = data.codes[v.book - 1];
         state.currentChapter = v.chapter;
@@ -449,9 +422,9 @@ function attachVerseEvents() {
         saveRecentVerse();
     };
 
-    document.getElementById('votd-fill').onclick = () => {
-        const day = new Date().getDate();
-        const v = data.yoruba.find(x => x.book === 19 && x.chapter === day && x.verse === 1) || data.yoruba[day * 500];
+    document.getElementById('votd-fill').onclick = function () {
+        var day = new Date().getDate();
+        var v = data.yoruba.find(function (x) { return x.book === 19 && x.chapter === day && x.verse === 1; }) || data.yoruba[day * 500];
         if (v) {
             pushUndo();
             state.currentBook = data.codes[v.book - 1];
@@ -477,33 +450,32 @@ function attachVerseEvents() {
     };
 
     // Topic search
-    let searchTimer;
-    document.getElementById('topic-search').addEventListener('input', (e) => {
+    var searchTimer;
+    document.getElementById('topic-search').addEventListener('input', function (e) {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            const q = e.target.value.toLowerCase().trim();
-            const resultsEl = document.getElementById('topic-results');
+        searchTimer = setTimeout(function () {
+            var q = e.target.value.toLowerCase().trim();
+            var resultsEl = document.getElementById('topic-results');
             resultsEl.innerHTML = '';
             if (q.length < 2) return;
 
-            // Expand query to include synonyms
-            let keywords = [q];
-            for (const topic in TOPICS) {
-                if (topic.includes(q) || q.includes(topic)) {
+            var keywords = [q];
+            for (var topic in TOPICS) {
+                if (topic.indexOf(q) >= 0 || q.indexOf(topic) >= 0) {
                     keywords = keywords.concat(TOPICS[topic]);
                 }
             }
 
-            // Search English verses
-            const found = [];
-            const seen = new Set();
-            for (const v of data.english) {
-                const text = (v.text || '').toLowerCase();
-                for (const kw of keywords) {
-                    if (text.includes(kw)) {
-                        const key = `${v.book}-${v.chapter}-${v.verse}`;
-                        if (!seen.has(key)) {
-                            seen.add(key);
+            var found = [];
+            var seen = {};
+            for (var i = 0; i < data.english.length; i++) {
+                var v = data.english[i];
+                var text = (v.text || '').toLowerCase();
+                for (var ki = 0; ki < keywords.length; ki++) {
+                    if (text.indexOf(keywords[ki]) >= 0) {
+                        var key = v.book + '-' + v.chapter + '-' + v.verse;
+                        if (!seen[key]) {
+                            seen[key] = true;
                             found.push(v);
                         }
                         break;
@@ -512,11 +484,16 @@ function attachVerseEvents() {
                 if (found.length >= 30) break;
             }
 
-            found.forEach(v => {
-                const chip = document.createElement('span');
+            if (found.length === 0) {
+                resultsEl.innerHTML = '<span class="hint-text">No verses found</span>';
+                return;
+            }
+
+            found.forEach(function (v) {
+                var chip = document.createElement('span');
                 chip.className = 'topic-result-item';
-                chip.textContent = `${data.englishNames[v.book - 1]} ${v.chapter}:${v.verse}`;
-                chip.onclick = () => {
+                chip.textContent = data.englishNames[v.book - 1] + ' ' + v.chapter + ':' + v.verse;
+                chip.onclick = function () {
                     pushUndo();
                     state.currentBook = data.codes[v.book - 1];
                     state.currentChapter = v.chapter;
@@ -529,16 +506,12 @@ function attachVerseEvents() {
                 };
                 resultsEl.appendChild(chip);
             });
-
-            if (found.length === 0) {
-                resultsEl.innerHTML = '<span class="hint-text">No verses found</span>';
-            }
         }, 300);
     });
 }
 
 function updatePickerButtons() {
-    const idx = data.codes.indexOf(state.currentBook);
+    var idx = data.codes.indexOf(state.currentBook);
     document.getElementById('pick-book').textContent = data.englishNames[idx] || 'Genesis';
     document.getElementById('pick-chapter').textContent = state.currentChapter;
     document.getElementById('pick-verse').textContent = state.currentVerse;
@@ -546,18 +519,18 @@ function updatePickerButtons() {
 
 function openVerseModal(type) {
     currentModalType = type;
-    const modal = document.getElementById('verse-modal');
-    const list = document.getElementById('verse-modal-list');
-    const title = document.getElementById('verse-modal-title');
+    var modal = document.getElementById('verse-modal');
+    var list = document.getElementById('verse-modal-list');
+    var title = document.getElementById('verse-modal-title');
     list.innerHTML = '';
 
     if (type === 'book') {
         title.textContent = 'Select Book';
-        data.englishNames.forEach((name, i) => {
-            const div = document.createElement('div');
+        data.englishNames.forEach(function (name, i) {
+            var div = document.createElement('div');
             div.className = 'modal-list-item';
             div.textContent = name;
-            div.onclick = () => {
+            div.onclick = function () {
                 pushUndo();
                 state.currentBook = data.codes[i];
                 state.currentChapter = 1;
@@ -571,33 +544,35 @@ function openVerseModal(type) {
         });
     } else if (type === 'chapter') {
         title.textContent = 'Select Chapter';
-        const bookNum = data.codes.indexOf(state.currentBook) + 1;
-        const max = Math.max(...data.yoruba.filter(v => v.book === bookNum).map(v => v.chapter));
-        for (let i = 1; i <= max; i++) {
-            const div = document.createElement('div');
-            div.className = 'modal-list-item';
-            div.textContent = i;
-            div.onclick = () => {
-                pushUndo();
-                state.currentChapter = i;
-                state.currentVerse = 1;
-                updatePickerButtons();
-                closeVerseModal();
-                updatePreview();
-                saveRecentVerse();
-            };
-            list.appendChild(div);
+        var bookNum = data.codes.indexOf(state.currentBook) + 1;
+        var max = Math.max.apply(null, data.yoruba.filter(function (v) { return v.book === bookNum; }).map(function (v) { return v.chapter; }));
+        for (var i = 1; i <= max; i++) {
+            (function (i) {
+                var div = document.createElement('div');
+                div.className = 'modal-list-item';
+                div.textContent = i;
+                div.onclick = function () {
+                    pushUndo();
+                    state.currentChapter = i;
+                    state.currentVerse = 1;
+                    updatePickerButtons();
+                    closeVerseModal();
+                    updatePreview();
+                    saveRecentVerse();
+                };
+                list.appendChild(div);
+            })(i);
         }
     } else if (type === 'verse') {
         title.textContent = 'Select Verse';
-        const bookNum = data.codes.indexOf(state.currentBook) + 1;
-        const verses = data.yoruba.filter(v => v.book === bookNum && v.chapter === state.currentChapter);
-        verses.forEach(v => {
-            const div = document.createElement('div');
+        var bookNum2 = data.codes.indexOf(state.currentBook) + 1;
+        var verses = data.yoruba.filter(function (v) { return v.book === bookNum2 && v.chapter === state.currentChapter; });
+        verses.forEach(function (v) {
+            var div = document.createElement('div');
             div.className = 'modal-list-item';
-            const preview = (v.text || '').substring(0, 40);
-            div.innerHTML = `<span>${v.verse}</span><span class="item-preview">${preview}…</span>`;
-            div.onclick = () => {
+            var preview = (v.text || '').substring(0, 40);
+            div.innerHTML = '<span>' + v.verse + '</span><span class="item-preview">' + preview + '...</span>';
+            div.onclick = function () {
                 pushUndo();
                 state.currentVerse = v.verse;
                 updatePickerButtons();
@@ -616,29 +591,30 @@ function closeVerseModal() {
 }
 
 function saveRecentVerse() {
-    const key = `${state.currentBook}-${state.currentChapter}-${state.currentVerse}`;
-    recentVerses = recentVerses.filter(k => k !== key);
+    var key = state.currentBook + '-' + state.currentChapter + '-' + state.currentVerse;
+    recentVerses = recentVerses.filter(function (k) { return k !== key; });
     recentVerses.unshift(key);
     recentVerses = recentVerses.slice(0, 10);
-    localStorage.setItem('studio_recents_verse', JSON.stringify(recentVerses));
+    try { localStorage.setItem('studio_recents_verse', JSON.stringify(recentVerses)); } catch (e) {}
     renderRecentVerses();
 }
 
 function renderRecentVerses() {
-    const el = document.getElementById('recent-verses');
+    var el = document.getElementById('recent-verses');
     el.innerHTML = '';
     if (recentVerses.length === 0) {
         el.innerHTML = '<span class="hint-text" style="margin:0;">No recent verses yet</span>';
         return;
     }
-    recentVerses.forEach(key => {
-        const [b, c, v] = key.split('-');
-        const idx = data.codes.indexOf(b);
+    recentVerses.forEach(function (key) {
+        var parts = key.split('-');
+        var b = parts[0], c = parts[1], v = parts[2];
+        var idx = data.codes.indexOf(b);
         if (idx < 0) return;
-        const chip = document.createElement('span');
+        var chip = document.createElement('span');
         chip.className = 'recent-chip';
-        chip.textContent = `${data.englishNames[idx]} ${c}:${v}`;
-        chip.onclick = () => {
+        chip.textContent = data.englishNames[idx] + ' ' + c + ':' + v;
+        chip.onclick = function () {
             pushUndo();
             state.currentBook = b;
             state.currentChapter = parseInt(c);
@@ -654,9 +630,9 @@ function renderRecentVerses() {
 // TEMPLATES
 // ============================================================
 function attachTemplateEvents() {
-    document.querySelectorAll('.tpl-tab').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tpl-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tpl-tab').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('.tpl-tab').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.currentCategory = btn.dataset.cat;
             state.selectedTemplate = 0;
@@ -667,7 +643,7 @@ function attachTemplateEvents() {
 }
 
 function renderTemplates() {
-    const grid = document.getElementById('template-grid');
+    var grid = document.getElementById('template-grid');
     grid.innerHTML = '';
 
     if (state.currentCategory === 'favorites') {
@@ -675,32 +651,36 @@ function renderTemplates() {
             grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;opacity:0.5;padding:20px;">No favorites yet. Tap the heart on any template.</p>';
             return;
         }
-        favorites.forEach(tplId => {
-            const item = buildTemplateItem(tplId);
+        favorites.forEach(function (tplId) {
+            var item = buildTemplateItem(tplId);
             if (item) grid.appendChild(item);
         });
         return;
     }
 
-    let items = [];
-    if (state.currentCategory === 'photos') items = PHOTO_URLS.map((_, i) => `photo_${i}`);
-    else if (state.currentCategory === 'gradients') items = GRADIENTS.map((_, i) => `grad_${i}`);
-    else items = SOLIDS.map((_, i) => `solid_${i}`);
+    var items = [];
+    if (state.currentCategory === 'photos') {
+        for (var i = 0; i < PHOTO_URLS.length; i++) items.push('photo_' + i);
+    } else if (state.currentCategory === 'gradients') {
+        for (var j = 0; j < GRADIENTS.length; j++) items.push('grad_' + j);
+    } else {
+        for (var k = 0; k < SOLIDS.length; k++) items.push('solid_' + k);
+    }
 
-    items.forEach(tplId => {
-        const item = buildTemplateItem(tplId);
+    items.forEach(function (tplId) {
+        var item = buildTemplateItem(tplId);
         if (item) grid.appendChild(item);
     });
 }
 
 function buildTemplateItem(tplId) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.className = 'template-item';
 
-    let bg = '', idx = 0, cat = '';
-    if (tplId.startsWith('photo_')) { cat = 'photos'; idx = parseInt(tplId.split('_')[1]); bg = `url('${PHOTO_URLS[idx]}') center/cover`; }
-    else if (tplId.startsWith('grad_')) { cat = 'gradients'; idx = parseInt(tplId.split('_')[1]); bg = GRADIENTS[idx]; }
-    else if (tplId.startsWith('solid_')) { cat = 'solids'; idx = parseInt(tplId.split('_')[1]); bg = SOLIDS[idx]; }
+    var bg = '', idx = 0, cat = '';
+    if (tplId.indexOf('photo_') === 0) { cat = 'photos'; idx = parseInt(tplId.split('_')[1]); bg = "url('" + PHOTO_URLS[idx] + "') center/cover"; }
+    else if (tplId.indexOf('grad_') === 0) { cat = 'gradients'; idx = parseInt(tplId.split('_')[1]); bg = GRADIENTS[idx]; }
+    else if (tplId.indexOf('solid_') === 0) { cat = 'solids'; idx = parseInt(tplId.split('_')[1]); bg = SOLIDS[idx]; }
     else return null;
 
     div.style.background = bg;
@@ -710,23 +690,23 @@ function buildTemplateItem(tplId) {
         div.classList.add('selected');
     }
 
-    div.onclick = () => {
+    div.onclick = function () {
         pushUndo();
         state.currentCategory = cat;
         state.selectedTemplate = idx;
-        document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected'));
+        document.querySelectorAll('.template-item').forEach(function (t) { t.classList.remove('selected'); });
         div.classList.add('selected');
         saveRecentTemplate(tplId);
         updatePreview();
     };
 
-    const favBtn = document.createElement('button');
+    var favBtn = document.createElement('button');
     favBtn.className = 'template-fav';
-    if (favorites.includes(tplId)) favBtn.classList.add('active');
+    if (favorites.indexOf(tplId) >= 0) favBtn.classList.add('active');
     favBtn.innerHTML = '<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
-    favBtn.onclick = (e) => {
+    favBtn.onclick = function (e) {
         e.stopPropagation();
-        const i = favorites.indexOf(tplId);
+        var i = favorites.indexOf(tplId);
         if (i >= 0) {
             favorites.splice(i, 1);
             showToast('Removed from favorites', 'info');
@@ -734,7 +714,7 @@ function buildTemplateItem(tplId) {
             favorites.push(tplId);
             showToast('Added to favorites', 'success');
         }
-        localStorage.setItem('studio_favorites', JSON.stringify(favorites));
+        try { localStorage.setItem('studio_favorites', JSON.stringify(favorites)); } catch (err) {}
         favBtn.classList.toggle('active');
         if (state.currentCategory === 'favorites') renderTemplates();
     };
@@ -744,33 +724,33 @@ function buildTemplateItem(tplId) {
 }
 
 function saveRecentTemplate(tplId) {
-    recentTemplates = recentTemplates.filter(t => t !== tplId);
+    recentTemplates = recentTemplates.filter(function (t) { return t !== tplId; });
     recentTemplates.unshift(tplId);
     recentTemplates = recentTemplates.slice(0, 6);
-    localStorage.setItem('studio_recent_templates', JSON.stringify(recentTemplates));
+    try { localStorage.setItem('studio_recent_templates', JSON.stringify(recentTemplates)); } catch (e) {}
     renderRecentTemplates();
 }
 
 function renderRecentTemplates() {
-    const el = document.getElementById('recent-templates');
+    var el = document.getElementById('recent-templates');
     el.innerHTML = '';
     if (recentTemplates.length === 0) {
         el.innerHTML = '<span class="hint-text" style="margin:0;">No recent templates</span>';
         return;
     }
-    recentTemplates.forEach(tplId => {
-        let bg = '';
-        if (tplId.startsWith('photo_')) bg = `url('${PHOTO_URLS[parseInt(tplId.split('_')[1])]}') center/cover`;
-        else if (tplId.startsWith('grad_')) bg = GRADIENTS[parseInt(tplId.split('_')[1])];
-        else if (tplId.startsWith('solid_')) bg = SOLIDS[parseInt(tplId.split('_')[1])];
-        const div = document.createElement('div');
+    recentTemplates.forEach(function (tplId) {
+        var bg = '';
+        if (tplId.indexOf('photo_') === 0) bg = "url('" + PHOTO_URLS[parseInt(tplId.split('_')[1])] + "') center/cover";
+        else if (tplId.indexOf('grad_') === 0) bg = GRADIENTS[parseInt(tplId.split('_')[1])];
+        else if (tplId.indexOf('solid_') === 0) bg = SOLIDS[parseInt(tplId.split('_')[1])];
+        var div = document.createElement('div');
         div.className = 'recent-tpl-item';
         div.style.background = bg;
-        div.onclick = () => {
+        div.onclick = function () {
             pushUndo();
-            if (tplId.startsWith('photo_')) { state.currentCategory = 'photos'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
-            else if (tplId.startsWith('grad_')) { state.currentCategory = 'gradients'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
-            else if (tplId.startsWith('solid_')) { state.currentCategory = 'solids'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
+            if (tplId.indexOf('photo_') === 0) { state.currentCategory = 'photos'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
+            else if (tplId.indexOf('grad_') === 0) { state.currentCategory = 'gradients'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
+            else if (tplId.indexOf('solid_') === 0) { state.currentCategory = 'solids'; state.selectedTemplate = parseInt(tplId.split('_')[1]); }
             renderTemplates();
             updatePreview();
         };
@@ -779,229 +759,204 @@ function renderRecentTemplates() {
 }
 
 // ============================================================
-// DESIGN (Layout, Background, Typography, Reference)
+// DESIGN EVENTS
 // ============================================================
 function attachDesignEvents() {
-    // Aspect ratio
-    document.querySelectorAll('#ratio-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#ratio-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#ratio-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#ratio-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.ratio = btn.dataset.ratio;
             updatePreview();
         };
     });
 
-    // Safe zone
     document.getElementById('safezone-toggle').onclick = function () {
         state.safezone = !state.safezone;
         this.classList.toggle('active', state.safezone);
         document.getElementById('preview-safezone').style.display = state.safezone ? 'block' : 'none';
     };
 
-    // Border
-    document.getElementById('border-slider').oninput = (e) => {
+    document.getElementById('border-slider').oninput = function (e) {
         state.borderWidth = parseInt(e.target.value);
         document.getElementById('border-label').textContent = state.borderWidth;
         updatePreview();
     };
-    document.getElementById('border-color-btn').onclick = () => openColorPicker('border');
+    document.getElementById('border-color-btn').onclick = function () { openColorPicker('border'); };
 
-    // Radius
-    document.getElementById('radius-slider').oninput = (e) => {
+    document.getElementById('radius-slider').oninput = function (e) {
         state.radius = parseInt(e.target.value);
         document.getElementById('radius-label').textContent = state.radius;
         updatePreview();
     };
 
-    // Background effects
-    document.getElementById('blur-slider').oninput = (e) => {
+    document.getElementById('blur-slider').oninput = function (e) {
         state.blur = parseFloat(e.target.value);
         document.getElementById('blur-label').textContent = state.blur;
         updatePreview();
     };
-    document.getElementById('dark-slider').oninput = (e) => {
+    document.getElementById('dark-slider').oninput = function (e) {
         state.darkOverlay = parseInt(e.target.value);
         document.getElementById('dark-label').textContent = state.darkOverlay;
         updatePreview();
     };
-    document.getElementById('brightness-slider').oninput = (e) => {
+    document.getElementById('brightness-slider').oninput = function (e) {
         state.brightness = parseInt(e.target.value);
         document.getElementById('brightness-label').textContent = state.brightness;
         updatePreview();
     };
-    document.getElementById('saturation-slider').oninput = (e) => {
+    document.getElementById('saturation-slider').oninput = function (e) {
         state.saturation = parseInt(e.target.value);
         document.getElementById('saturation-label').textContent = state.saturation;
         updatePreview();
     };
 
-    // Duotone
     document.getElementById('duotone-toggle').onclick = function () {
         pushUndo();
         state.duotoneOn = !state.duotoneOn;
         this.classList.toggle('active', state.duotoneOn);
         updatePreview();
     };
-    document.getElementById('duotone-shadow-btn').onclick = () => openColorPicker('duotoneShadow');
-    document.getElementById('duotone-highlight-btn').onclick = () => openColorPicker('duotoneHighlight');
+    document.getElementById('duotone-shadow-btn').onclick = function () { openColorPicker('duotoneShadow'); };
+    document.getElementById('duotone-highlight-btn').onclick = function () { openColorPicker('duotoneHighlight'); };
 
-    // Gradient overlay
     document.getElementById('gradient-overlay-toggle').onclick = function () {
         pushUndo();
         state.gradientOverlay = !state.gradientOverlay;
         this.classList.toggle('active', state.gradientOverlay);
         updatePreview();
     };
-    document.getElementById('gradient-color-btn').onclick = () => openColorPicker('gradient');
-    document.getElementById('gradient-opacity-slider').oninput = (e) => {
+    document.getElementById('gradient-color-btn').onclick = function () { openColorPicker('gradient'); };
+    document.getElementById('gradient-opacity-slider').oninput = function (e) {
         state.gradientOpacity = parseInt(e.target.value);
         updatePreview();
     };
 
-    // Vignette
-    document.getElementById('vignette-slider').oninput = (e) => {
+    document.getElementById('vignette-slider').oninput = function (e) {
         state.vignette = parseInt(e.target.value);
         document.getElementById('vignette-label').textContent = state.vignette;
         updatePreview();
     };
 
-    // Font family
-    document.getElementById('font-family-btn').onclick = () => openFontModal('main');
+    document.getElementById('font-family-btn').onclick = function () { openFontModal('main'); };
 
-    // Font size
-    document.getElementById('font-size-slider').oninput = (e) => {
+    document.getElementById('font-size-slider').oninput = function (e) {
         state.fontSize = parseInt(e.target.value);
         document.getElementById('font-size-label').textContent = state.fontSize;
         updatePreview();
     };
 
-    // Auto-fit
     document.getElementById('autofit-btn').onclick = autoFitText;
 
-    // Line spacing
-    document.getElementById('line-spacing-slider').oninput = (e) => {
+    document.getElementById('line-spacing-slider').oninput = function (e) {
         state.lineSpacing = parseFloat(e.target.value);
         document.getElementById('line-spacing-label').textContent = state.lineSpacing;
         updatePreview();
     };
 
-    // Letter spacing
-    document.getElementById('letter-spacing-slider').oninput = (e) => {
+    document.getElementById('letter-spacing-slider').oninput = function (e) {
         state.letterSpacing = parseInt(e.target.value);
         document.getElementById('letter-spacing-label').textContent = state.letterSpacing;
         updatePreview();
     };
 
-    // Padding
-    document.getElementById('padding-slider').oninput = (e) => {
+    document.getElementById('padding-slider').oninput = function (e) {
         state.padding = parseFloat(e.target.value);
         document.getElementById('padding-label').textContent = state.padding;
         updatePreview();
     };
 
-    // Block gap
-    document.getElementById('block-gap-slider').oninput = (e) => {
+    document.getElementById('block-gap-slider').oninput = function (e) {
         state.blockGap = parseFloat(e.target.value);
         document.getElementById('block-gap-label').textContent = state.blockGap;
         updatePreview();
     };
 
-    // Alignment
-    document.querySelectorAll('#align-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#align-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#align-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#align-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.align = btn.dataset.align;
             updatePreview();
         };
     });
 
-    // Vertical position
-    document.querySelectorAll('#vpos-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#vpos-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#vpos-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#vpos-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.vpos = btn.dataset.vpos;
             updatePreview();
         };
     });
 
-    // Text color
-    document.getElementById('text-color-btn').onclick = () => openColorPicker('text');
+    document.getElementById('text-color-btn').onclick = function () { openColorPicker('text'); };
 
-// Text shadow
-    document.querySelectorAll('#shadow-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#shadow-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#shadow-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#shadow-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.shadow = btn.dataset.shadow;
             updatePreview();
         };
     });
 
-    // Text case
-    document.querySelectorAll('#case-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#case-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#case-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#case-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.textCase = btn.dataset.case;
             updatePreview();
         };
     });
 
-    // Yoruba opacity
-    document.getElementById('yo-opacity-slider').oninput = (e) => {
+    document.getElementById('yo-opacity-slider').oninput = function (e) {
         state.yoOpacity = parseInt(e.target.value);
         document.getElementById('yo-opacity-label').textContent = state.yoOpacity;
         updatePreview();
     };
-
-    // English opacity
-    document.getElementById('en-opacity-slider').oninput = (e) => {
+    document.getElementById('en-opacity-slider').oninput = function (e) {
         state.enOpacity = parseInt(e.target.value);
         document.getElementById('en-opacity-label').textContent = state.enOpacity;
         updatePreview();
     };
 
-    // Word highlight
-    document.getElementById('highlight-word-input').oninput = (e) => {
+    document.getElementById('highlight-word-input').oninput = function (e) {
         state.highlightWord = e.target.value;
         updatePreview();
     };
-    document.getElementById('highlight-color-btn').onclick = () => openColorPicker('highlight');
+    document.getElementById('highlight-color-btn').onclick = function () { openColorPicker('highlight'); };
 
-    // Reference
     document.getElementById('ref-toggle').onclick = function () {
         pushUndo();
         state.refShow = !state.refShow;
         this.classList.toggle('active', state.refShow);
         updatePreview();
     };
-    document.querySelectorAll('#refpos-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.querySelectorAll('#refpos-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#refpos-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#refpos-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.refPos = btn.dataset.refpos;
             updatePreview();
         };
     });
-    document.getElementById('ref-size-slider').oninput = (e) => {
+    document.getElementById('ref-size-slider').oninput = function (e) {
         state.refSize = parseInt(e.target.value);
         document.getElementById('ref-size-label').textContent = state.refSize;
         updatePreview();
     };
-    document.getElementById('ref-color-btn').onclick = () => openColorPicker('ref');
-    document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
+    document.getElementById('ref-color-btn').onclick = function () { openColorPicker('ref'); };
+    document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
             pushUndo();
-            document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#ref-shadow-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.refShadow = btn.dataset.refshadow;
             updatePreview();
@@ -1014,7 +969,7 @@ function attachDesignEvents() {
         document.getElementById('ref-font-btn').style.display = state.refMatchFont ? 'none' : 'block';
         updatePreview();
     };
-    document.getElementById('ref-font-btn').onclick = () => openFontModal('ref');
+    document.getElementById('ref-font-btn').onclick = function () { openFontModal('ref'); };
 }
 
 // ============================================================
@@ -1022,21 +977,19 @@ function attachDesignEvents() {
 // ============================================================
 function autoFitText() {
     pushUndo();
-    const card = document.getElementById('preview-card');
-    const textEl = document.getElementById('preview-text');
-    const cardH = card.clientHeight;
-    const paddingPx = (state.padding / 100) * card.clientWidth;
+    var card = document.getElementById('preview-card');
+    var textEl = document.getElementById('preview-text');
+    var cardH = card.clientHeight;
+    var cardW = card.clientWidth;
+    var paddingPx = (state.padding / 100) * cardW;
+    var usableH = cardH - (paddingPx * 2);
 
-    // Usable height inside card
-    const usableH = cardH - (paddingPx * 2);
-
-    // Binary search for best font size
-    let lo = 10, hi = 120, best = 24;
-    for (let i = 0; i < 20; i++) {
-        const mid = Math.floor((lo + hi) / 2);
+    var lo = 10, hi = 120, best = 24;
+    for (var i = 0; i < 20; i++) {
+        var mid = Math.floor((lo + hi) / 2);
         state.fontSize = mid;
         updatePreview();
-        const currentH = textEl.scrollHeight + (state.refShow ? state.refSize * 2 : 0);
+        var currentH = textEl.scrollHeight + (state.refShow ? state.refSize * 2 : 0);
         if (currentH <= usableH) {
             best = mid;
             lo = mid + 1;
@@ -1052,40 +1005,39 @@ function autoFitText() {
 }
 
 // ============================================================
-// EXTRAS (Secondary, Logo)
+// EXTRAS
 // ============================================================
 function attachExtrasEvents() {
-    document.getElementById('secondary-input').oninput = (e) => {
+    document.getElementById('secondary-input').oninput = function (e) {
         state.secText = e.target.value;
         updatePreview();
     };
-    document.querySelectorAll('#secpos-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('#secpos-group .opt-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#secpos-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('#secpos-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.secPos = btn.dataset.secpos;
             updatePreview();
         };
     });
-    document.getElementById('sec-size-slider').oninput = (e) => {
+    document.getElementById('sec-size-slider').oninput = function (e) {
         state.secSize = parseInt(e.target.value);
         document.getElementById('sec-size-label').textContent = state.secSize;
         updatePreview();
     };
-    document.getElementById('sec-opacity-slider').oninput = (e) => {
+    document.getElementById('sec-opacity-slider').oninput = function (e) {
         state.secOpacity = parseInt(e.target.value);
         document.getElementById('sec-opacity-label').textContent = state.secOpacity;
         updatePreview();
     };
-    document.getElementById('sec-color-btn').onclick = () => openColorPicker('sec');
+    document.getElementById('sec-color-btn').onclick = function () { openColorPicker('sec'); };
 
-    // Logo
-    document.getElementById('logo-upload-btn').onclick = () => document.getElementById('logo-input').click();
-    document.getElementById('logo-input').onchange = (e) => {
-        const file = e.target.files[0];
+    document.getElementById('logo-upload-btn').onclick = function () { document.getElementById('logo-input').click(); };
+    document.getElementById('logo-input').onchange = function (e) {
+        var file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
+        var reader = new FileReader();
+        reader.onload = function (ev) {
             pushUndo();
             state.logoData = ev.target.result;
             try { localStorage.setItem('studio_logo', state.logoData); } catch (err) {}
@@ -1095,28 +1047,28 @@ function attachExtrasEvents() {
         };
         reader.readAsDataURL(file);
     };
-    document.getElementById('logo-remove-btn').onclick = () => {
+    document.getElementById('logo-remove-btn').onclick = function () {
         pushUndo();
         state.logoData = null;
-        localStorage.removeItem('studio_logo');
+        try { localStorage.removeItem('studio_logo'); } catch (e) {}
         document.getElementById('preview-logo-wrap').style.display = 'none';
         updatePreview();
         showToast('Logo removed', 'info');
     };
-    document.querySelectorAll('#logo-pos-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('#logo-pos-group .opt-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#logo-pos-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('#logo-pos-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.logoPos = btn.dataset.logopos;
             updatePreview();
         };
     });
-    document.getElementById('logo-size-slider').oninput = (e) => {
+    document.getElementById('logo-size-slider').oninput = function (e) {
         state.logoSize = parseInt(e.target.value);
         document.getElementById('logo-size-label').textContent = state.logoSize;
         updatePreview();
     };
-    document.getElementById('logo-opacity-slider').oninput = (e) => {
+    document.getElementById('logo-opacity-slider').oninput = function (e) {
         state.logoOpacity = parseInt(e.target.value);
         document.getElementById('logo-opacity-label').textContent = state.logoOpacity;
         updatePreview();
@@ -1126,17 +1078,17 @@ function attachExtrasEvents() {
         this.classList.toggle('active', state.logoBorderOn);
         updatePreview();
     };
-    document.getElementById('logo-border-color-btn').onclick = () => openColorPicker('logoBorder');
+    document.getElementById('logo-border-color-btn').onclick = function () { openColorPicker('logoBorder'); };
     document.getElementById('logo-bg-toggle').onclick = function () {
         state.logoBgOn = !state.logoBgOn;
         this.classList.toggle('active', state.logoBgOn);
         updatePreview();
     };
-    document.getElementById('logo-bg-color-btn').onclick = () => openColorPicker('logoBg');
+    document.getElementById('logo-bg-color-btn').onclick = function () { openColorPicker('logoBg'); };
 }
 
 function showPreviewLogo() {
-    const wrap = document.getElementById('preview-logo-wrap');
+    var wrap = document.getElementById('preview-logo-wrap');
     if (!state.logoData) {
         wrap.style.display = 'none';
         return;
@@ -1149,11 +1101,11 @@ function showPreviewLogo() {
 // PRESETS
 // ============================================================
 function attachPresetEvents() {
-    document.getElementById('preset-confirm-btn').onclick = () => {
-        const name = document.getElementById('preset-name-input').value.trim() || 'Untitled';
-        const preset = {
+    document.getElementById('preset-confirm-btn').onclick = function () {
+        var name = document.getElementById('preset-name-input').value.trim() || 'Untitled';
+        var preset = {
             id: Date.now(),
-            name,
+            name: name,
             fontFamily: state.fontFamily,
             fontSize: state.fontSize,
             lineSpacing: state.lineSpacing,
@@ -1178,23 +1130,14 @@ function attachPresetEvents() {
             darkOverlay: state.darkOverlay,
             vignette: state.vignette,
             ratio: state.ratio,
-            thumbnail: capturePresetThumbnail()
+            thumbnailBg: getCurrentBackgroundCSS()
         };
         presets.unshift(preset);
         presets = presets.slice(0, 20);
-        localStorage.setItem('studio_presets', JSON.stringify(presets));
+        try { localStorage.setItem('studio_presets', JSON.stringify(presets)); } catch (e) {}
         closePresetModal();
         renderPresets();
         showToast('Preset saved', 'success');
-    };
-}
-
-function capturePresetThumbnail() {
-    // Simple: use current background + text color as a mini representation
-    return {
-        bg: getCurrentBackgroundCSS(),
-        textColor: state.textColor,
-        font: state.fontFamily
     };
 }
 
@@ -1203,36 +1146,36 @@ function closePresetModal() {
 }
 
 function renderPresets() {
-    const el = document.getElementById('presets-list');
+    var el = document.getElementById('presets-list');
     el.innerHTML = '';
     if (presets.length === 0) {
         el.innerHTML = '<p class="hint-text">No presets saved yet.</p>';
         return;
     }
-    presets.forEach(p => {
-        const div = document.createElement('div');
+    presets.forEach(function (p) {
+        var div = document.createElement('div');
         div.className = 'preset-item';
 
-        const thumb = document.createElement('div');
+        var thumb = document.createElement('div');
         thumb.className = 'preset-thumb';
-        if (p.thumbnail && p.thumbnail.bg) thumb.style.background = p.thumbnail.bg;
+        if (p.thumbnailBg) thumb.style.background = p.thumbnailBg;
 
-        const info = document.createElement('div');
+        var info = document.createElement('div');
         info.className = 'preset-item-info';
-        info.innerHTML = `<div class="preset-item-name">${p.name}</div><div class="preset-item-meta">${p.fontFamily} • ${p.fontSize}px</div>`;
+        info.innerHTML = '<div class="preset-item-name">' + p.name + '</div><div class="preset-item-meta">' + p.fontFamily + ' &middot; ' + p.fontSize + 'px</div>';
 
-        const actions = document.createElement('div');
+        var actions = document.createElement('div');
         actions.className = 'preset-item-actions';
 
-        const loadBtn = document.createElement('button');
+        var loadBtn = document.createElement('button');
         loadBtn.className = 'preset-mini-btn load';
         loadBtn.textContent = 'Load';
-        loadBtn.onclick = () => loadPreset(p);
+        loadBtn.onclick = function () { loadPreset(p); };
 
-        const delBtn = document.createElement('button');
+        var delBtn = document.createElement('button');
         delBtn.className = 'preset-mini-btn delete';
         delBtn.textContent = 'Delete';
-        delBtn.onclick = () => deletePreset(p.id);
+        delBtn.onclick = function () { deletePreset(p.id); };
 
         actions.appendChild(loadBtn);
         actions.appendChild(delBtn);
@@ -1246,23 +1189,39 @@ function renderPresets() {
 
 function loadPreset(p) {
     pushUndo();
-    Object.assign(state, {
-        fontFamily: p.fontFamily, fontSize: p.fontSize, lineSpacing: p.lineSpacing,
-        letterSpacing: p.letterSpacing, padding: p.padding, blockGap: p.blockGap,
-        align: p.align, vpos: p.vpos, textColor: p.textColor, shadow: p.shadow,
-        textCase: p.textCase, yoOpacity: p.yoOpacity, enOpacity: p.enOpacity,
-        refShow: p.refShow, refPos: p.refPos, refSize: p.refSize, refColor: p.refColor,
-        refShadow: p.refShadow, borderWidth: p.borderWidth, borderColor: p.borderColor,
-        radius: p.radius, darkOverlay: p.darkOverlay, vignette: p.vignette, ratio: p.ratio
-    });
+    state.fontFamily = p.fontFamily;
+    state.fontSize = p.fontSize;
+    state.lineSpacing = p.lineSpacing;
+    state.letterSpacing = p.letterSpacing;
+    state.padding = p.padding;
+    state.blockGap = p.blockGap;
+    state.align = p.align;
+    state.vpos = p.vpos;
+    state.textColor = p.textColor;
+    state.shadow = p.shadow;
+    state.textCase = p.textCase;
+    state.yoOpacity = p.yoOpacity;
+    state.enOpacity = p.enOpacity;
+    state.refShow = p.refShow;
+    state.refPos = p.refPos;
+    state.refSize = p.refSize;
+    state.refColor = p.refColor;
+    state.refShadow = p.refShadow;
+    state.borderWidth = p.borderWidth;
+    state.borderColor = p.borderColor;
+    state.radius = p.radius;
+    state.darkOverlay = p.darkOverlay;
+    state.vignette = p.vignette;
+    state.ratio = p.ratio;
+
     syncAllUI();
     updatePreview();
     showToast('Preset loaded', 'success');
 }
 
 function deletePreset(id) {
-    presets = presets.filter(p => p.id !== id);
-    localStorage.setItem('studio_presets', JSON.stringify(presets));
+    presets = presets.filter(function (p) { return p.id !== id; });
+    try { localStorage.setItem('studio_presets', JSON.stringify(presets)); } catch (e) {}
     renderPresets();
     showToast('Preset deleted', 'info');
 }
@@ -1272,21 +1231,19 @@ function deletePreset(id) {
 // ============================================================
 function openColorPicker(target) {
     colorTarget = target;
-    let current = '#ffffff';
-    switch (target) {
-        case 'text': current = state.textColor; break;
-        case 'ref': current = state.refColor; break;
-        case 'border': current = state.borderColor; break;
-        case 'gradient': current = state.gradientColor; break;
-        case 'highlight': current = state.highlightColor; break;
-        case 'sec': current = state.secColor; break;
-        case 'duotoneShadow': current = state.duotoneShadow; break;
-        case 'duotoneHighlight': current = state.duotoneHighlight; break;
-        case 'logoBorder': current = state.logoBorderColor; break;
-        case 'logoBg': current = state.logoBgColor; break;
-    }
+    var current = '#ffffff';
+    if (target === 'text') current = state.textColor;
+    else if (target === 'ref') current = state.refColor;
+    else if (target === 'border') current = state.borderColor;
+    else if (target === 'gradient') current = state.gradientColor;
+    else if (target === 'highlight') current = state.highlightColor;
+    else if (target === 'sec') current = state.secColor;
+    else if (target === 'duotoneShadow') current = state.duotoneShadow;
+    else if (target === 'duotoneHighlight') current = state.duotoneHighlight;
+    else if (target === 'logoBorder') current = state.logoBorderColor;
+    else if (target === 'logoBg') current = state.logoBgColor;
 
-    const rgb = hexToRgb(current);
+    var rgb = hexToRgb(current);
     pickedColor = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
     document.getElementById('hue-slider').value = pickedColor.h;
@@ -1298,22 +1255,21 @@ function openColorPicker(target) {
     document.getElementById('hex-input').value = current;
     updateColorPreview();
 
-    const swatchEl = document.getElementById('color-swatches');
+    var swatchEl = document.getElementById('color-swatches');
     swatchEl.innerHTML = '';
-    // Brand colors first
-    brandColors.forEach(c => {
-        const btn = document.createElement('button');
+    brandColors.forEach(function (c) {
+        var btn = document.createElement('button');
         btn.className = 'color-swatch';
         btn.style.background = c;
         btn.style.borderColor = '#f59e0b';
-        btn.onclick = () => applySwatchColor(c);
+        btn.onclick = function () { applySwatchColor(c); };
         swatchEl.appendChild(btn);
     });
-    COLOR_PRESETS.forEach(c => {
-        const btn = document.createElement('button');
+    COLOR_PRESETS.forEach(function (c) {
+        var btn = document.createElement('button');
         btn.className = 'color-swatch';
         btn.style.background = c;
-        btn.onclick = () => applySwatchColor(c);
+        btn.onclick = function () { applySwatchColor(c); };
         swatchEl.appendChild(btn);
     });
 
@@ -1321,7 +1277,7 @@ function openColorPicker(target) {
 }
 
 function applySwatchColor(c) {
-    const rgb = hexToRgb(c);
+    var rgb = hexToRgb(c);
     pickedColor = rgbToHsl(rgb.r, rgb.g, rgb.b);
     document.getElementById('hue-slider').value = pickedColor.h;
     document.getElementById('sat-slider').value = pickedColor.s;
@@ -1334,25 +1290,33 @@ function applySwatchColor(c) {
 }
 
 function attachColorPickerEvents() {
-    document.getElementById('hue-slider').oninput = (e) => {
+    document.getElementById('hue-slider').oninput = function (e) {
         pickedColor.h = parseInt(e.target.value);
         document.getElementById('hue-label').textContent = pickedColor.h;
         updateColorPreview();
     };
-    document.getElementById('sat-slider').oninput = (e) => {
+    document.getElementById('sat-slider').oninput = function (e) {
         pickedColor.s = parseInt(e.target.value);
         document.getElementById('sat-label').textContent = pickedColor.s;
         updateColorPreview();
     };
-    document.getElementById('light-slider').oninput = (e) => {
+    document.getElementById('light-slider').oninput = function (e) {
         pickedColor.l = parseInt(e.target.value);
         document.getElementById('light-label').textContent = pickedColor.l;
         updateColorPreview();
     };
-    document.getElementById('hex-input').oninput = (e) => {
-        const v = e.target.value.trim();
-        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
-            const rgb = hexToRgb(v);
+    document.getElementById('hex-input').oninput = function (e) {
+        var v = e.target.value.trim();
+        var isValidHex = (v.length === 7 && v.charAt(0) === '#');
+        if (isValidHex) {
+            for (var i = 1; i < 7; i++) {
+                var c = v.charAt(i).toLowerCase();
+                var isHex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+                if (!isHex) { isValidHex = false; break; }
+            }
+        }
+        if (isValidHex) {
+            var rgb = hexToRgb(v);
             pickedColor = rgbToHsl(rgb.r, rgb.g, rgb.b);
             document.getElementById('hue-slider').value = pickedColor.h;
             document.getElementById('sat-slider').value = pickedColor.s;
@@ -1360,18 +1324,18 @@ function attachColorPickerEvents() {
             updateColorPreview();
         }
     };
-    document.getElementById('color-confirm-btn').onclick = () => {
+    document.getElementById('color-confirm-btn').onclick = function () {
         pushUndo();
-        const hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
+        var hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
         applyColor(colorTarget, hex);
         closeColorModal();
     };
-    document.getElementById('save-brand-color-btn').onclick = () => {
-        const hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
-        if (!brandColors.includes(hex)) {
+    document.getElementById('save-brand-color-btn').onclick = function () {
+        var hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
+        if (brandColors.indexOf(hex) < 0) {
             brandColors.push(hex);
             brandColors = brandColors.slice(-3);
-            localStorage.setItem('studio_brand_colors', JSON.stringify(brandColors));
+            try { localStorage.setItem('studio_brand_colors', JSON.stringify(brandColors)); } catch (e) {}
             renderBrandColors();
             showToast('Brand color saved', 'success');
         } else {
@@ -1381,24 +1345,22 @@ function attachColorPickerEvents() {
 }
 
 function updateColorPreview() {
-    const hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
+    var hex = hslToHex(pickedColor.h, pickedColor.s, pickedColor.l);
     document.getElementById('color-preview').style.background = hex;
     document.getElementById('hex-input').value = hex;
 }
 
 function applyColor(target, hex) {
-    switch (target) {
-        case 'text': state.textColor = hex; document.getElementById('text-color-btn').style.background = hex; break;
-        case 'ref': state.refColor = hex; document.getElementById('ref-color-btn').style.background = hex; break;
-        case 'border': state.borderColor = hex; document.getElementById('border-color-btn').style.background = hex; break;
-        case 'gradient': state.gradientColor = hex; document.getElementById('gradient-color-btn').style.background = hex; break;
-        case 'highlight': state.highlightColor = hex; document.getElementById('highlight-color-btn').style.background = hex; break;
-        case 'sec': state.secColor = hex; document.getElementById('sec-color-btn').style.background = hex; break;
-        case 'duotoneShadow': state.duotoneShadow = hex; document.getElementById('duotone-shadow-btn').style.background = hex; break;
-        case 'duotoneHighlight': state.duotoneHighlight = hex; document.getElementById('duotone-highlight-btn').style.background = hex; break;
-        case 'logoBorder': state.logoBorderColor = hex; document.getElementById('logo-border-color-btn').style.background = hex; break;
-        case 'logoBg': state.logoBgColor = hex; document.getElementById('logo-bg-color-btn').style.background = hex; break;
-    }
+    if (target === 'text') { state.textColor = hex; document.getElementById('text-color-btn').style.background = hex; }
+    else if (target === 'ref') { state.refColor = hex; document.getElementById('ref-color-btn').style.background = hex; }
+    else if (target === 'border') { state.borderColor = hex; document.getElementById('border-color-btn').style.background = hex; }
+    else if (target === 'gradient') { state.gradientColor = hex; document.getElementById('gradient-color-btn').style.background = hex; }
+    else if (target === 'highlight') { state.highlightColor = hex; document.getElementById('highlight-color-btn').style.background = hex; }
+    else if (target === 'sec') { state.secColor = hex; document.getElementById('sec-color-btn').style.background = hex; }
+    else if (target === 'duotoneShadow') { state.duotoneShadow = hex; document.getElementById('duotone-shadow-btn').style.background = hex; }
+    else if (target === 'duotoneHighlight') { state.duotoneHighlight = hex; document.getElementById('duotone-highlight-btn').style.background = hex; }
+    else if (target === 'logoBorder') { state.logoBorderColor = hex; document.getElementById('logo-border-color-btn').style.background = hex; }
+    else if (target === 'logoBg') { state.logoBgColor = hex; document.getElementById('logo-bg-color-btn').style.background = hex; }
     updatePreview();
 }
 
@@ -1407,41 +1369,42 @@ function closeColorModal() {
 }
 
 function renderBrandColors() {
-    const el = document.getElementById('brand-colors-row');
+    var el = document.getElementById('brand-colors-row');
     el.innerHTML = '';
-    for (let i = 0; i < 3; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'brand-color-slot';
-        if (brandColors[i]) {
-            slot.style.background = brandColors[i];
-            slot.classList.add('filled');
-            slot.onclick = () => openColorPicker('text');
-        } else {
-            slot.textContent = '+';
-            slot.onclick = () => {
-                showToast('Pick a color and save as brand', 'info');
-                openColorPicker('text');
-            };
-        }
-        el.appendChild(slot);
+    for (var i = 0; i < 3; i++) {
+        (function (i) {
+            var slot = document.createElement('div');
+            slot.className = 'brand-color-slot';
+            if (brandColors[i]) {
+                slot.style.background = brandColors[i];
+                slot.classList.add('filled');
+                slot.onclick = function () { openColorPicker('text'); };
+            } else {
+                slot.textContent = '+';
+                slot.onclick = function () {
+                    showToast('Pick a color and save as brand', 'info');
+                    openColorPicker('text');
+                };
+            }
+            el.appendChild(slot);
+        })(i);
     }
-    }
+}
 
-/ ============================================================
+// ============================================================
 // FONT MODAL
 // ============================================================
-function attachFontModalEvents() {}
 function openFontModal(target) {
     fontTarget = target;
-    const list = document.getElementById('font-list');
-    const title = document.getElementById('font-modal-title');
+    var list = document.getElementById('font-list');
+    var title = document.getElementById('font-modal-title');
     title.textContent = target === 'ref' ? 'Reference Font' : 'Font Family';
     list.innerHTML = '';
-    FONTS.forEach(f => {
-        const div = document.createElement('div');
+    FONTS.forEach(function (f) {
+        var div = document.createElement('div');
         div.className = 'font-item';
-        div.innerHTML = `<div style="font-family:${f.css};">The Lord is my shepherd</div><div class="font-item-name">${f.name}</div>`;
-        div.onclick = () => {
+        div.innerHTML = '<div style="font-family:' + f.css + ';">The Lord is my shepherd</div><div class="font-item-name">' + f.name + '</div>';
+        div.onclick = function () {
             pushUndo();
             if (fontTarget === 'ref') {
                 state.refFontFamily = f.name;
@@ -1465,13 +1428,13 @@ function closeFontModal() {
 // QUICK PRESETS
 // ============================================================
 function renderQuickPresets() {
-    const el = document.getElementById('quick-presets');
+    var el = document.getElementById('quick-presets');
     el.innerHTML = '';
-    QUICK_PRESETS.forEach(qp => {
-        const btn = document.createElement('button');
+    QUICK_PRESETS.forEach(function (qp) {
+        var btn = document.createElement('button');
         btn.className = 'quick-preset-btn';
         btn.textContent = qp.name;
-        btn.onclick = () => {
+        btn.onclick = function () {
             pushUndo();
             state.fontFamily = qp.font;
             state.fontSize = qp.fontSize;
@@ -1496,19 +1459,22 @@ function renderQuickPresets() {
 }
 
 // ============================================================
-// PREVIEW RENDERING
+// PREVIEW HELPERS
 // ============================================================
 function getCurrentBackgroundCSS() {
-    let bg = '';
-    if (state.currentCategory === 'photos') bg = `url('${PHOTO_URLS[state.selectedTemplate]}') center/cover`;
-    else if (state.currentCategory === 'gradients') bg = GRADIENTS[state.selectedTemplate];
-    else if (state.currentCategory === 'solids') bg = SOLIDS[state.selectedTemplate];
-    else if (state.currentCategory === 'favorites') {
-        const tplId = favorites[state.selectedTemplate];
+    var bg = '';
+    if (state.currentCategory === 'photos') {
+        bg = "url('" + PHOTO_URLS[state.selectedTemplate] + "') center/cover";
+    } else if (state.currentCategory === 'gradients') {
+        bg = GRADIENTS[state.selectedTemplate];
+    } else if (state.currentCategory === 'solids') {
+        bg = SOLIDS[state.selectedTemplate];
+    } else if (state.currentCategory === 'favorites') {
+        var tplId = favorites[state.selectedTemplate];
         if (tplId) {
-            if (tplId.startsWith('photo_')) bg = `url('${PHOTO_URLS[parseInt(tplId.split('_')[1])]}') center/cover`;
-            else if (tplId.startsWith('grad_')) bg = GRADIENTS[parseInt(tplId.split('_')[1])];
-            else if (tplId.startsWith('solid_')) bg = SOLIDS[parseInt(tplId.split('_')[1])];
+            if (tplId.indexOf('photo_') === 0) bg = "url('" + PHOTO_URLS[parseInt(tplId.split('_')[1])] + "') center/cover";
+            else if (tplId.indexOf('grad_') === 0) bg = GRADIENTS[parseInt(tplId.split('_')[1])];
+            else if (tplId.indexOf('solid_') === 0) bg = SOLIDS[parseInt(tplId.split('_')[1])];
         }
     }
     return bg;
@@ -1517,107 +1483,128 @@ function getCurrentBackgroundCSS() {
 function getPreviewBackgroundURL() {
     if (state.currentCategory === 'photos') return PHOTO_URLS[state.selectedTemplate];
     if (state.currentCategory === 'favorites') {
-        const tplId = favorites[state.selectedTemplate];
-        if (tplId && tplId.startsWith('photo_')) return PHOTO_URLS[parseInt(tplId.split('_')[1])];
+        var tplId = favorites[state.selectedTemplate];
+        if (tplId && tplId.indexOf('photo_') === 0) return PHOTO_URLS[parseInt(tplId.split('_')[1])];
     }
     return null;
 }
 
 function getVerseText() {
-    const bookNum = data.codes.indexOf(state.currentBook) + 1;
-    const yo = data.yoruba.find(x => x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse);
-    const en = data.englishMap[`${bookNum}-${state.currentChapter}-${state.currentVerse}`] || '';
-    return { yo: yo ? yo.text : '', en };
+    var bookNum = data.codes.indexOf(state.currentBook) + 1;
+    var yo = data.yoruba.find(function (x) { return x.book === bookNum && x.chapter === state.currentChapter && x.verse === state.currentVerse; });
+    var en = data.englishMap[bookNum + '-' + state.currentChapter + '-' + state.currentVerse] || '';
+    return { yo: yo ? yo.text : '', en: en };
 }
 
 function getReferenceText() {
-    return `${data.englishNames[data.codes.indexOf(state.currentBook)]} ${state.currentChapter}:${state.currentVerse}`;
+    return data.englishNames[data.codes.indexOf(state.currentBook)] + ' ' + state.currentChapter + ':' + state.currentVerse;
 }
 
 function escapeHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    if (s === null || s === undefined) return '';
+    var str = String(s);
+    var out = '';
+    for (var i = 0; i < str.length; i++) {
+        var c = str.charAt(i);
+        if (c === '&') out += '&amp;';
+        else if (c === '<') out += '&lt;';
+        else if (c === '>') out += '&gt;';
+        else if (c === '"') out += '&quot;';
+        else out += c;
+    }
+    return out;
 }
 
 function buildTextHTML() {
-    const { yo, en } = getVerseText();
-    const word = state.highlightWord.trim();
+    var texts = getVerseText();
+    var yo = texts.yo;
+    var en = texts.en;
+    var word = state.highlightWord.trim();
 
     function hl(text) {
         if (!word || !text) return escapeHtml(text || '');
-        try {
-            const regex = new RegExp(`(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-            return escapeHtml(text).replace(regex, `<span class="hl" style="background:${state.highlightColor};color:#fff;">$1</span>`);
-        } catch (e) {
-            return escapeHtml(text);
+        var escaped = escapeHtml(text);
+        var lowerText = text.toLowerCase();
+        var lowerWord = word.toLowerCase();
+        var result = '';
+        var pos = 0;
+        while (true) {
+            var idx = lowerText.indexOf(lowerWord, pos);
+            if (idx < 0) {
+                result += escaped.substring(pos);
+                break;
+            }
+            result += escaped.substring(pos, idx);
+            result += '<span class="hl" style="background:' + state.highlightColor + ';color:#fff;">' + escaped.substring(idx, idx + word.length) + '</span>';
+            pos = idx + word.length;
         }
+        return result;
     }
 
-    let html = '';
+    var html = '';
     if (state.showYoruba && yo) {
-        html += `<div class="text-yo" style="opacity:${state.yoOpacity / 100};">${hl(yo)}</div>`;
+        html += '<div class="text-yo" style="opacity:' + (state.yoOpacity / 100) + ';">' + hl(yo) + '</div>';
     }
     if (state.showEnglish && en) {
-        html += `<div class="text-en" style="opacity:${state.enOpacity / 100};">${hl(en)}</div>`;
+        html += '<div class="text-en" style="opacity:' + (state.enOpacity / 100) + ';">' + hl(en) + '</div>';
     }
     return html || 'Verse not found';
 }
 
 function getShadowCSS(style) {
-    switch (style) {
-        case 'none': return 'none';
-        case 'soft': return '0 2px 8px rgba(0,0,0,0.4)';
-        case 'strong': return '0 4px 15px rgba(0,0,0,0.75)';
-        case 'glow': return '0 0 25px rgba(255,255,255,0.7), 0 0 50px rgba(255,255,255,0.3)';
-        case 'outline': return '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
-        default: return 'none';
-    }
+    if (style === 'none') return 'none';
+    if (style === 'soft') return '0 2px 8px rgba(0,0,0,0.4)';
+    if (style === 'strong') return '0 4px 15px rgba(0,0,0,0.75)';
+    if (style === 'glow') return '0 0 25px rgba(255,255,255,0.7), 0 0 50px rgba(255,255,255,0.3)';
+    if (style === 'outline') return '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000';
+    return 'none';
 }
 
+// ============================================================
+// PREVIEW UPDATE
+// ============================================================
 function updatePreview() {
-    const card = document.getElementById('preview-card');
-    const bg = document.getElementById('preview-bg');
-    const bgFilter = document.getElementById('preview-bg-filter');
-    const darkOv = document.getElementById('preview-dark-overlay');
-    const duotoneOv = document.getElementById('preview-duotone');
-    const gradOv = document.getElementById('preview-gradient-overlay');
-    const vig = document.getElementById('preview-vignette');
-    const textEl = document.getElementById('preview-text');
-    const refEl = document.getElementById('preview-ref');
-    const secEl = document.getElementById('preview-secondary');
-    const logoWrap = document.getElementById('preview-logo-wrap');
-    const logoBg = document.getElementById('preview-logo-bg');
-    const deco = document.getElementById('preview-decoration');
-    const content = card.querySelector('.preview-content');
+    var card = document.getElementById('preview-card');
+    var bg = document.getElementById('preview-bg');
+    var bgFilter = document.getElementById('preview-bg-filter');
+    var darkOv = document.getElementById('preview-dark-overlay');
+    var duotoneOv = document.getElementById('preview-duotone');
+    var gradOv = document.getElementById('preview-gradient-overlay');
+    var vig = document.getElementById('preview-vignette');
+    var textEl = document.getElementById('preview-text');
+    var refEl = document.getElementById('preview-ref');
+    var secEl = document.getElementById('preview-secondary');
+    var logoWrap = document.getElementById('preview-logo-wrap');
+    var logoBg = document.getElementById('preview-logo-bg');
+    var deco = document.getElementById('preview-decoration');
+    var content = card.querySelector('.preview-content');
 
-    // Ratio
     card.className = 'preview-card ratio-' + state.ratio;
 
-    // Background
     bg.style.background = getCurrentBackgroundCSS() || '#1a237e';
 
-    // Filters (brightness, saturation)
-    const filters = [];
-    if (state.brightness !== 100) filters.push(`brightness(${state.brightness / 100})`);
-    if (state.saturation !== 100) filters.push(`saturate(${state.saturation / 100})`);
-    bgFilter.style.backdropFilter = filters.length ? filters.join(' ') : 'none';
-    bgFilter.style.webkitBackdropFilter = filters.length ? filters.join(' ') : 'none';
+    var filters = [];
+    if (state.brightness !== 100) filters.push('brightness(' + (state.brightness / 100) + ')');
+    if (state.saturation !== 100) filters.push('saturate(' + (state.saturation / 100) + ')');
+    if (filters.length) {
+        bgFilter.style.backdropFilter = filters.join(' ');
+        bgFilter.style.webkitBackdropFilter = filters.join(' ');
+    } else {
+        bgFilter.style.backdropFilter = 'none';
+        bgFilter.style.webkitBackdropFilter = 'none';
+    }
 
-    // Blur
-    bg.style.filter = state.blur > 0 ? `blur(${state.blur}px)` : 'none';
+    bg.style.filter = state.blur > 0 ? 'blur(' + state.blur + 'px)' : 'none';
+    darkOv.style.background = 'rgba(0,0,0,' + (state.darkOverlay / 100) + ')';
 
-    // Dark overlay
-    darkOv.style.background = `rgba(0,0,0,${state.darkOverlay / 100})`;
-
-    // Duotone
     if (state.duotoneOn) {
         duotoneOv.style.display = 'block';
-        duotoneOv.style.background = `linear-gradient(45deg, ${state.duotoneShadow}, ${state.duotoneHighlight})`;
+        duotoneOv.style.background = 'linear-gradient(45deg, ' + state.duotoneShadow + ', ' + state.duotoneHighlight + ')';
         duotoneOv.style.opacity = '0.55';
     } else {
         duotoneOv.style.display = 'none';
     }
 
-    // Gradient overlay
     if (state.gradientOverlay) {
         gradOv.style.display = 'block';
         gradOv.style.background = hexToRgba(state.gradientColor, state.gradientOpacity / 100);
@@ -1625,23 +1612,23 @@ function updatePreview() {
         gradOv.style.display = 'none';
     }
 
-    // Vignette
     if (state.vignette > 0) {
-        vig.style.boxShadow = `inset 0 0 ${Math.round(state.vignette * 2.5)}px ${Math.round(state.vignette * 1.5)}px rgba(0,0,0,${state.vignette / 100})`;
+        vig.style.boxShadow = 'inset 0 0 ' + Math.round(state.vignette * 2.5) + 'px ' + Math.round(state.vignette * 1.5) + 'px rgba(0,0,0,' + (state.vignette / 100) + ')';
     } else {
         vig.style.boxShadow = 'none';
     }
 
-    // Border + radius
     if (state.borderWidth > 0) {
-        deco.style.border = `${state.borderWidth}px solid ${state.borderColor}`;
+        deco.style.border = state.borderWidth + 'px solid ' + state.borderColor;
     } else {
         deco.style.border = 'none';
     }
     card.style.borderRadius = state.radius + 'px';
 
-    // Text styles
-    const fontCss = FONTS.find(f => f.name === state.fontFamily)?.css || "'Poppins', sans-serif";
+    var fontCss = "'Poppins', sans-serif";
+    for (var i = 0; i < FONTS.length; i++) {
+        if (FONTS[i].name === state.fontFamily) { fontCss = FONTS[i].css; break; }
+    }
     textEl.style.fontFamily = fontCss;
     textEl.style.fontSize = state.fontSize + 'px';
     textEl.style.lineHeight = state.lineSpacing;
@@ -1654,13 +1641,15 @@ function updatePreview() {
     if (state.textCase === 'title') textEl.classList.add('title');
     textEl.innerHTML = buildTextHTML();
 
-    // Reference
     if (state.refShow) {
         refEl.style.display = 'block';
         refEl.textContent = getReferenceText();
-        const refFont = state.refMatchFont
-            ? fontCss
-            : (FONTS.find(f => f.name === state.refFontFamily)?.css || "'Playfair Display', serif");
+        var refFont = fontCss;
+        if (!state.refMatchFont) {
+            for (var j = 0; j < FONTS.length; j++) {
+                if (FONTS[j].name === state.refFontFamily) { refFont = FONTS[j].css; break; }
+            }
+        }
         refEl.style.fontFamily = refFont;
         refEl.style.fontSize = state.refSize + 'px';
         refEl.style.color = state.refColor;
@@ -1670,38 +1659,33 @@ function updatePreview() {
         refEl.style.display = 'none';
     }
 
-    // Content padding (percentage of width)
     content.style.padding = state.padding + '%';
 
-    // Vertical position
     if (state.vpos === 'top') content.style.justifyContent = 'flex-start';
     else if (state.vpos === 'bottom') content.style.justifyContent = 'flex-end';
     else content.style.justifyContent = 'center';
 
-    // Gap between Yoruba / English
-    const gapPx = state.fontSize * state.blockGap * 0.5;
-    textEl.querySelectorAll('.text-en').forEach(el => el.style.marginTop = gapPx + 'px');
+    var gapPx = state.fontSize * state.blockGap * 0.5;
+    textEl.querySelectorAll('.text-en').forEach(function (el) { el.style.marginTop = gapPx + 'px'; });
 
-    // Secondary text
     if (state.secText) {
         secEl.style.display = 'block';
         secEl.textContent = state.secText;
         secEl.style.fontSize = state.secSize + 'px';
         secEl.style.color = state.secColor;
         secEl.style.opacity = state.secOpacity / 100;
-        secEl.style.order = state.secPos === 'top' ? -2 : state.secPos === 'bottom' ? 20 : 0;
+        secEl.style.order = state.secPos === 'top' ? -2 : (state.secPos === 'bottom' ? 20 : 0);
     } else {
         secEl.style.display = 'none';
     }
 
-    // Logo
     if (state.logoData) {
         logoWrap.style.display = 'flex';
         logoWrap.dataset.pos = state.logoPos;
         logoWrap.style.width = state.logoSize + 'px';
         logoWrap.style.height = state.logoSize + 'px';
         logoWrap.style.opacity = state.logoOpacity / 100;
-        logoWrap.style.border = state.logoBorderOn ? `2px solid ${state.logoBorderColor}` : 'none';
+        logoWrap.style.border = state.logoBorderOn ? '2px solid ' + state.logoBorderColor : 'none';
         logoBg.style.display = state.logoBgOn ? 'block' : 'none';
         logoBg.style.background = state.logoBgColor;
         document.getElementById('preview-logo-img').src = state.logoData;
@@ -1714,10 +1698,10 @@ function updatePreview() {
 // ZOOM
 // ============================================================
 function attachZoomEvents() {
-    document.getElementById('preview-card').addEventListener('click', () => {
-        const clone = document.getElementById('preview-card').cloneNode(true);
+    document.getElementById('preview-card').addEventListener('click', function () {
+        var clone = document.getElementById('preview-card').cloneNode(true);
         clone.id = 'zoom-preview-clone';
-        const zoomContent = document.getElementById('zoom-content');
+        var zoomContent = document.getElementById('zoom-content');
         zoomContent.innerHTML = '';
         zoomContent.appendChild(clone);
         document.getElementById('zoom-modal').classList.add('show');
@@ -1732,18 +1716,21 @@ function closeZoomModal() {
 // ONBOARDING
 // ============================================================
 function attachOnboardingEvents() {
-    let slide = 1;
-    const total = 3;
-    const nextBtn = document.getElementById('onboarding-next-btn');
-    const skipBtn = document.getElementById('onboarding-skip-btn');
+    var slide = 1;
+    var total = 3;
+    var nextBtn = document.getElementById('onboarding-next-btn');
+    var skipBtn = document.getElementById('onboarding-skip-btn');
+
     function showSlide(n) {
-        for (let i = 1; i <= total; i++) {
+        for (var i = 1; i <= total; i++) {
             document.getElementById('ob-slide-' + i).style.display = (i === n) ? 'block' : 'none';
-            document.querySelector(`.onboarding-dots .dot[data-slide="${i}"]`).classList.toggle('active', i === n);
+            var dot = document.querySelector('.onboarding-dots .dot[data-slide="' + i + '"]');
+            if (dot) dot.classList.toggle('active', i === n);
         }
         nextBtn.textContent = (n === total) ? 'Got it' : 'Next';
     }
-    nextBtn.onclick = () => {
+
+    nextBtn.onclick = function () {
         if (slide < total) {
             slide++;
             showSlide(slide);
@@ -1752,12 +1739,12 @@ function attachOnboardingEvents() {
             localStorage.setItem('studio_onboarded', '1');
         }
     };
-    skipBtn.onclick = () => {
+    skipBtn.onclick = function () {
         document.getElementById('onboarding-overlay').classList.remove('show');
         localStorage.setItem('studio_onboarded', '1');
     };
-    document.querySelectorAll('.onboarding-dots .dot').forEach(dot => {
-        dot.onclick = () => {
+    document.querySelectorAll('.onboarding-dots .dot').forEach(function (dot) {
+        dot.onclick = function () {
             slide = parseInt(dot.dataset.slide);
             showSlide(slide);
         };
@@ -1769,8 +1756,8 @@ function attachOnboardingEvents() {
 // CONFIRM MODAL
 // ============================================================
 function attachConfirmModalEvents() {
-    document.getElementById('confirm-cancel-btn').onclick = () => closeConfirmModal();
-    document.getElementById('confirm-ok-btn').onclick = () => {
+    document.getElementById('confirm-cancel-btn').onclick = function () { closeConfirmModal(); };
+    document.getElementById('confirm-ok-btn').onclick = function () {
         if (confirmCallback) confirmCallback();
         closeConfirmModal();
     };
@@ -1790,10 +1777,9 @@ function closeConfirmModal() {
 // EXPORT MODAL
 // ============================================================
 function attachExportModalEvents() {
-    document.getElementById('export-open-btn').onclick = () => {
-        // Pre-fill from saved prefs
-        document.querySelectorAll('#format-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.format === state.exportFormat));
-        document.querySelectorAll('#resolution-group .opt-btn').forEach(b => b.classList.toggle('active', b.dataset.res === state.exportRes));
+    document.getElementById('export-open-btn').onclick = function () {
+        document.querySelectorAll('#format-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.format === state.exportFormat); });
+        document.querySelectorAll('#resolution-group .opt-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.res === state.exportRes); });
         document.getElementById('jpg-quality-slider').value = state.exportQuality;
         document.getElementById('jpg-quality-label').textContent = state.exportQuality;
         document.getElementById('jpg-quality-row').style.display = state.exportFormat === 'jpg' ? 'block' : 'none';
@@ -1801,9 +1787,9 @@ function attachExportModalEvents() {
         document.getElementById('export-modal').classList.add('show');
     };
 
-    document.querySelectorAll('#format-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('#format-group .opt-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#format-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('#format-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.exportFormat = btn.dataset.format;
             document.getElementById('jpg-quality-row').style.display = state.exportFormat === 'jpg' ? 'block' : 'none';
@@ -1811,45 +1797,40 @@ function attachExportModalEvents() {
         };
     });
 
-    document.querySelectorAll('#resolution-group .opt-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('#resolution-group .opt-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#resolution-group .opt-btn').forEach(function (btn) {
+        btn.onclick = function () {
+            document.querySelectorAll('#resolution-group .opt-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
             state.exportRes = btn.dataset.res;
             updateExportEstimate();
         };
     });
 
-    document.getElementById('jpg-quality-slider').oninput = (e) => {
+    document.getElementById('jpg-quality-slider').oninput = function (e) {
         state.exportQuality = parseInt(e.target.value);
         document.getElementById('jpg-quality-label').textContent = state.exportQuality;
         updateExportEstimate();
     };
 
-    document.getElementById('export-download-btn').onclick = () => {
-        // Save preferences
-        localStorage.setItem('studio_export_format', state.exportFormat);
-        localStorage.setItem('studio_export_quality', state.exportQuality);
-        localStorage.setItem('studio_export_res', state.exportRes);
-
-        // Save full export state to localStorage
+    document.getElementById('export-download-btn').onclick = function () {
+        try { localStorage.setItem('studio_export_format', state.exportFormat); } catch (e) {}
+        try { localStorage.setItem('studio_export_quality', state.exportQuality); } catch (e) {}
+        try { localStorage.setItem('studio_export_res', state.exportRes); } catch (e) {}
         saveExportState();
-
-        // Navigate to export page
         window.location.href = '/studio/export';
     };
 }
 
 function updateExportEstimate() {
-    const res = parseInt(state.exportRes);
-    const pixels = res * res * 1.5;
-    let sizeMB;
+    var res = parseInt(state.exportRes);
+    var pixels = res * res * 1.5;
+    var sizeMB;
     if (state.exportFormat === 'jpg') {
         sizeMB = (pixels * (state.exportQuality / 100) * 0.00000025).toFixed(2);
     } else {
         sizeMB = (pixels * 0.0000007).toFixed(2);
     }
-    document.getElementById('export-estimate').textContent = `Estimated size: ~${sizeMB} MB`;
+    document.getElementById('export-estimate').textContent = 'Estimated size: ~' + sizeMB + ' MB';
 }
 
 function closeExportModal() {
@@ -1860,100 +1841,49 @@ function closeExportModal() {
 // SAVE EXPORT STATE
 // ============================================================
 function saveExportState() {
-    const { yo, en } = getVerseText();
-    const backgroundURL = getPreviewBackgroundURL();
-    const bgGradient = (state.currentCategory === 'gradients' ||
-        (state.currentCategory === 'favorites' && favorites[state.selectedTemplate]?.startsWith('grad_'))
-    ) ? getCurrentBackgroundCSS() : null;
-    const bgSolid = (state.currentCategory === 'solids' ||
-        (state.currentCategory === 'favorites' && favorites[state.selectedTemplate]?.startsWith('solid_'))
-    ) ? getCurrentBackgroundCSS() : null;
+    var texts = getVerseText();
+    var backgroundURL = getPreviewBackgroundURL();
+    var bgGradient = null;
+    var bgSolid = null;
 
-    const exportData = {
-        // Verse
-        verseYoruba: yo,
-        verseEnglish: en,
+    if (state.currentCategory === 'gradients' ||
+        (state.currentCategory === 'favorites' && favorites[state.selectedTemplate] && favorites[state.selectedTemplate].indexOf('grad_') === 0)) {
+        bgGradient = getCurrentBackgroundCSS();
+    }
+    if (state.currentCategory === 'solids' ||
+        (state.currentCategory === 'favorites' && favorites[state.selectedTemplate] && favorites[state.selectedTemplate].indexOf('solid_') === 0)) {
+        bgSolid = getCurrentBackgroundCSS();
+    }
+
+    var exportData = {
+        verseYoruba: texts.yo,
+        verseEnglish: texts.en,
         referenceText: getReferenceText(),
-        // Background
-        backgroundURL,
-        bgGradient,
-        bgSolid,
-         // All visual settings
-        settings: {
-            ratio: state.ratio,
-            borderWidth: state.borderWidth,
-            borderColor: state.borderColor,
-            radius: state.radius,
-            blur: state.blur,
-            darkOverlay: state.darkOverlay,
-            brightness: state.brightness,
-            saturation: state.saturation,
-            duotoneOn: state.duotoneOn,
-            duotoneShadow: state.duotoneShadow,
-            duotoneHighlight: state.duotoneHighlight,
-            gradientOverlay: state.gradientOverlay,
-            gradientColor: state.gradientColor,
-            gradientOpacity: state.gradientOpacity,
-            vignette: state.vignette,
-            fontFamily: state.fontFamily,
-            fontSize: state.fontSize,
-            lineSpacing: state.lineSpacing,
-            letterSpacing: state.letterSpacing,
-            padding: state.padding,
-            blockGap: state.blockGap,
-            align: state.align,
-            vpos: state.vpos,
-            textColor: state.textColor,
-            shadow: state.shadow,
-            textCase: state.textCase,
-            yoOpacity: state.yoOpacity,
-            enOpacity: state.enOpacity,
-            highlightWord: state.highlightWord,
-            highlightColor: state.highlightColor,
-            refShow: state.refShow,
-            refPos: state.refPos,
-            refSize: state.refSize,
-            refColor: state.refColor,
-            refShadow: state.refShadow,
-            refMatchFont: state.refMatchFont,
-            refFontFamily: state.refFontFamily,
-            secText: state.secText,
-            secPos: state.secPos,
-            secSize: state.secSize,
-            secOpacity: state.secOpacity,
-            secColor: state.secColor,
-            logoData: state.logoData,
-            logoPos: state.logoPos,
-            logoSize: state.logoSize,
-            logoOpacity: state.logoOpacity,
-            logoBorderOn: state.logoBorderOn,
-            logoBorderColor: state.logoBorderColor,
-            logoBgOn: state.logoBgOn,
-            logoBgColor: state.logoBgColor,
-            showYoruba: state.showYoruba,
-            showEnglish: state.showEnglish
-        },
-        // Export preferences
+        backgroundURL: backgroundURL,
+        bgGradient: bgGradient,
+        bgSolid: bgSolid,
+        settings: JSON.parse(JSON.stringify(state)),
         exportFormat: state.exportFormat,
         exportQuality: state.exportQuality,
         exportRes: state.exportRes
     };
 
-    localStorage.setItem('studio_export_state', JSON.stringify(exportData));
+    try { localStorage.setItem('studio_export_state', JSON.stringify(exportData)); } catch (e) {}
 }
 
 // ============================================================
 // TOAST
 // ============================================================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
+function showToast(message, type) {
+    if (!type) type = 'info';
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.textContent = message;
     container.appendChild(toast);
-    setTimeout(() => {
+    setTimeout(function () {
         toast.classList.add('out');
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(function () { toast.remove(); }, 300);
     }, 2200);
 }
 
@@ -1970,10 +1900,10 @@ function hexToRgb(hex) {
 }
 function rgbToHsl(r, g, b) {
     r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0, l = (max + min) / 2;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h = 0, s = 0, l = (max + min) / 2;
     if (max !== min) {
-        const d = max - min;
+        var d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         if (max === r) h = ((g - b) / d + (g < b ? 6 : 0));
         else if (max === g) h = (b - r) / d + 2;
@@ -1984,33 +1914,25 @@ function rgbToHsl(r, g, b) {
 }
 function hslToHex(h, s, l) {
     s /= 100; l /= 100;
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-    const m = l - c / 2;
-    let r = 0, g = 0, b = 0;
+    var c = (1 - Math.abs(2 * l - 1)) * s;
+    var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    var m = l - c / 2;
+    var r = 0, g = 0, b = 0;
     if (h < 60) { r = c; g = x; }
     else if (h < 120) { r = x; g = c; }
     else if (h < 180) { g = c; b = x; }
     else if (h < 240) { g = x; b = c; }
     else if (h < 300) { r = x; b = c; }
     else { r = c; b = x; }
-    const toHex = (v) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    function toHex(v) { return Math.round((v + m) * 255).toString(16).padStart(2, '0'); }
+    return '#' + toHex(r) + toHex(g) + toHex(b);
 }
 function hexToRgba(hex, alpha) {
-    const { r, g, b } = hexToRgb(hex);
-    return `rgba(${r},${g},${b},${alpha})`;
+    var rgb = hexToRgb(hex);
+    return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
 }
 
 // ============================================================
 // START
 // ============================================================
-console.log('[Studio] calling initStudio...');
-initStudio()
-    .then(function() { console.log('[Studio] initStudio resolved'); })
-    .catch(function(err) {
-        var d = document.createElement('div');
-        d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:15px;font-size:13px;z-index:99999;font-family:monospace;word-break:break-all;';
-        d.textContent = 'INIT FAILED: ' + err.message + ' | ' + (err.stack || '').substring(0, 200);
-        document.body.appendChild(d);
-    });
+initStudio();
