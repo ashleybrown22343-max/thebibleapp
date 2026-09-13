@@ -1841,8 +1841,12 @@ function closeExportModal() {
 // SAVE EXPORT STATE
 // ============================================================
 function saveExportState() {
-    var texts = getVerseText();
-    var backgroundURL = getPreviewBackgroundURL();
+    const texts = getVerseText();
+    const previewCard = document.getElementById('preview-card');
+    const previewW = previewCard.offsetWidth;
+    const previewH = previewCard.offsetHeight;
+    
+    const backgroundURL = getPreviewBackgroundURL();
     var bgGradient = null;
     var bgSolid = null;
 
@@ -1855,18 +1859,20 @@ function saveExportState() {
         bgSolid = getCurrentBackgroundCSS();
     }
 
-    var exportData = {
-        verseYoruba: texts.yo,
-        verseEnglish: texts.en,
-        referenceText: getReferenceText(),
-        backgroundURL: backgroundURL,
-        bgGradient: bgGradient,
-        bgSolid: bgSolid,
-        settings: JSON.parse(JSON.stringify(state)),
-        exportFormat: state.exportFormat,
-        exportQuality: state.exportQuality,
-        exportRes: state.exportRes
-    };
+    const exportData = {
+    verseYoruba: texts.yo,
+    verseEnglish: texts.en,
+    referenceText: getReferenceText(),
+    backgroundURL: backgroundURL,
+    bgGradient: bgGradient,
+    bgSolid: bgSolid,
+    previewW: previewW,
+    previewH: previewH,
+    settings: JSON.parse(JSON.stringify(state)),
+    exportFormat: state.exportFormat,
+    exportQuality: state.exportQuality,
+    exportRes: state.exportRes
+};
 
     try { localStorage.setItem('studio_export_state', JSON.stringify(exportData)); } catch (e) {}
 }
