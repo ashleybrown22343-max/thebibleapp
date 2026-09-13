@@ -1,0 +1,340 @@
+/* ============================================================
+   BIBELI MIMO – EXPORT PAGE STYLES
+   ============================================================ */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+}
+
+.export-view {
+    display: none;
+    padding: 30px 20px;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeInView 0.3s ease-out;
+}
+.export-view.active {
+    display: flex;
+}
+@keyframes fadeInView {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- PROCESSING ---------- */
+.spinner-wrap {
+    margin-bottom: 30px;
+}
+.big-spinner {
+    width: 70px;
+    height: 70px;
+    border: 5px solid rgba(245,158,11,0.15);
+    border-top-color: #f59e0b;
+    border-radius: 50%;
+    animation: spinnerSpin 0.9s linear infinite;
+}
+@keyframes spinnerSpin {
+    to { transform: rotate(360deg); }
+}
+
+.progress-percent {
+    font-family: 'Playfair Display', serif;
+    font-size: 60px;
+    font-weight: 700;
+    color: #f59e0b;
+    line-height: 1;
+    margin-bottom: 20px;
+    letter-spacing: -2px;
+}
+
+.progress-track {
+    width: 100%;
+    max-width: 320px;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease-out;
+}
+
+.status-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.7;
+    font-family: 'Poppins', sans-serif;
+    min-height: 20px;
+}
+
+/* ---------- SUCCESS ---------- */
+.success-check {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #16a34a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 25px rgba(22,163,74,0.35);
+    animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.success-check svg {
+    width: 44px;
+    height: 44px;
+}
+@keyframes checkPop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.success-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--text);
+    font-family: 'Poppins', sans-serif;
+}
+
+.filename-display {
+    font-size: 13px;
+    opacity: 0.6;
+    margin: 0 0 30px 0;
+    word-break: break-all;
+    max-width: 320px;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.5;
+}
+
+/* ---------- ACTION GRID ---------- */
+.action-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 30px;
+}
+
+.action-tile {
+    padding: 18px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: transform 0.15s, background 0.15s;
+}
+.action-tile:active {
+    transform: scale(0.96);
+    background: var(--bg);
+}
+
+.action-icon {
+    width: 24px;
+    height: 24px;
+    color: #f59e0b;
+}
+
+/* ---------- PREVIEW THUMB ---------- */
+.preview-thumb-wrap {
+    width: 100%;
+    max-width: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    margin-top: 10px;
+}
+.preview-thumb {
+    width: 100%;
+    display: block;
+}
+
+/* ---------- ERROR ---------- */
+.error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #dc2626;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 25px rgba(220,38,38,0.35);
+}
+.error-icon svg {
+    width: 44px;
+    height: 44px;
+}
+
+/* ---------- HIDDEN CONTAINER (offscreen) ---------- */
+#hidden-preview-container {
+    position: fixed;
+    top: 0;
+    left: -100000px;
+    width: auto;
+    height: auto;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1;
+    overflow: visible;
+}
+
+/* Hidden preview - replicates studio preview-card exactly */
+.export-preview-card {
+    position: relative;
+    overflow: hidden;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Poppins', sans-serif;
+}
+.export-preview-bg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+}
+.export-preview-bg-filter {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+.export-preview-dark-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 3;
+    pointer-events: none;
+}
+.export-preview-duotone {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 4;
+    pointer-events: none;
+}
+.export-preview-gradient-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 5;
+    pointer-events: none;
+}
+.export-preview-vignette {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 6;
+    pointer-events: none;
+}
+.export-preview-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.export-preview-ref {
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.export-preview-text {
+    font-weight: 600;
+    margin: 0;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+.export-preview-text .text-yo {
+    display: block;
+    font-weight: 700;
+}
+.export-preview-text .text-en {
+    display: block;
+    font-weight: 400;
+}
+.export-preview-text .hl {
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.export-preview-text.upper { text-transform: uppercase; }
+.export-preview-text.title { text-transform: capitalize; }
+.export-preview-secondary {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+.export-preview-logo-wrap {
+    position: absolute;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.export-preview-logo-wrap[data-pos="tl"] { top: 0; left: 0; }
+.export-preview-logo-wrap[data-pos="tr"] { top: 0; right: 0; }
+.export-preview-logo-wrap[data-pos="bl"] { bottom: 0; left: 0; }
+.export-preview-logo-wrap[data-pos="br"] { bottom: 0; right: 0; }
+.export-preview-logo-bg {
+    position: absolute;
+    inset: 0;
+}
+.export-preview-logo-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+}
+.export-preview-decoration {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 13;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+.export-preview-watermark {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    font-weight: 600;
+    opacity: 0.6;
+    letter-spacing: 1.5px;
+    z-index: 14;
+    color: white;
+    text-transform: uppercase;
+    font-family: 'Poppins', sans-serif;
+}
