@@ -1,3 +1,12 @@
+// ===== DIAGNOSTIC (Remove later) =====
+window.addEventListener('error', function(e) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:15px;font-size:13px;z-index:99999;font-family:monospace;word-break:break-all;';
+    d.textContent = 'JS ERROR: ' + e.message + ' | Line: ' + e.lineno + ' | File: ' + (e.filename || '').split('/').pop();
+    document.body.appendChild(d);
+});
+console.log('[Studio] studio.js loaded successfully');
+// ===== END DIAGNOSTIC =====
 // ============================================================
 // BIBELI MIMO – IMAGE STUDIO LOGIC (Complete)
 // ============================================================
