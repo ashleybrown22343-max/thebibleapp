@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preparing Image – Bibeli Mimo</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/studio/export/export.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' font-size='60' font-family='Arial' font-weight='bold' fill='%23f59e0b' text-anchor='middle'>B</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;600&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <button class="icon-btn" id="back-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+        <h1>Preparing Image</h1>
+        <div style="width:40px;"></div>
+    </header>
+
+    <!-- PROCESSING VIEW -->
+    <div id="processing-view" class="export-view active">
+        <div class="spinner-wrap">
+            <div class="big-spinner"></div>
+        </div>
+        <div id="progress-percent" class="progress-percent">0%</div>
+        <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="status-text" class="status-text">Starting...</div>
+    </div>
+
+    <!-- SUCCESS VIEW -->
+    <div id="success-view" class="export-view">
+        <div class="success-check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h2 class="success-title">Image Saved</h2>
+        <p id="filename-display" class="filename-display"></p>
+
+        <div class="action-grid-2">
+            <button class="action-tile" id="share-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                <span>Share</span>
+            </button>
+            <button class="action-tile" id="copy-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                <span>Copy</span>
+            </button>
+            <button class="action-tile" id="save-again-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Save Again</span>
+            </button>
+            <button class="action-tile" id="back-studio-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/></svg>
+                <span>Back to Studio</span>
+            </button>
+        </div>
+
+        <div class="preview-thumb-wrap">
+            <img id="preview-thumb" class="preview-thumb" alt="Preview">
+        </div>
+    </div>
+
+    <!-- ERROR VIEW -->
+    <div id="error-view" class="export-view">
+        <div class="error-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h2 class="success-title">Something went wrong</h2>
+        <p id="error-msg" class="filename-display">-</p>
+        <div class="action-grid-2">
+            <button class="action-tile" id="retry-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                <span>Retry</span>
+            </button>
+            <button class="action-tile" id="error-back-action">
+                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8M3 12a9 9 0 1118 0 9 9 0 01-18 0z"/></svg>
+                <span>Back to Studio</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- HIDDEN FULL-SIZE PREVIEW CONTAINER (used for html2canvas) -->
+    <div id="hidden-preview-container"></div>
+
+    <!-- html2canvas from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="/shared.js"></script>
+    <script src="/studio/export/export.js"></script>
+</body>
+              </html>
