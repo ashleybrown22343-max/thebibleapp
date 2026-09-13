@@ -184,7 +184,10 @@ let undoStack = [];
 async function initStudio() {
     try {
         await data.loadAllData();
-        await document.fonts.ready;
+        await Promise.race([
+    document.fonts.ready,
+    new Promise(resolve => setTimeout(resolve, 2000))
+]);
 
         // URL prefill
         applyUrlParams();
