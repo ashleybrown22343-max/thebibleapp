@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reading – Bibeli Mimo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        /* -------- READING PAGE ONLY -------- */
+        .reading-page {
+            padding: 20px;
+            max-width: 720px;
+            margin: 0 auto;
+            font-size: var(--reading-size, 100%);
+        }
+        .reading-page .verse-card {
+            margin-bottom: 12px;
+        }
+        .reading-page .verse-yoruba {
+            font-size: 1.1em;
+        }
+        .reading-page .verse-english {
+            font-size: 0.95em;
+        }
+
+        /* -------- ACTION SHEET -------- */
+        .sheet-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11,30,57,0.5);
+            z-index: 500;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .sheet-overlay.show { display: block; opacity: 1; }
+
+        .action-sheet {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            background: var(--card);
+            border-radius: 20px 20px 0 0;
+            z-index: 501;
+            padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.2);
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .action-sheet.show { transform: translateY(0); }
+        .sheet-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            margin: 0 auto 16px;
+        }
+        .sheet-ref {
+            font-family: var(--font-head);
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+        .sheet-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .sheet-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 4px;
+            background: var(--bg);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .sheet-item:active {
+            transform: scale(0.95);
+            background: var(--border);
+        }
+        .sheet-item svg {
+            width: 22px;
+            height: 22px;
+            color: var(--accent);
+        }
+        .sheet-cancel {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg);
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .sheet-cancel:active { background: var(--border); }
+
+        /* -------- NOTE MODAL -------- */
+        .note-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11,30,57,0.6);
+            z-index: 600;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .note-modal-overlay.show { display: flex; }
+        .note-modal {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+        }
+        .note-modal h3 {
+            font-family: var(--font-head);
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+        .note-modal textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text);
+            resize: none;
+            outline: none;
+        }
+        .note-modal textarea:focus { border-color: var(--accent); }
+        .note-modal-btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .note-modal-btns button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .note-cancel { background: var(--bg); color: var(--text); border: none; }
+        .note-save { background: var(--accent); color: #fff; border: none; }
+
+        /* -------- FONT SIZE HINT -------- */
+        .font-hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .font-hint.show { opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="read-header">
+        <button class="read-header-btn" id="btn-back">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="read-header-title" id="read-title">Genesis 1</div>
+        <button class="read-header-btn" id="btn-font-down">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+        </button>
+        <button class="read-header-btn" id="btn-font-up">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="18" y1="10" x2="22" y2="14"/><line x1="22" y1="10" x2="18" y2="14"/></svg>
+        </button>
+        <button class="read-header-btn" id="btn-share">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+    </div>
+
+    <main class="reading-page" id="reading-content">
+        <p style="text-align:center; opacity:0.5; padding:40px 0;">Loading...</p>
+    </main>
+
+    <div class="reading-page" style="max-width:720px; margin:0 auto;">
+        <div class="chapter-nav" id="chapter-nav" style="display:none;">
+            <button class="chapter-nav-btn" id="btn-prev">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                Previous
+            </button>
+            <button class="chapter-nav-btn" id="btn-next">
+                Next
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- ACTION SHEET -->
+    <div class="sheet-overlay" id="sheet-overlay"></div>
+    <div class="action-sheet" id="action-sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-ref" id="sheet-ref">Genesis 1:1</div>
+        <div class="sheet-grid">
+            <button class="sheet-item" id="act-copy">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+            </button>
+            <button class="sheet-item" id="act-share">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Share
+            </button>
+            <button class="sheet-item" id="act-highlight">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m9 11-6 6v3h3l6-6"/><path d="m16 12 6 6-3 3-6-6"/><path d="M14.5 4.5 19 9"/></svg>
+                Highlight
+            </button>
+            <button class="sheet-item" id="act-note">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Note
+            </button>
+            <button class="sheet-item" id="act-save">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                Save
+            </button>
+            <button class="sheet-item" id="act-image">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Image
+            </button>
+            <button class="sheet-item" id="act-read">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                Read
+            </button>
+        </div>
+        <button class="sheet-cancel" id="sheet-cancel">Cancel</button>
+    </div>
+
+    <!-- NOTE MODAL -->
+    <div class="note-modal-overlay" id="note-overlay">
+        <div class="note-modal">
+            <h3>Add Note</h3>
+            <textarea id="note-input" placeholder="Write your note here..."></textarea>
+            <div class="note-modal-btns">
+                <button class="note-cancel" id="note-cancel">Cancel</button>
+                <button class="note-save" id="note-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="font-hint" id="font-hint"></div>
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/shared.js"></script>
+    <script src="/shared-nav.js"></script>
+    <script src="/read/chapter/chapter.js"></script>
+</body>
+  </html>
