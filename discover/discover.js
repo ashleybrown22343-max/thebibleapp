@@ -264,7 +264,7 @@
         }
     }
 
-    // -------- RENDER DEVOTIONALS --------
+ // -------- RENDER DEVOTIONALS --------
     function renderDevotionals() {
         var container = document.getElementById('devotionals-list');
         var html = '';
@@ -284,4 +284,89 @@
             cards[j].onclick = function () {
                 openDevotional(parseInt(this.dataset.index));
             };
- 
+        }
+    }
+
+    // -------- OPEN DEVOTIONAL --------
+    function openDevotional(index) {
+        var d = DEVOTIONALS[index];
+        if (!d) return;
+
+        // Parse verse reference
+        var parts = d.verseRef.split('-');
+        var v = getVerseText(parts[0], parseInt(parts[1]), parseInt(parts[2]));
+
+        document.getElementById('view-main').style.display = 'none';
+        document.getElementById('view-devotional').style.display = 'block';
+
+        var html =
+            '<div class="dv-title">' + d.title + '</div>' +
+            '<div style="font-size:13px; font-style:italic; color:var(--text-soft); margin-bottom:8px;">' + d.titleYoruba + '</div>' +
+            '<div class="dv-verse">' +
+                v.yo +
+                '<div class="dv-verse-en">' + v.en + '</div>' +
+                '<div class="dv-verse-ref">' + v.ref + '</div>' +
+            '</div>' +
+            '<p>' + d.bodyYoruba + '</p>' +
+            '<p>' + d.body + '</p>' +
+            '<div class="dv-prayer">' +
+                '<div class="dv-prayer-title">Prayer · Àdúrà</div>' +
+                '<p style="margin:0 0 8px 0; font-style:italic;">' + d.prayerYoruba + '</p>' +
+                '<p style="margin:0; font-style:italic; color:var(--text-soft);">' + d.prayer + '</p>' +
+            '</div>';
+
+        document.getElementById('devotional-content').innerHTML = html;
+        window.scrollTo(0, 0);
+    }
+
+    // -------- TABS --------
+    function wireTabs() {
+        var tabs = document.querySelectorAll('#discover-tabs .tab-btn');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].onclick = function () {
+                for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
+                this.classList.add('active');
+
+                document.getElementById('tab-plans').style.display = 'none';
+                document.getElementById('tab-topics').style.display = 'none';
+                document.getElementById('tab-devotionals').style.display = 'none';
+
+                var tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).style.display = 'block';
+            };
+        }
+    }
+
+    // -------- BACK BUTTONS --------
+    function wireBackButtons() {
+        document.getElementById('topic-back').onclick = function () {
+            document.getElementById('view-topic').style.display = 'none';
+            document.getElementById('view-main').style.display = 'block';
+        };
+        document.getElementById('devotional-back').onclick = function () {
+            document.getElementById('view-devotional').style.display = 'none';
+            document.getElementById('view-main').style.display = 'block';
+        };
+    }
+
+    // -------- BOOT --------
+    function boot() {
+        window.bibleData.loadAllData().then(function () {
+            wireTabs();
+            wireBackButtons();
+            renderPlans();
+            renderTopics();
+            renderDevotionals();
+        }).catch(function (err) {
+            console.error(err);
+            showToast('Could not load Bible data', 'error');
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', boot);
+    } else {
+        boot();
+    }
+
+})();
