@@ -2,78 +2,334 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bibeli Mimo – Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Settings – Bibeli Mimo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <style>
+        .settings-section {
+            margin-bottom: 24px;
+        }
+        .settings-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            padding-left: 4px;
+            margin-bottom: 10px;
+        }
+        .settings-group {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-row-label {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            min-width: 0;
+        }
+        .settings-row-label small {
+            display: block;
+            font-size: 11px;
+            color: var(--text-soft);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        /* Segmented control */
+        .seg-control {
+            display: flex;
+            gap: 4px;
+            padding: 4px;
+            background: var(--bg);
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        .seg-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-soft);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .seg-btn.active {
+            background: var(--card);
+            color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Range slider */
+        .settings-range {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .settings-range input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 6px;
+            cursor: pointer;
+        }
+        .settings-range-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 48px;
+            text-align: right;
+        }
+
+        /* Toggle switch */
+        .sw {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            border-radius: 20px;
+            background: var(--border);
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .sw::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            transition: left 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .sw.active { background: var(--accent); }
+        .sw.active::after { left: 23px; }
+
+        /* Danger button */
+        .settings-btn-danger {
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--danger);
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s;
+        }
+        .settings-btn-danger:active { background: var(--bg); }
+
+        /* Confirm modal */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11,30,57,0.6);
+            z-index: 600;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: var(--shadow-lg);
+        }
+        .confirm-box h3 {
+            font-family: var(--font-head);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .confirm-box p {
+            font-size: 14px;
+            color: var(--text-soft);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .confirm-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .confirm-buttons button {
+            flex: 1;
+            padding: 13px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .confirm-cancel {
+            background: var(--bg);
+            color: var(--text);
+            border: none;
+        }
+        .confirm-confirm {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+        }
+
+        /* Icon in row */
+        .settings-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        .settings-icon svg { width: 18px; height: 18px; }
+    </style>
 </head>
 <body>
-    <header class="header">
-        <button class="icon-btn" id="menu-btn"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <h1>Settings</h1>
-        <div style="width:40px;"></div>
-    </header>
 
-    <div class="drawer" id="drawer">
-        <div class="drawer-header"><h3>Menu</h3><button class="icon-btn" id="close-drawer"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-        <div class="drawer-menu">
-            <a href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Home</a>
-            <a href="/books"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg> Books</a>
-            <a href="/search"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg> Search</a>
-            <a href="/library"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg> Library</a>
-            <a href="/plans"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Plans</a>
-            <a href="/daily"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Daily</a>
-            <a href="/settings" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Settings</a>
-            <a href="/studio"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Studio</a>
-        </div>
-    </div>
-    <div id="drawer-overlay"></div>
+    <main class="page-container">
 
-    <main style="padding:20px;">
-        <div class="live-preview-box">
-            <h3>Preview</h3>
-            <p id="settings-preview-text">
-                <strong style="color: var(--accent);">1</strong> Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.
-                <br>
-                <em id="settings-preview-english" style="opacity:0.8;">In the beginning God created the heaven and the earth.</em>
-            </p>
+        <!-- APPEARANCE -->
+        <div class="settings-section">
+            <div class="settings-label">Appearance</div>
+            <div class="settings-group">
+                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
+                    <div class="settings-row-label">Theme<small>Choose how the app looks</small></div>
+                    <div class="seg-control" id="theme-control">
+                        <button class="seg-btn" data-theme="light">Light</button>
+                        <button class="seg-btn" data-theme="dark">Dark</button>
+                        <button class="seg-btn" data-theme="church">Church</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Rest of settings same as before -->
-        <div class="setting-section">
-            <h3>Font Style</h3>
-            <div class="setting-row"><span>Sans Serif</span><button id="settings-font-btn" class="toggle-switch">ON</button></div>
+        <!-- READING -->
+        <div class="settings-section">
+            <div class="settings-label">Reading</div>
+            <div class="settings-group">
+                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
+                    <div class="settings-row-label">Reading Font Size<small>Used in the Bible reading view</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="reading-font-size" min="80" max="160" step="10" value="100">
+                        <div class="settings-range-value" id="reading-font-value">100%</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="setting-section">
-            <h3>Font Size</h3>
-            <div class="slider-row"><input type="range" id="font-size-slider" min="80" max="150" value="100"><span id="font-size-label">100%</span></div>
+
+        <!-- LANGUAGE -->
+        <div class="settings-section">
+            <div class="settings-label">Language</div>
+            <div class="settings-group">
+                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
+                    <div class="settings-row-label">Default Bible Language<small>Which version is shown first</small></div>
+                    <div class="seg-control" id="lang-control">
+                        <button class="seg-btn" data-lang="both">Both</button>
+                        <button class="seg-btn" data-lang="yo">Yoruba</button>
+                        <button class="seg-btn" data-lang="en">English</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="setting-section">
-            <h3>Line Spacing</h3>
-            <div class="slider-row"><input type="range" id="line-spacing-slider" min="1.2" max="2.5" step="0.1" value="1.5"><span id="line-spacing-label">1.5</span></div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="settings-section">
+            <div class="settings-label">Notifications</div>
+            <div class="settings-group">
+                <div class="settings-row">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    </div>
+                    <div class="settings-row-label">Daily Verse Reminder<small>Get a verse each morning</small></div>
+                    <button class="sw" id="reminder-toggle"></button>
+                </div>
+                <div class="settings-row" id="reminder-time-row" style="display:none;">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="settings-row-label">Reminder Time</div>
+                    <input type="time" id="reminder-time" value="08:00" style="padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-family:inherit; color:var(--text); font-size:14px;">
+                </div>
+            </div>
         </div>
-        <div class="setting-section">
-            <h3>Verse Spacing</h3>
-            <div class="slider-row"><input type="range" id="verse-spacing-slider" min="0.5" max="3" step="0.1" value="1.5"><span id="verse-spacing-label">1.5</span></div>
+
+        <!-- DATA -->
+        <div class="settings-section">
+            <div class="settings-label">My Data</div>
+            <div class="settings-group">
+                <div class="settings-row" id="export-data-btn" style="cursor:pointer;">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </div>
+                    <div class="settings-row-label">Export My Data<small>Download a backup of saved verses, notes, highlights</small></div>
+                </div>
+                <button class="settings-btn-danger" id="clear-saved">Clear Saved Verses</button>
+                <button class="settings-btn-danger" id="clear-notes" style="border-top:1px solid var(--border);">Clear Notes</button>
+                <button class="settings-btn-danger" id="clear-highlights" style="border-top:1px solid var(--border);">Clear Highlights</button>
+                <button class="settings-btn-danger" id="clear-history" style="border-top:1px solid var(--border);">Clear History</button>
+            </div>
         </div>
-        <div class="setting-section">
-            <h3>Reading Settings</h3>
-            <div class="setting-row"><span>Red Letters Mode</span><button id="settings-red-btn" class="toggle-switch">OFF</button></div>
+
+        <!-- RESET -->
+        <div class="settings-section">
+            <div class="settings-label">Danger Zone</div>
+            <div class="settings-group">
+                <button class="settings-btn-danger" id="reset-all">Reset Everything</button>
+            </div>
         </div>
-        <div class="setting-section">
-            <h3>Display</h3>
-            <div class="setting-row"><span>Dark Mode</span><button id="settings-theme-btn" class="toggle-switch">OFF</button></div>
-            <div class="setting-row"><span>Church Mode</span><button id="settings-church-btn" class="toggle-switch">OFF</button></div>
-        </div>
+
+        <div style="height:40px;"></div>
+
     </main>
 
-    <nav class="bottom-nav">
-        <a href="/" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></a>
-        <a href="/books" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span>Books</span></a>
-        <a href="/studio" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span>Studio</span></a>
-        <a href="/library" class="nav-btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg><span>Library</span></a>
-    </nav>
+    <!-- CONFIRM MODAL -->
+    <div class="confirm-overlay" id="confirm-overlay">
+        <div class="confirm-box">
+            <h3 id="confirm-title">Are you sure?</h3>
+            <p id="confirm-message">This cannot be undone.</p>
+            <div class="confirm-buttons">
+                <button class="confirm-cancel" id="confirm-cancel">Cancel</button>
+                <button class="confirm-confirm" id="confirm-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
 
     <script src="/shared.js"></script>
+    <script src="/shared-nav.js"></script>
     <script src="/settings/settings.js"></script>
 </body>
-    </html>
+                </html>
