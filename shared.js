@@ -65,24 +65,17 @@ if ('serviceWorker' in navigator) {
 // ============================================================
 // STUDIO OFFLINE WARNING
 // ============================================================
-(function () {
-    if (window.location.pathname.indexOf('/studio') !== 0) return;
-
-    function showOfflineBanner() {
-        if (document.getElementById('studio-offline-banner')) return;
-        var banner = document.createElement('div');
-        banner.id = 'studio-offline-banner';
-        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#DC2626;color:#fff;padding:12px 16px;text-align:center;font-size:13px;font-weight:600;font-family:Inter,sans-serif;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.2);';
-        banner.textContent = 'You need internet for the Image Studio. Reconnect and try again.';
-        document.body.appendChild(banner);
-    }
-
-    function removeOfflineBanner() {
-        var banner = document.getElementById('studio-offline-banner');
-        if (banner) banner.parentNode.removeChild(banner);
-    }
-
-    if (!navigator.onLine) showOfflineBanner();
-    window.addEventListener('offline', showOfflineBanner);
-    window.addEventListener('online', removeOfflineBanner);
-})();
+// ============================================================
+// SERVICE WORKER REGISTRATION
+// ============================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').then(function (reg) {
+            setInterval(function () {
+                reg.update().catch(function () {});
+            }, 30 * 60 * 1000);
+        }).catch(function (err) {
+            console.warn('Service Worker registration failed:', err);
+        });
+    });
+            }
