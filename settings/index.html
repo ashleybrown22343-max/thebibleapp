@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&family=Cormorant+Garamond:wght@500;600&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <style>
         .settings-section {
@@ -36,6 +36,10 @@
             border-bottom: 1px solid var(--border);
         }
         .settings-row:last-child { border-bottom: none; }
+        .settings-row.column {
+            flex-direction: column;
+            align-items: stretch;
+        }
         .settings-row-label {
             flex: 1;
             font-size: 15px;
@@ -49,7 +53,20 @@
             color: var(--text-soft);
             font-weight: 400;
             margin-top: 2px;
+            line-height: 1.4;
         }
+        .settings-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        .settings-icon svg { width: 18px; height: 18px; }
 
         /* Segmented control */
         .seg-control {
@@ -96,8 +113,44 @@
             font-size: 14px;
             font-weight: 700;
             color: var(--accent);
-            min-width: 48px;
+            min-width: 52px;
             text-align: right;
+        }
+
+        /* Font family picker */
+        .font-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .font-card {
+            padding: 14px 10px;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .font-card:active { transform: scale(0.97); }
+        .font-card.active {
+            border-color: var(--accent);
+            background: rgba(232,177,75,0.08);
+        }
+        .font-card-sample {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        .font-card-name {
+            font-size: 10px;
+            color: var(--text-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
         }
 
         /* Toggle switch */
@@ -190,42 +243,74 @@
             font-weight: 600;
             cursor: pointer;
         }
-        .confirm-cancel {
-            background: var(--bg);
-            color: var(--text);
-            border: none;
+        .confirm-cancel { background: var(--bg); color: var(--text); border: none; }
+        .confirm-confirm { background: var(--danger); color: #fff; border: none; }
+
+        /* Preview box */
+        .preview-box {
+            background: var(--card);
+            border: 2px solid var(--accent);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 24px;
         }
-        .confirm-confirm {
-            background: var(--danger);
-            color: #fff;
-            border: none;
+        .preview-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .preview-verse-num {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 14px;
+        }
+        .preview-yoruba {
+            font-weight: 600;
+            color: var(--text);
+            margin: 6px 0;
+        }
+        .preview-english {
+            color: var(--text-soft);
+            font-size: 0.9em;
         }
 
-        /* Icon in row */
-        .settings-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
+        /* Time input */
+        .time-input {
+            padding: 10px 12px;
             background: var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent);
-            flex-shrink: 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            color: var(--text);
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
         }
-        .settings-icon svg { width: 18px; height: 18px; }
     </style>
 </head>
 <body>
 
     <main class="page-container">
 
+        <!-- LIVE PREVIEW -->
+        <div class="preview-box">
+            <div class="preview-title">Live Preview</div>
+            <div id="preview-content">
+                <span class="preview-verse-num">1</span>
+                <div class="preview-yoruba" id="preview-yo">Ní àtẹ̀tẹ́kọsẹ̀ Ọlọ́run dá ọrun àti ilẹ̀.</div>
+                <div class="preview-english" id="preview-en">In the beginning God created the heaven and the earth.</div>
+            </div>
+        </div>
+
         <!-- APPEARANCE -->
         <div class="settings-section">
             <div class="settings-label">Appearance</div>
             <div class="settings-group">
-                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
-                    <div class="settings-row-label">Theme<small>Choose how the app looks</small></div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Theme<small>How the entire app looks</small></div>
                     <div class="seg-control" id="theme-control">
                         <button class="seg-btn" data-theme="light">Light</button>
                         <button class="seg-btn" data-theme="dark">Dark</button>
@@ -235,25 +320,118 @@
             </div>
         </div>
 
-        <!-- READING -->
+        <!-- FONT -->
         <div class="settings-section">
-            <div class="settings-label">Reading</div>
+            <div class="settings-label">Font Family</div>
             <div class="settings-group">
-                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
-                    <div class="settings-row-label">Reading Font Size<small>Used in the Bible reading view</small></div>
-                    <div class="settings-range">
-                        <input type="range" id="reading-font-size" min="80" max="160" step="10" value="100">
-                        <div class="settings-range-value" id="reading-font-value">100%</div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Choose reading font</div>
+                    <div class="font-grid" id="font-grid">
+                        <div class="font-card" data-font="sans">
+                            <div class="font-card-sample" style="font-family:'Inter',sans-serif;">Aa</div>
+                            <div class="font-card-name">Sans</div>
+                        </div>
+                        <div class="font-card" data-font="serif">
+                            <div class="font-card-sample" style="font-family:'Lora',serif;">Aa</div>
+                            <div class="font-card-name">Serif</div>
+                        </div>
+                        <div class="font-card" data-font="display">
+                            <div class="font-card-sample" style="font-family:'Playfair Display',serif;">Aa</div>
+                            <div class="font-card-name">Display</div>
+                        </div>
+                        <div class="font-card" data-font="classic">
+                            <div class="font-card-sample" style="font-family:'Merriweather',serif;">Aa</div>
+                            <div class="font-card-name">Classic</div>
+                        </div>
+                        <div class="font-card" data-font="elegant">
+                            <div class="font-card-sample" style="font-family:'Cormorant Garamond',serif;">Aa</div>
+                            <div class="font-card-name">Elegant</div>
+                        </div>
+                        <div class="font-card" data-font="modern">
+                            <div class="font-card-sample" style="font-family:'Josefin Sans',sans-serif;">Aa</div>
+                            <div class="font-card-name">Modern</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- LANGUAGE -->
+        <!-- TYPOGRAPHY -->
         <div class="settings-section">
-            <div class="settings-label">Language</div>
+            <div class="settings-label">Typography</div>
             <div class="settings-group">
-                <div class="settings-row" style="flex-direction:column; align-items:stretch;">
+                <div class="settings-row column">
+                    <div class="settings-row-label">Font Size<small>The size of verse text</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="font-size" min="80" max="180" step="5" value="100">
+                        <div class="settings-range-value" id="font-size-value">100%</div>
+                    </div>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Line Spacing<small>Space between lines of text</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="line-spacing" min="1.2" max="2.5" step="0.1" value="1.7">
+                        <div class="settings-range-value" id="line-spacing-value">1.7</div>
+                    </div>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Verse Spacing<small>Space between verses</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="verse-spacing" min="0.5" max="3" step="0.1" value="1.5">
+                        <div class="settings-range-value" id="verse-spacing-value">1.5</div>
+                    </div>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Text Padding<small>Space between text and screen edge</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="text-padding" min="8" max="40" step="2" value="20">
+                        <div class="settings-range-value" id="text-padding-value">20px</div>
+                    </div>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Letter Spacing<small>Space between letters</small></div>
+                    <div class="settings-range">
+                        <input type="range" id="letter-spacing" min="-1" max="4" step="0.5" value="0">
+                        <div class="settings-range-value" id="letter-spacing-value">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- READING -->
+        <div class="settings-section">
+            <div class="settings-label">Reading</div>
+            <div class="settings-group">
+                <div class="settings-row">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    </div>
+                    <div class="settings-row-label">Parallel View<small>Yoruba and English side by side</small></div>
+                    <button class="sw" id="parallel-toggle"></button>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 7V4h16v3"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                    </div>
+                    <div class="settings-row-label">Show Verse Numbers<small>Display the verse number before each verse</small></div>
+                    <button class="sw" id="verse-num-toggle"></button>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/></svg>
+                    </div>
+                    <div class="settings-row-label">Red Letter Mode<small>Show the words of Jesus in red</small></div>
+                    <button class="sw" id="red-letter-toggle"></button>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-label">Text Alignment<small>How verse text is aligned</small></div>
+                    <div class="seg-control" id="align-control">
+                        <button class="seg-btn" data-align="left">Left</button>
+                        <button class="seg-btn" data-align="center">Center</button>
+                        <button class="seg-btn" data-align="justify">Justify</button>
+                    </div>
+                </div>
+                <div class="settings-row column">
                     <div class="settings-row-label">Default Bible Language<small>Which version is shown first</small></div>
                     <div class="seg-control" id="lang-control">
                         <button class="seg-btn" data-lang="both">Both</button>
@@ -275,17 +453,14 @@
                     <div class="settings-row-label">Daily Verse Reminder<small>Get a verse each morning</small></div>
                     <button class="sw" id="reminder-toggle"></button>
                 </div>
-                <div class="settings-row" id="reminder-time-row" style="display:none;">
-                    <div class="settings-icon">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
+                <div class="settings-row column" id="reminder-time-row" style="display:none;">
                     <div class="settings-row-label">Reminder Time</div>
-                    <input type="time" id="reminder-time" value="08:00" style="padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-family:inherit; color:var(--text); font-size:14px;">
+                    <input type="time" id="reminder-time" class="time-input" value="08:00">
                 </div>
             </div>
         </div>
 
-        <!-- DATA -->
+<!-- DATA -->
         <div class="settings-section">
             <div class="settings-label">My Data</div>
             <div class="settings-group">
@@ -293,7 +468,7 @@
                     <div class="settings-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     </div>
-                    <div class="settings-row-label">Export My Data<small>Download a backup of saved verses, notes, highlights</small></div>
+                    <div class="settings-row-label">Export My Data<small>Backup as JSON — saved verses, notes, highlights</small></div>
                 </div>
                 <button class="settings-btn-danger" id="clear-saved">Clear Saved Verses</button>
                 <button class="settings-btn-danger" id="clear-notes" style="border-top:1px solid var(--border);">Clear Notes</button>
@@ -302,7 +477,7 @@
             </div>
         </div>
 
-        <!-- RESET -->
+        <!-- DANGER -->
         <div class="settings-section">
             <div class="settings-label">Danger Zone</div>
             <div class="settings-group">
@@ -310,7 +485,7 @@
             </div>
         </div>
 
-        <div style="height:40px;"></div>
+        <div style="height:60px;"></div>
 
     </main>
 
@@ -332,4 +507,4 @@
     <script src="/shared-nav.js"></script>
     <script src="/settings/settings.js"></script>
 </body>
-                </html>
+</html>
