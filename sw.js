@@ -1,59 +1,75 @@
 // ============================================================
-// SERVICE WORKER — Offline caching (except Studio)
+// SERVICE WORKER — Offline caching (Studio requires internet)
 // ============================================================
 
-const CACHE_NAME = 'bibeli-mimo-v1';
+const CACHE_NAME = 'bibeli-mimo-v2';
 
 const APP_SHELL = [
     '/',
     '/index.html',
+    '/home.js',
     '/style.css',
     '/shared.js',
     '/shared-nav.js',
-    '/home.js',
+
     '/read/',
     '/read/index.html',
     '/read/read.js',
     '/read/chapter/',
     '/read/chapter/index.html',
     '/read/chapter/chapter.js',
+
     '/discover/',
     '/discover/index.html',
     '/discover/discover.js',
     '/discover/search/',
     '/discover/search/index.html',
     '/discover/search/search.js',
+
     '/library/',
     '/library/index.html',
     '/library/library.js',
+
     '/more/',
     '/more/index.html',
     '/more/more.js',
+
     '/settings/',
     '/settings/index.html',
     '/settings/settings.js',
+
     '/about/',
     '/about/index.html',
     '/about/about.js',
+
     '/download/',
     '/download/index.html',
     '/download/download.js',
+
     '/404.html',
+    '/offline.html',
+
     '/data/yoruba.json',
     '/data/english_nkj.json'
 ];
 
+// ---------- INSTALL ----------
 self.addEventListener('install', function (event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
-            return cache.addAll(APP_SHELL).catch(function (err) {
-                console.warn('Some files failed to cache:', err);
-            });
+            return Promise.all(
+                APP_SHELL.map(function (url) {
+                    return cache.add(url).catch(function (err) {
+                        console.warn('SW: could not cache ' + url, err);
+                    });
+                })
+            );
         })
     );
     self.skipWaiting();
 });
 
+// ---------- ACTIVATE ----------
 self.addEventListener('activate', function (event) {
     event.waitUntil(
         caches.keys().then(function (keys) {
@@ -66,58 +82,64 @@ self.addEventListener('activate', function (event) {
     self.clients.claim();
 });
 
+// ---------- FETCH ----------
 self.addEventListener('fetch', function (event) {
     var url = new URL(event.request.url);
-
-    // Studio: always network (never cached)
-    if (url.pathname.indexOf('/studio') === 0) {
-        event.respondWith(fetch(event.request));
-        return;
-    }
 
     // Only handle GET
     if (event.request.method !== 'GET') return;
 
-    // Cross-origin (fonts, images from CDN): cache-first with network fallback
-    if (url.origin !== self.location.origin) {
+    // STUDIO — always network. If offline, show offline page.
+    if (url.pathname.indexOf('/studio') === 0) {
         event.respondWith(
-            caches.match(event.request).then(function (cached) {
-                return cached || fetch(event.request).then(function (response) {
-                    return response;
-                }).catch(function () { return cached; });
+            fetch(event.request).catch(function () {
+                return caches.match('/offline.html');
             })
         );
         return;
     }
 
-    // Same-origin: cache-first with background refresh
-    event.respondWith(
-        caches.match(event.request).then(function (cached) {
-            if (cached) {
-                // Refresh in background
-                fetch(event.request).then(function (response) {
-                    if (response && response.status === 200) {
-                        caches.open(CACHE_NAME).then(function (cache) {
-                            cache.put(event.request, response.clone());
-                        });
-                    }
-                }).catch(function () {});
-                return cached;
-            }
-
-            return fetch(event.request).then(function (response) {
-                if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
+    // NAVIGATION (HTML pages) — network first, cache fallback
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).then(function (response) {
+                if (response && response.status === 200) {
+                    var clone = response.clone();
+                    caches.open(CACHE_NAME).then(function (cache) {
+                        cache.put(event.request, clone);
+                    });
                 }
-                var clone = response.clone();
-                caches.open(CACHE_NAME).then(function (cache) {
-                    cache.put(event.request, clone);
-                });
                 return response;
             }).catch(function () {
-                if (event.request.mode === 'navigate') {
-                    return caches.match('/404.html');
+                // Offline: match by path, ignoring query string
+                return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
+                    if (cached) return cached;
+
+                    // Try the folder's index.html
+                    var base = url.pathname;
+                    if (base.charAt(base.length - 1) === '/') base += 'index.html';
+                    return caches.match(base).then(function (c) {
+                        return c || caches.match('/offline.html');
+                    });
+                });
+            })
+        );
+        return;
+    }
+
+    // OTHER ASSETS — cache first
+    event.respondWith(
+        caches.match(event.request).then(function (cached) {
+            if (cached) return cached;
+            return fetch(event.request).then(function (response) {
+                if (response && response.status === 200 && response.type === 'basic') {
+                    var clone = response.clone();
+                    caches.open(CACHE_NAME).then(function (cache) {
+                        cache.put(event.request, clone);
+                    });
                 }
+                return response;
+            }).catch(function () {
                 return null;
             });
         })
