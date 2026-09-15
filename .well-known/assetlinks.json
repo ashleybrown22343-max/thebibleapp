@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.thebibleapp.twa",
+        "sha256_cert_fingerprints": ["FB:65:24:FB:83:8E:B2:30:D6:24:AE:78:BF:D0:ED:5A:BA:C4:B3:CC:CE:C1:0D:E9:89:79:C3:79:A5:71:9D:2B"]
+      }
+    }]
