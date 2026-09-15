@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>About – Bibeli Mimo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .about-hero {
+            text-align: center;
+            padding: 20px 0 30px;
+        }
+        .about-logo {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: 40px;
+            margin: 0 auto 16px;
+            box-shadow: var(--shadow-md);
+        }
+        .about-name {
+            font-family: var(--font-head);
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .about-version {
+            font-size: 13px;
+            color: var(--text-soft);
+            letter-spacing: 0.5px;
+        }
+        .about-tagline {
+            font-size: 14px;
+            color: var(--text-soft);
+            margin-top: 16px;
+            line-height: 1.6;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .about-section {
+            margin-bottom: 24px;
+        }
+        .about-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            padding-left: 4px;
+            margin-bottom: 10px;
+        }
+        .about-group {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .about-row {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .about-row:last-child { border-bottom: none; }
+        .about-row strong {
+            display: block;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        .about-row small {
+            font-size: 12px;
+            color: var(--text-soft);
+            line-height: 1.5;
+            display: block;
+        }
+        .about-row a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .about-row a:active { opacity: 0.7; }
+
+        .about-footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-soft);
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        .about-footer-heart {
+            color: var(--accent);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="page-container">
+
+        <div class="about-hero">
+            <div class="about-logo">B</div>
+            <div class="about-name">Bibeli Mimo</div>
+            <div class="about-version">Version 1.0.0</div>
+            <div class="about-tagline">A free, offline-first Bible in Yoruba and English. Built to serve Nigerian churches and the global Yoruba community.</div>
+        </div>
+
+        <div class="about-section">
+            <div class="about-section-title">Bible Texts</div>
+            <div class="about-group">
+                <div class="about-row">
+                    <strong>Yoruba</strong>
+                    <small>Biblica Open Yoruba Contemporary Bible. Licensed under Creative Commons Attribution-ShareAlike (CC BY-SA).</small>
+                </div>
+                <div class="about-row">
+                    <strong>English</strong>
+                    <small>King James Version (KJV). Public domain.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <div class="about-section-title">Fonts</div>
+            <div class="about-group">
+                <div class="about-row">
+                    <strong>Playfair Display, Inter, Lora</strong>
+                    <small>Served via Google Fonts under the SIL Open Font License.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <div class="about-section-title">Support</div>
+            <div class="about-group">
+                <div class="about-row" style="cursor:pointer;" id="about-share">
+                    <strong>Share Bibeli Mimo</strong>
+                    <small>Invite friends, family, and your church</small>
+                </div>
+                <div class="about-row" style="cursor:pointer;" id="about-feedback">
+                    <strong>Send Feedback</strong>
+                    <small>Report a bug or request a feature</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <div class="about-section-title">Legal</div>
+            <div class="about-group">
+                <div class="about-row">
+                    <strong>Privacy</strong>
+                    <small>Bibeli Mimo stores your data only on your device. We do not collect personal information, and no account is required to use the app.</small>
+                </div>
+                <div class="about-row">
+                    <strong>Terms</strong>
+                    <small>This app is provided free of charge for personal, non-commercial use. Bible texts remain the property of their respective copyright holders.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-footer">
+            Made with <span class="about-footer-heart">love</span> for the Church
+        </div>
+
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/shared.js"></script>
+    <script src="/shared-nav.js"></script>
+    <script src="/about/about.js"></script>
+</body>
+  </html>
