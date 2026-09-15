@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Discover – Bibeli Mimo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        /* Search bar link */
+        .search-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            color: var(--text-soft);
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .search-link:active { background: var(--bg); }
+        .search-link svg { width: 20px; height: 20px; color: var(--accent); }
+
+        /* Plan cards */
+        .plan-tile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .plan-tile:active { transform: scale(0.98); }
+        .plan-tile.active {
+            border-color: var(--accent);
+            background: rgba(232,177,75,0.06);
+        }
+        .plan-tile-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        .plan-tile-icon svg { width: 24px; height: 24px; }
+        .plan-tile-body { flex: 1; min-width: 0; }
+        .plan-tile-name {
+            font-family: var(--font-head);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .plan-tile-desc {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.4;
+        }
+        .plan-tile-badge {
+            color: var(--accent);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Topic tiles */
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .topic-tile {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .topic-tile:active {
+            transform: scale(0.95);
+            border-color: var(--accent);
+        }
+        .topic-tile svg {
+            width: 22px;
+            height: 22px;
+            color: var(--accent);
+        }
+        .topic-tile span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Devotional cards */
+        .devotional-card {
+            padding: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .devotional-card:active {
+            transform: scale(0.98);
+            border-color: var(--accent);
+        }
+        .devotional-day {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .devotional-title {
+            font-family: var(--font-head);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .devotional-preview {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.5;
+        }
+
+        /* Topic detail */
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .detail-back {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .detail-back:active { background: var(--bg); }
+        .detail-back svg { width: 20px; height: 20px; }
+        .detail-title {
+            font-family: var(--font-head);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        /* Devotional reading */
+        .devotional-body {
+            padding: 24px;
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+        .devotional-body .dv-title {
+            font-family: var(--font-head);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+        .devotional-body .dv-verse {
+            font-family: var(--font-yoruba);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            padding: 16px;
+            background: var(--bg);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            margin: 16px 0;
+            line-height: 1.6;
+        }
+        .devotional-body .dv-verse-en {
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--text-soft);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+        .devotional-body .dv-verse-ref {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+        .devotional-body p {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text);
+            margin: 16px 0;
+        }
+        .devotional-body .dv-prayer {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 10px;
+            font-style: italic;
+            margin-top: 20px;
+            border-left: 3px solid var(--accent);
+        }
+        .devotional-body .dv-prayer-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="page-container">
+
+        <!-- ============ MAIN VIEW ============ -->
+        <div id="view-main">
+
+            <!-- Search link -->
+            <a class="search-link" href="/discover/search/">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Search the Bible...</span>
+            </a>
+
+            <!-- Tabs -->
+            <div class="tab-bar" id="discover-tabs">
+                <button class="tab-btn active" data-tab="plans">Plans</button>
+                <button class="tab-btn" data-tab="topics">Topics</button>
+                <button class="tab-btn" data-tab="devotionals">Devotionals</button>
+            </div>
+
+            <!-- Plans tab -->
+            <div id="tab-plans" class="tab-content"></div>
+
+            <!-- Topics tab -->
+            <div id="tab-topics" class="tab-content" style="display:none;">
+                <div class="topics-grid" id="topics-grid"></div>
+            </div>
+
+            <!-- Devotionals tab -->
+            <div id="tab-devotionals" class="tab-content" style="display:none;">
+                <div id="devotionals-list"></div>
+            </div>
+
+        </div>
+
+        <!-- ============ TOPIC DETAIL VIEW ============ -->
+        <div id="view-topic" style="display:none;">
+            <div class="detail-header">
+                <button class="detail-back" id="topic-back">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h1 class="detail-title" id="topic-detail-title">Love</h1>
+            </div>
+            <div id="topic-verses"></div>
+        </div>
+
+        <!-- ============ DEVOTIONAL READING VIEW ============ -->
+        <div id="view-devotional" style="display:none;">
+            <div class="detail-header">
+                <button class="detail-back" id="devotional-back">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <h1 class="detail-title">Devotional</h1>
+            </div>
+            <div class="devotional-body" id="devotional-content"></div>
+        </div>
+
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/shared.js"></script>
+    <script src="/shared-nav.js"></script>
+    <script src="/discover/discover.js"></script>
+</body>
+  </html>
