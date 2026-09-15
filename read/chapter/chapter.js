@@ -1,5 +1,5 @@
 // ============================================================
-// CHAPTER READING PAGE
+// CHAPTER READING — Reads and applies all Settings
 // ============================================================
 
 (function () {
@@ -15,7 +15,6 @@
         activeNav: 'read'
     });
 
-    // -------- STATE --------
     var state = {
         bookCode: 'GEN',
         bookNum: 1,
@@ -33,46 +32,156 @@
     try { notes = JSON.parse(localStorage.getItem('notes') || '{}'); } catch (e) {}
     try { saved = JSON.parse(localStorage.getItem('saved') || '[]'); } catch (e) {}
 
+    // -------- SETTINGS --------
+    function getNum(key, fallback) {
+        var v = localStorage.getItem(key);
+        if (v === null) return fallback;
+        var n = parseFloat(v);
+        return isNaN(n) ? fallback : n;
+    }
+    function getBool(key, fallback) {
+        var v = localStorage.getItem(key);
+        if (v === null) return fallback;
+        return v === 'true';
+    }
+    function getSetting(key, fallback) {
+        var v = localStorage.getItem(key);
+        return v === null ? fallback : v;
+    }
+
+    var FONT_MAP = {
+        'sans':    "'Inter', -apple-system, sans-serif",
+        'serif':   "'Lora', Georgia, serif",
+        'display': "'Playfair Display', Georgia, serif",
+        'classic': "'Merriweather', Georgia, serif",
+        'elegant': "'Cormorant Garamond', Georgia, serif",
+        'modern':  "'Josefin Sans', sans-serif"
+    };
+
+    // Red letter map — chapters where Jesus speaks
+    var RED_LETTER_CHAPTERS = [
+        // Matthew
+        [40,5],[40,6],[40,7],[40,9],[40,10],[40,11],[40,12],[40,13],[40,15],
+        [40,16],[40,17],[40,18],[40,19],[40,20],[40,21],[40,22],[40,23],[40,24],[40,25],[40,26],[40,28],
+        // Mark
+        [41,2],[41,3],[41,4],[41,5],[41,6],[41,7],[41,8],[41,9],[41,10],
+        [41,11],[41,12],[41,13],[41,14],[41,16],
+        // Luke
+        [42,4],[42,5],[42,6],[42,7],[42,8],[42,9],[42,10],[42,11],[42,12],
+        [42,13],[42,14],[42,15],[42,16],[42,17],[42,18],[42,19],[42,20],
+        [42,21],[42,22],[42,24],
+        // John
+        [43,3],[43,4],[43,5],[43,6],[43,7],[43,8],[43,9],[43,10],[43,11],
+        [43,12],[43,13],[43,14],[43,15],[43,16],[43,17],[43,18]
+    ];
+    function isRedLetterChapter(bookNum, chapter) {
+        for (var i = 0; i < RED_LETTER_CHAPTERS.length; i++) {
+            if (RED_LETTER_CHAPTERS[i][0] === bookNum && RED_LETTER_CHAPTERS[i][1] === chapter) return true;
+        }
+        return false;
+    }
+
     // -------- TOAST --------
     function showToast(msg, type) {
         if (!type) type = 'info';
-        var container = document.getElementById('toast-container');
+        var c = document.getElementById('toast-container');
         var t = document.createElement('div');
         t.className = 'toast ' + type;
         t.textContent = msg;
-        container.appendChild(t);
-        setTimeout(function () {
-            if (t.parentNode) t.parentNode.removeChild(t);
-        }, 2200);
+        c.appendChild(t);
+        setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 2200);
     }
 
-    // -------- URL PARAMS --------
+    // -------- INJECT DYNAMIC STYLES --------
+    function injectStyles() {
+        var style = document.createElement('style');
+        style.id = 'reader-dynamic-styles';
+        style.textContent = `
+            .reading-page {
+                font-family: ${FONT_MAP[getSetting('fontFamily', 'serif')] || FONT_MAP.serif};
+                font-size: ${getNum('readerFontSize', 100)}%;
+                padding: ${getNum('readerTextPadding', 20)}px;
+            }
+            .reading-page .verse-card {
+                margin-bottom: ${getNum('readerVerseSpacing', 1.5)}em;
+                text-align: ${getSetting('readerAlign', 'left')};
+            }
+            .reading-page .verse-yoruba,
+            .reading-page .verse-english {
+                line-height: ${getNum('readerLineSpacing', 1.7)};
+                letter-spacing: ${getNum('readerLetterSpacing', 0)}px;
+            }
+            .reading-page .verse-yoruba {
+                font-family: ${FONT_MAP[getSetting('fontFamily', 'serif')] || FONT_MAP.serif};
+            }
+            .reading-page .verse-english {
+                font-family: ${FONT_MAP[getSetting('fontFamily', 'serif')] || FONT_MAP.serif};
+            }
+            .reading-page .verse-card.red-letter .verse-yoruba,
+            .reading-page .verse-card.red-letter .verse-english {
+                color: #DC2626;
+            }
+            body.dark .reading-page .verse-card.red-letter .verse-yoruba,
+            body.dark .reading-page .verse-card.red-letter .verse-english {
+                color: #F87171;
+            }
+            body.church .reading-page .verse-card.red-letter .verse-yoruba,
+            body.church .reading-page .verse-card.red-letter .verse-english {
+                color: #FF6666;
+            }
+            .reading-page.parallel .verse-card {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                grid-template-areas:
+                    "num num"
+                    "yo en";
+                column-gap: 14px;
+                align-items: start;
+            }
+            .reading-page.parallel .verse-num {
+                grid-area: num;
+            }
+            .reading-page.parallel .verse-yoruba {
+                grid-area: yo;
+                border-right: 1px solid var(--border);
+                padding-right: 14px;
+                margin-bottom: 0;
+            }
+            .reading-page.parallel .verse-english {
+                grid-area: en;
+                padding-top: 0;
+                border-top: none;
+                margin-bottom: 0;
+            }
+            .reading-page.hide-verse-nums .verse-num {
+                display: none;
+            }
+            .reading-page.hide-verse-nums.parallel .verse-card {
+                grid-template-areas: "yo en";
+            }
+        `;
+        var existing = document.getElementById('reader-dynamic-styles');
+        if (existing) existing.parentNode.removeChild(existing);
+        document.head.appendChild(style);
+    }
+
+    // -------- INITIALIZE --------
     function getParam(name) {
         return new URLSearchParams(window.location.search).get(name);
     }
 
-    // -------- READER FONT SIZE --------
-    var readerFontSize = parseInt(localStorage.getItem('readingFontSize') || '100');
-
-    function applyReaderFontSize() {
-        document.getElementById('reading-content').style.fontSize = readerFontSize + '%';
+    function findMaxChapter() {
+        var yoruba = window.bibleData.yoruba;
+        var max = 0;
+        for (var i = 0; i < yoruba.length; i++) {
+            if (yoruba[i].book === state.bookNum) {
+                if (yoruba[i].chapter > max) max = yoruba[i].chapter;
+            }
+        }
+        state.maxChapter = max || 50;
     }
 
-    function showFontHint() {
-        var hint = document.getElementById('font-hint');
-        hint.textContent = 'Font size: ' + readerFontSize + '%';
-        hint.classList.add('show');
-        setTimeout(function () { hint.classList.remove('show'); }, 1200);
-    }
-
-    function changeFontSize(delta) {
-        readerFontSize = Math.max(80, Math.min(160, readerFontSize + delta));
-        localStorage.setItem('readingFontSize', String(readerFontSize));
-        applyReaderFontSize();
-        showFontHint();
-    }
-
-    // -------- RENDER VERSES --------
+    // -------- RENDER --------
     function renderChapter() {
         var yoruba = window.bibleData.yoruba;
         var enMap = window.bibleData.englishMap;
@@ -85,6 +194,19 @@
         }
 
         var container = document.getElementById('reading-content');
+        container.className = 'reading-page';
+
+        // Apply classes based on settings
+        if (getBool('parallelView', false)) container.classList.add('parallel');
+        if (!getBool('showVerseNumbers', true)) container.classList.add('hide-verse-nums');
+
+        // Determine which languages to show
+        var lang = getSetting('defaultLanguage', 'both');
+        var showYo = (lang === 'both' || lang === 'yo');
+        var showEn = (lang === 'both' || lang === 'en');
+
+        // Red letter
+        var redLetter = getBool('redLetterMode', false) && isRedLetterChapter(state.bookNum, state.chapter);
 
         if (verses.length === 0) {
             container.innerHTML = '<p style="text-align:center; opacity:0.5; padding:40px 0;">Chapter not found.</p>';
@@ -96,22 +218,29 @@
             var v = verses[j];
             var key = v.book + '-' + v.chapter + '-' + v.verse;
             var eng = enMap[key] || '';
-            var highlightClass = '';
-            if (highlights[key]) {
-                highlightClass = ' highlight-' + highlights[key];
-            }
+            var classes = 'verse-card';
+            if (highlights[key]) classes += ' highlight-' + highlights[key];
+            if (redLetter) classes += ' red-letter';
+
             var noteText = notes[key] || '';
 
-            html += '<div class="verse-card' + highlightClass + '" data-book="' + v.book + '" data-chapter="' + v.chapter + '" data-verse="' + v.verse + '">' +
-                '<div class="verse-num">' + v.verse + '</div>' +
-                '<div class="verse-yoruba">' + v.text + '</div>' +
-                (eng ? '<div class="verse-english">' + eng + '</div>' : '') +
-                (noteText ? '<div class="verse-note">' + noteText + '</div>' : '') +
-                '</div>';
+            html += '<div class="' + classes + '" data-book="' + v.book + '" data-chapter="' + v.chapter + '" data-verse="' + v.verse + '">' +
+                '<div class="verse-num">' + v.verse + '</div>';
+
+            if (showYo) {
+                html += '<div class="verse-yoruba">' + v.text + '</div>';
+            }
+            if (showEn && eng) {
+                html += '<div class="verse-english">' + eng + '</div>';
+            }
+            if (noteText) {
+                html += '<div class="verse-note">' + noteText + '</div>';
+            }
+
+            html += '</div>';
         }
         container.innerHTML = html;
 
-        // Wire verse taps
         var cards = container.querySelectorAll('.verse-card');
         for (var k = 0; k < cards.length; k++) {
             cards[k].onclick = function () {
@@ -122,15 +251,11 @@
             };
         }
 
-        // Header title
         document.getElementById('read-title').textContent = state.bookName + ' ' + state.chapter;
-        var headerTitle = document.querySelector('.app-header-title');
-        if (headerTitle) headerTitle.textContent = state.bookName;
 
         // Save progress
         localStorage.setItem('lastRead', JSON.stringify({ b: state.bookCode, c: state.chapter }));
 
-        // Track completed chapter
         var completed = [];
         try { completed = JSON.parse(localStorage.getItem('completedChapters') || '[]'); } catch (e) {}
         var chapterKey = state.bookCode + '-' + state.chapter;
@@ -139,7 +264,6 @@
             localStorage.setItem('completedChapters', JSON.stringify(completed));
         }
 
-        // Update history
         var history = [];
         try { history = JSON.parse(localStorage.getItem('history') || '[]'); } catch (e) {}
         var newEntry = { b: state.bookCode, c: state.chapter };
@@ -153,25 +277,11 @@
         if (filtered.length > 10) filtered = filtered.slice(0, 10);
         localStorage.setItem('history', JSON.stringify(filtered));
 
-        // Chapter nav
         document.getElementById('chapter-nav').style.display = 'flex';
         document.getElementById('btn-prev').disabled = state.chapter <= 1;
         document.getElementById('btn-next').disabled = state.chapter >= state.maxChapter;
 
-        // Scroll to top
         window.scrollTo(0, 0);
-    }
-
-    // -------- DETERMINE MAX CHAPTER --------
-    function findMaxChapter() {
-        var yoruba = window.bibleData.yoruba;
-        var max = 0;
-        for (var i = 0; i < yoruba.length; i++) {
-            if (yoruba[i].book === state.bookNum) {
-                if (yoruba[i].chapter > max) max = yoruba[i].chapter;
-            }
-        }
-        state.maxChapter = max || 50;
     }
 
     // -------- ACTION SHEET --------
@@ -181,13 +291,11 @@
         document.getElementById('sheet-overlay').classList.add('show');
         document.getElementById('action-sheet').classList.add('show');
     }
-
     function closeActionSheet() {
         document.getElementById('sheet-overlay').classList.remove('show');
         document.getElementById('action-sheet').classList.remove('show');
     }
 
-    // -------- GET VERSE TEXT --------
     function getActiveVerseText() {
         if (!state.activeVerse) return { yo: '', en: '', key: '' };
         var a = state.activeVerse;
@@ -200,14 +308,9 @@
                 break;
             }
         }
-        return {
-            yo: yo,
-            en: window.bibleData.englishMap[key] || '',
-            key: key
-        };
+        return { yo: yo, en: window.bibleData.englishMap[key] || '', key: key };
     }
 
-    // -------- ACTIONS --------
     function handleCopy() {
         var v = getActiveVerseText();
         var fullText = state.bookName + ' ' + state.activeVerse.chapter + ':' + state.activeVerse.verse + '\n\n' + v.yo + '\n\n' + v.en;
@@ -233,8 +336,6 @@
                 closeActionSheet();
                 showToast('Copied instead', 'info');
             });
-        } else {
-            showToast('Sharing not supported', 'error');
         }
     }
 
@@ -244,12 +345,8 @@
         var current = highlights[key] || 'none';
         var idx = order.indexOf(current);
         var next = order[(idx + 1) % order.length];
-
-        if (next === 'none') {
-            delete highlights[key];
-        } else {
-            highlights[key] = next;
-        }
+        if (next === 'none') delete highlights[key];
+        else highlights[key] = next;
         localStorage.setItem('highlights', JSON.stringify(highlights));
         closeActionSheet();
         renderChapter();
@@ -300,7 +397,6 @@
         closeActionSheet();
     }
 
-    // -------- SAVE NOTE --------
     function saveNote() {
         var key = state.activeVerse.book + '-' + state.activeVerse.chapter + '-' + state.activeVerse.verse;
         var text = document.getElementById('note-input').value.trim();
@@ -316,13 +412,11 @@
         renderChapter();
     }
 
-    // -------- NAVIGATION --------
     function goPrev() {
         if (state.chapter > 1) {
             window.location.href = '/read/chapter/?b=' + state.bookCode + '&c=' + (state.chapter - 1);
         }
     }
-
     function goNext() {
         if (state.chapter < state.maxChapter) {
             window.location.href = '/read/chapter/?b=' + state.bookCode + '&c=' + (state.chapter + 1);
@@ -336,8 +430,12 @@
         };
         document.getElementById('btn-prev').onclick = goPrev;
         document.getElementById('btn-next').onclick = goNext;
-        document.getElementById('btn-font-down').onclick = function () { changeFontSize(-10); };
-        document.getElementById('btn-font-up').onclick = function () { changeFontSize(10); };
+
+        // Remove the old font size buttons if they exist
+        var fontDown = document.getElementById('btn-font-down');
+        var fontUp = document.getElementById('btn-font-up');
+        if (fontDown) fontDown.style.display = 'none';
+        if (fontUp) fontUp.style.display = 'none';
 
         document.getElementById('btn-share').onclick = function () {
             var yoruba = window.bibleData.yoruba;
@@ -359,7 +457,6 @@
 
         document.getElementById('sheet-overlay').onclick = closeActionSheet;
         document.getElementById('sheet-cancel').onclick = closeActionSheet;
-
         document.getElementById('act-copy').onclick = handleCopy;
         document.getElementById('act-share').onclick = handleShare;
         document.getElementById('act-highlight').onclick = handleHighlight;
@@ -391,8 +488,7 @@
         state.chapter = isNaN(chapterParam) || chapterParam < 1 ? 1 : chapterParam;
 
         findMaxChapter();
-
-        applyReaderFontSize();
+        injectStyles();
         renderChapter();
         wireEvents();
     }
