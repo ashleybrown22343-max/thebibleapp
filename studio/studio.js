@@ -4,6 +4,19 @@
 
 const data = window.bibleData;
 
+// Initialize shared navigation header + side drawer
+if (window.SharedNav) {
+    window.SharedNav.init({
+        title: 'Image Studio',
+        showBack: false,        // studio has its own back arrow
+        showSearch: false,
+        showBell: false,
+        showMenu: true,         // side drawer for navigation
+        showBottomNav: false,   // no bottom nav — full-screen editor
+        activeNav: ''
+    });
+}
+
 // ---------- CONSTANTS ----------
 const FONTS = [
     { name: 'Poppins', css: "'Poppins', sans-serif" },
