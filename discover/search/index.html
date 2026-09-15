@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Search – Bibeli Mimo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .search-input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        .search-input-wrap svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 15px;
+            color: var(--text);
+            font-family: inherit;
+            min-width: 0;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-soft);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-chip.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .search-result {
+            padding: 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .search-result:active { transform: scale(0.98); }
+        .search-result-ref {
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+            letter-spacing: 0.4px;
+        }
+        .search-result-text {
+            font-size: 14px;
+            line-height: 1.55;
+            color: var(--text);
+        }
+        .search-result-lang {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-soft);
+            margin-bottom: 6px;
+        }
+        mark {
+            background: var(--accent);
+            color: #fff;
+            padding: 1px 3px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-soft);
+        }
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            color: var(--border);
+        }
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="read-header">
+        <button class="read-header-btn" id="btn-back">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="read-header-title">Search</div>
+        <div style="width:38px;"></div>
+    </div>
+
+    <main class="page-container">
+
+        <div class="search-input-wrap">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="search-input" placeholder="Search Yoruba or English..." autofocus>
+        </div>
+
+        <div class="filter-row">
+            <button class="filter-chip active" data-lang="yo">Yoruba</button>
+            <button class="filter-chip active" data-lang="en">English</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="empty-state" id="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <p>Type at least 2 characters to search the Bible.</p>
+        </div>
+
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/shared.js"></script>
+    <script src="/shared-nav.js"></script>
+    <script src="/discover/search/search.js"></script>
+</body>
+  </html>
