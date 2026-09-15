@@ -1138,3 +1138,154 @@ body.church .preview-ref { font-size: 18px !important; }
 body.church .panel-title { font-size: 18px; }
 body.church .field-label { font-size: 16px; }
 body.church .opt-btn { font-size: 14px; padding: 14px 8px; }
+
+
+/* ============================================================
+   STUDIO HEADER — Matches global design system
+   ============================================================ */
+
+body .header {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    min-height: 60px;
+    box-shadow: var(--shadow-sm);
+    gap: 8px;
+}
+
+body .header h1 {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+}
+
+body .header .icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--header-text);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+body .header .icon-btn:active {
+    background: rgba(255,255,255,0.12);
+}
+
+body .header .icon-btn .icon,
+body .header .icon-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+body .header .header-actions {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+body .header a.icon-btn {
+    text-decoration: none;
+    color: var(--header-text);
+}
+
+/* Sticky actions bar (below header) */
+body .sticky-actions {
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    background: var(--bg);
+    padding: 10px 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+body .export-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(232,177,75,0.35);
+    transition: transform 0.15s;
+}
+
+body .export-btn:active {
+    transform: scale(0.98);
+}
+
+body .export-btn .icon,
+body .export-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Studio tab bar — matches the app's tabs */
+.studio-container .tab-bar {
+    display: flex;
+    background: var(--card);
+    border-radius: 12px;
+    padding: 5px;
+    gap: 3px;
+    margin-bottom: 15px;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    scrollbar-width: none;
+}
+.studio-container .tab-bar::-webkit-scrollbar { display: none; }
+
+.studio-container .tab-btn {
+    flex: 1;
+    min-width: 70px;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.studio-container .tab-btn .icon,
+.studio-container .tab-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.studio-container .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+   }
