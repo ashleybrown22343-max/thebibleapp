@@ -156,6 +156,7 @@ let favorites = [];
 let recentVerses = [];
 let presets = [];
 let activeSheet = 'verse';
+let activeLangMenuTarget = null;
 
 try { favorites = JSON.parse(localStorage.getItem('studio_favorites') || '[]'); } catch (e) { favorites = []; }
 try { recentVerses = JSON.parse(localStorage.getItem('studio_recents_verse') || '[]'); } catch (e) { recentVerses = []; }
@@ -225,9 +226,10 @@ async function initStudio() {
     attachLookEvents();
     attachTypeEvents();
     attachMoreEvents();
-    attachActionBarEvents();
+    attachExportModalEvents();
     attachModalEvents();
     attachCanvasGestures();
+    attachLangMenuGlobal();
 
     renderFontStrip();
     renderSwatches('text-swatches', 'text');
@@ -316,15 +318,17 @@ function resizeCanvas() {
 function attachHeaderEvents() {
     document.getElementById('undo-btn').onclick = performUndo;
     document.getElementById('redo-btn').onclick = performRedo;
-    document.getElementById('overflow-btn').onclick = function () {
-        document.querySelectorAll('.sheet-pane').forEach(function (p) { p.classList.remove('active'); });
-        document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
-        var chip = document.querySelector('.chip[data-sheet="more"]');
-        chip.classList.add('active');
-        document.querySelector('.sheet-pane[data-pane="more"]').classList.add('active');
-        document.getElementById('sheet').classList.remove('collapsed');
-        activeSheet = 'more';
-    };
+    document.getElementById('header-export-btn').onclick = openExportModal;
+}
+
+function openExportModal() {
+    document.querySelectorAll('#format-chips .chip-sm').forEach(function (b) { b.classList.toggle('active', b.dataset.format === state.exportFormat); });
+    document.querySelectorAll('#resolution-chips .chip-sm').forEach(function (b) { b.classList.toggle('active', b.dataset.res === state.exportRes); });
+    document.getElementById('jpg-quality-slider').value = state.exportQuality;
+    document.getElementById('jpg-quality-label').textContent = state.exportQuality;
+    document.getElementById('jpg-quality-row').style.display = state.exportFormat === 'jpg' ? 'block' : 'none';
+    updateExportEstimate();
+    document.getElementById('export-modal').classList.add('show');
 }
 
 // ---------- SHEET ----------
@@ -416,6 +420,76 @@ function attachCanvasGestures() {
     };
 }
 
+// ---------- LANGUAGE MENU (NEW) ----------
+function attachLangMenuGlobal() {
+    document.addEventListener('pointerdown', closeLangOnOutside, true);
+}
+
+function closeLangOnOutside(e) {
+    var menu = document.getElementById('lang-menu');
+    if (!menu || menu.style.display !== 'block') return;
+    if (menu.contains(e.target)) return;
+    if (e.target.closest && (e.target.closest('#primary-lang-btn') || e.target.closest('#secondary-lang-btn'))) return;
+    e.stopPropagation();
+    e.preventDefault();
+    closeLangMenu();
+}
+
+function openLangMenu(which) {
+    activeLangMenuTarget = which;
+    var btn = document.getElementById(which === 'primary' ? 'primary-lang-btn' : 'secondary-lang-btn');
+    var rect = btn.getBoundingClientRect();
+    var menu = document.getElementById('lang-menu');
+    menu.innerHTML = '';
+
+    var currentValue = which === 'primary' ? state.primaryLang : state.secondaryLang;
+    var takenValue = which === 'primary' ? state.secondaryLang : state.primaryLang;
+    var options = which === 'primary' ? ['yoruba', 'english'] : ['none', 'yoruba', 'english'];
+
+    options.forEach(function (id) {
+        var label = id === 'none'
+            ? 'None'
+            : ((data.languages.find(function (l) { return l.id === id; }) || { label: id }).label);
+        var div = document.createElement('div');
+        div.className = 'lang-menu-option';
+        if (id === currentValue) div.classList.add('active');
+        if (id === takenValue) {
+            div.classList.add('disabled');
+            div.textContent = label + ' — in use';
+        } else {
+            div.textContent = label;
+        }
+        div.onclick = function (e) {
+            e.stopPropagation();
+            if (id === takenValue) return;
+            if (id === currentValue) { closeLangMenu(); return; }
+            pushUndo();
+            if (which === 'primary') state.primaryLang = id;
+            else state.secondaryLang = id;
+            syncLangButtons();
+            updatePreview();
+            closeLangMenu();
+        };
+        menu.appendChild(div);
+    });
+
+    menu.style.display = 'block';
+    menu.style.top = (rect.bottom + 6) + 'px';
+    menu.style.right = Math.max(8, window.innerWidth - rect.right) + 'px';
+    menu.style.left = 'auto';
+}
+
+function closeLangMenu() {
+    var menu = document.getElementById('lang-menu');
+    if (menu) menu.style.display = 'none';
+    activeLangMenuTarget = null;
+}
+
+function toggleLangMenu(which) {
+    if (activeLangMenuTarget === which) closeLangMenu();
+    else openLangMenu(which);
+}
+
 // ---------- VERSE ----------
 function attachVerseEvents() {
     document.getElementById('pick-book').onclick = function () { openVerseModal('book'); };
@@ -423,8 +497,6 @@ function attachVerseEvents() {
     document.getElementById('pick-verse').onclick = function () { openVerseModal('verse'); };
 
     document.getElementById('random-verse').onclick = randomVerse;
-    document.getElementById('action-random-btn').onclick = randomVerse;
-
     document.getElementById('votd-fill').onclick = function () {
         var day = new Date().getDate();
         var v = data.yoruba.find(function (x) { return x.book === 19 && x.chapter === day && x.verse === 1; }) || data.yoruba[day * 500];
@@ -439,8 +511,8 @@ function attachVerseEvents() {
         }
     };
 
-    document.getElementById('primary-lang-btn').onclick = function () { cycleLang('primary'); };
-    document.getElementById('secondary-lang-btn').onclick = function () { cycleLang('secondary'); };
+    document.getElementById('primary-lang-btn').onclick = function () { toggleLangMenu('primary'); };
+    document.getElementById('secondary-lang-btn').onclick = function () { toggleLangMenu('secondary'); };
 
     var searchTimer;
     document.getElementById('topic-search').addEventListener('input', function (e) {
@@ -506,22 +578,6 @@ function randomVerse() {
     updatePickerButtons();
     updatePreview();
     saveRecentVerse();
-}
-
-function cycleLang(which) {
-    var langs = data.languages;
-    var current = which === 'primary' ? state.primaryLang : state.secondaryLang;
-    var list = ['none'].concat(langs.map(function (l) { return l.id; }));
-    var idx = list.indexOf(current);
-    var next = list[(idx + 1) % list.length];
-    if (which === 'primary' && next === 'none') next = list[1];
-    if (which === 'secondary' && next === state.primaryLang) next = 'none';
-    if (which === 'primary' && next === state.secondaryLang) state.secondaryLang = 'none';
-    pushUndo();
-    if (which === 'primary') state.primaryLang = next;
-    else state.secondaryLang = next;
-    syncLangButtons();
-    updatePreview();
 }
 
 function syncLangButtons() {
@@ -669,6 +725,7 @@ function attachLookEvents() {
             pushUndo();
             state.bgImageData = ev.target.result;
             document.getElementById('bg-remove-btn').style.display = 'block';
+            renderFilmstrip();
             updatePreview();
             showToast('Photo uploaded', 'success');
         };
@@ -678,6 +735,7 @@ function attachLookEvents() {
         pushUndo();
         state.bgImageData = null;
         this.style.display = 'none';
+        renderFilmstrip();
         updatePreview();
     };
 
@@ -759,7 +817,6 @@ function renderFilmstrip() {
         });
     }
 
-    // Prepend uploaded photo if present
     if (state.bgImageData) {
         items.unshift({ id: '__uploaded', bg: "url('" + state.bgImageData + "') center/cover" });
     }
@@ -805,7 +862,6 @@ function renderFilmstrip() {
             updatePreview();
         };
 
-        // Heart for favorites
         if (item.id !== '__uploaded') {
             div.classList.add('fav-item');
             var heart = document.createElement('button');
@@ -835,15 +891,12 @@ function attachTypeEvents() {
         document.getElementById('font-size-label').textContent = state.fontSize;
         updatePreview();
     };
-
     document.getElementById('autofit-btn').onclick = autoFitText;
-
     document.getElementById('line-spacing-slider').oninput = function (e) {
         state.lineSpacing = parseFloat(e.target.value);
         document.getElementById('line-spacing-label').textContent = state.lineSpacing;
         updatePreview();
     };
-
     document.getElementById('letter-spacing-slider').oninput = function (e) {
         state.letterSpacing = parseInt(e.target.value);
         document.getElementById('letter-spacing-label').textContent = state.letterSpacing;
@@ -1251,18 +1304,8 @@ function deletePreset(id) {
     showToast('Preset deleted', 'info');
 }
 
-// ---------- ACTION BAR ----------
-function attachActionBarEvents() {
-    document.getElementById('export-open-btn').onclick = function () {
-        document.querySelectorAll('#format-chips .chip-sm').forEach(function (b) { b.classList.toggle('active', b.dataset.format === state.exportFormat); });
-        document.querySelectorAll('#resolution-chips .chip-sm').forEach(function (b) { b.classList.toggle('active', b.dataset.res === state.exportRes); });
-        document.getElementById('jpg-quality-slider').value = state.exportQuality;
-        document.getElementById('jpg-quality-label').textContent = state.exportQuality;
-        document.getElementById('jpg-quality-row').style.display = state.exportFormat === 'jpg' ? 'block' : 'none';
-        updateExportEstimate();
-        document.getElementById('export-modal').classList.add('show');
-    };
-
+// ---------- EXPORT MODAL EVENTS ----------
+function attachExportModalEvents() {
     document.querySelectorAll('#format-chips .chip-sm').forEach(function (btn) {
         btn.onclick = function () {
             document.querySelectorAll('#format-chips .chip-sm').forEach(function (b) { b.classList.remove('active'); });
@@ -1353,8 +1396,7 @@ function attachModalEvents() {
         });
     });
 
-    // Color picker
-document.getElementById('hue-slider').oninput = function (e) {
+    document.getElementById('hue-slider').oninput = function (e) {
         pickedColor.h = parseInt(e.target.value);
         document.getElementById('hue-label').textContent = pickedColor.h;
         updateColorPreview();
@@ -1387,7 +1429,6 @@ document.getElementById('hue-slider').oninput = function (e) {
         closeModal('color-modal');
     };
 
-    // Confirm
     document.getElementById('confirm-cancel-btn').onclick = function () {
         confirmCallback = null;
         closeModal('confirm-modal');
