@@ -60,22 +60,4 @@ if ('serviceWorker' in navigator) {
             console.warn('Service Worker registration failed:', err);
         });
     });
-}
-
-// ============================================================
-// STUDIO OFFLINE WARNING
-// ============================================================
-// ============================================================
-// SERVICE WORKER REGISTRATION
-// ============================================================
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').then(function (reg) {
-            setInterval(function () {
-                reg.update().catch(function () {});
-            }, 30 * 60 * 1000);
-        }).catch(function (err) {
-            console.warn('Service Worker registration failed:', err);
-        });
-    });
             }
