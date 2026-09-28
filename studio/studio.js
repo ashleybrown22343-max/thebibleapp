@@ -157,6 +157,7 @@ function createDefaultState() {
 
         showYoruba: true,
         showEnglish: true,
+        watermarkOn: true,
 
         exportFormat: 'png',
         exportQuality: 90,
@@ -196,15 +197,36 @@ async function initStudio() {
         return;
     }
 
-    // Wait max 2s for fonts
+    // Wait up to 2.5s for the fonts we actually need
     try {
+        var neededFonts = [state.fontFamily, state.refFontFamily, 'Poppins', 'Playfair Display', 'Inter'];
         await Promise.race([
-            document.fonts.ready,
-            new Promise(function (resolve) { setTimeout(resolve, 2000); })
+            Promise.all(neededFonts.map(function (f) {
+                return Promise.all([
+                    document.fonts.load('700 24px "' + f + '"').catch(function () {}),
+                    document.fonts.load('400 24px "' + f + '"').catch(function () {})
+                ]);
+            })),
+            new Promise(function (resolve) { setTimeout(resolve, 2500); })
         ]);
     } catch (e) {}
 
-    // Apply URL params
+    // Restore draft (URL params can override below)
+    try {
+        var draftRaw = localStorage.getItem('studio_draft');
+        if (draftRaw) {
+            var draft = JSON.parse(draftRaw);
+            if (draft && typeof draft === 'object') {
+                for (var dk in draft) {
+                    if (Object.prototype.hasOwnProperty.call(state, dk)) {
+                        state[dk] = draft[dk];
+                    }
+                }
+            }
+        }
+    } catch (e) {}
+
+    // Apply URL params (overrides draft)
     applyUrlParams();
 
     // Load saved logo
@@ -375,6 +397,7 @@ function syncAllUI() {
 
     document.getElementById('lang-yo-toggle').classList.toggle('active', state.showYoruba);
     document.getElementById('lang-en-toggle').classList.toggle('active', state.showEnglish);
+    document.getElementById('watermark-toggle').classList.toggle('active', state.watermarkOn !== false);
 }
 
 // ============================================================
@@ -387,6 +410,7 @@ function attachHeaderEvents() {
         openConfirm('Reset All?', 'All your current edits will be cleared. This cannot be undone.', function () {
             pushUndo();
             state = createDefaultState();
+            try { localStorage.removeItem('studio_draft'); } catch (e) {}
             var savedLogo = localStorage.getItem('studio_logo');
             if (savedLogo) state.logoData = savedLogo;
             syncAllUI();
@@ -1098,6 +1122,12 @@ function attachExtrasEvents() {
         updatePreview();
     };
     document.getElementById('logo-bg-color-btn').onclick = function () { openColorPicker('logoBg'); };
+
+    document.getElementById('watermark-toggle').onclick = function () {
+        state.watermarkOn = !state.watermarkOn;
+        this.classList.toggle('active', state.watermarkOn);
+        updatePreview();
+    };
 }
 
 function showPreviewLogo() {
@@ -1667,7 +1697,7 @@ function updatePreview() {
         refEl.style.fontSize = state.refSize + 'px';
         refEl.style.color = state.refColor;
         refEl.style.textShadow = getShadowCSS(state.refShadow);
-        refEl.style.order = state.refPos === 'top' ? -1 : 10;
+        refEl.style.order = state.refPos === 'top' ? -2 : 10;
     } else {
         refEl.style.display = 'none';
     }
@@ -1687,7 +1717,7 @@ function updatePreview() {
         secEl.style.fontSize = state.secSize + 'px';
         secEl.style.color = state.secColor;
         secEl.style.opacity = state.secOpacity / 100;
-        secEl.style.order = state.secPos === 'top' ? -2 : (state.secPos === 'bottom' ? 20 : 0);
+        secEl.style.order = state.secPos === 'top' ? -3 : (state.secPos === 'bottom' ? 20 : -1);
     } else {
         secEl.style.display = 'none';
     }
@@ -1705,6 +1735,9 @@ function updatePreview() {
     } else {
         logoWrap.style.display = 'none';
     }
+
+    var wmEl = document.getElementById('preview-watermark');
+    if (wmEl) wmEl.style.display = (state.watermarkOn !== false) ? 'block' : 'none';
 }
 
 // ============================================================
@@ -1858,7 +1891,7 @@ function saveExportState() {
     const previewCard = document.getElementById('preview-card');
     const previewW = previewCard.offsetWidth;
     const previewH = previewCard.offsetHeight;
-    
+
     const backgroundURL = getPreviewBackgroundURL();
     var bgGradient = null;
     var bgSolid = null;
