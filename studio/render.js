@@ -1,8 +1,6 @@
 // ============================================================
-// BIBELI MIMO – NATIVE CANVAS 2D RENDERER
-// Used by /studio/export for pixel-perfect output.
-// Pure canvas — no DOM, no html2canvas, no CDN.
-// Later reused by the video exporter.
+// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V2)
+// Shared by /studio/image/export and (later) /studio/video.
 // ============================================================
 
 window.RenderEngine = (function () {
@@ -58,13 +56,19 @@ window.RenderEngine = (function () {
         ctx.closePath();
     }
 
-    function drawImageCover(ctx, img, x, y, w, h) {
+    // Cover-crop image, honouring position ('center'|'top'|'bottom'|'left'|'right')
+    function drawImageCover(ctx, img, x, y, w, h, position) {
         var iw = img.width, ih = img.height;
         var s = Math.max(w / iw, h / ih);
         var sw = iw * s;
         var sh = ih * s;
-        var sx = x + (w - sw) / 2;
-        var sy = y + (h - sh) / 2;
+        var px = 0.5, py = 0.5;
+        if (position === 'top') py = 0;
+        else if (position === 'bottom') py = 1;
+        else if (position === 'left') px = 0;
+        else if (position === 'right') px = 1;
+        var sx = x + (w - sw) * px;
+        var sy = y + (h - sh) * py;
         ctx.drawImage(img, sx, sy, sw, sh);
     }
 
@@ -125,7 +129,7 @@ window.RenderEngine = (function () {
         var radiusPx = (state.radius || 0) * scale;
         var bwPx = (state.borderWidth || 0) * scale;
 
-        // ============ BACKGROUND LAYER (clipped to radius) ============
+        // ---------- BACKGROUND (clipped) ----------
         ctx.save();
         if (radiusPx > 0) {
             roundRectPath(ctx, 0, 0, W, H, radiusPx);
@@ -135,24 +139,31 @@ window.RenderEngine = (function () {
         ctx.fillStyle = '#1a237e';
         ctx.fillRect(0, 0, W, H);
 
-        if (opts.backgroundURL) {
-            try {
-                var bgImg = await loadImage(opts.backgroundURL);
-                var filters = [];
-                if (state.blur > 0) filters.push('blur(' + (state.blur * scale) + 'px)');
-                if (state.brightness !== undefined && state.brightness !== 100) filters.push('brightness(' + (state.brightness / 100) + ')');
-                if (state.saturation !== undefined && state.saturation !== 100) filters.push('saturate(' + (state.saturation / 100) + ')');
-                if (filters.length) ctx.filter = filters.join(' ');
-                var bleed = Math.ceil((state.blur || 0) * scale * 2) + 2;
-                drawImageCover(ctx, bgImg, -bleed, -bleed, W + bleed * 2, H + bleed * 2);
-                ctx.filter = 'none';
-            } catch (e) {}
-        } else if (opts.bgGradient) {
-            var gg = parseCssGradient(ctx, opts.bgGradient, W, H);
-            if (gg) { ctx.fillStyle = gg; ctx.fillRect(0, 0, W, H); }
-        } else if (opts.bgSolid) {
-            ctx.fillStyle = opts.bgSolid;
-            ctx.fillRect(0, 0, W, H);
+        var bgAlpha = state.bgOpacity !== undefined ? state.bgOpacity / 100 : 1;
+        if (bgAlpha > 0) {
+            ctx.save();
+            ctx.globalAlpha = bgAlpha;
+
+            if (opts.backgroundURL) {
+                try {
+                    var bgImg = await loadImage(opts.backgroundURL);
+                    var filters = [];
+                    if (state.blur > 0) filters.push('blur(' + (state.blur * scale) + 'px)');
+                    if (state.brightness !== undefined && state.brightness !== 100) filters.push('brightness(' + (state.brightness / 100) + ')');
+                    if (state.saturation !== undefined && state.saturation !== 100) filters.push('saturate(' + (state.saturation / 100) + ')');
+                    if (filters.length) ctx.filter = filters.join(' ');
+                    var bleed = Math.ceil((state.blur || 0) * scale * 2) + 2;
+                    drawImageCover(ctx, bgImg, -bleed, -bleed, W + bleed * 2, H + bleed * 2, state.bgPosition || 'center');
+                    ctx.filter = 'none';
+                } catch (e) {}
+            } else if (opts.bgGradient) {
+                var gg = parseCssGradient(ctx, opts.bgGradient, W, H);
+                if (gg) { ctx.fillStyle = gg; ctx.fillRect(0, 0, W, H); }
+            } else if (opts.bgSolid) {
+                ctx.fillStyle = opts.bgSolid;
+                ctx.fillRect(0, 0, W, H);
+            }
+            ctx.restore();
         }
 
         if (state.darkOverlay > 0) {
@@ -186,7 +197,7 @@ window.RenderEngine = (function () {
             ctx.fillRect(0, 0, W, H);
         }
 
-        // ============ TEXT SETUP ============
+        // ---------- TEXT SETUP ----------
         var mainFontFamily = getFontCss(state.fontFamily || 'Poppins');
         var refFontFamily = state.refMatchFont ? mainFontFamily : getFontCss(state.refFontFamily || 'Playfair Display');
 
@@ -208,6 +219,10 @@ window.RenderEngine = (function () {
         var align = state.align || 'center';
         var hw = (state.highlightWord || '').trim().toLowerCase();
         var hlColor = state.highlightColor || '#f59e0b';
+
+        // Font weight — main text uses state.fontWeight (default 700).
+        // Secondary language (English block) always uses 400 for contrast.
+        var primaryWeight = state.fontWeight || '700';
 
         function measure(text, font, maxW) {
             ctx.font = font;
@@ -325,32 +340,32 @@ window.RenderEngine = (function () {
             }
         }
 
-        // ============ MEASURE ============
-        var yoText = applyCase(opts.verseYoruba || '', state.textCase);
-        var enText = applyCase(opts.verseEnglish || '', state.textCase);
+        // ---------- MEASURE ----------
+        var primaryText = applyCase(opts.verseYoruba || '', state.textCase);
+        var secondaryText = applyCase(opts.verseEnglish || '', state.textCase);
 
         var mainSub = [];
-        if (state.showYoruba !== false && yoText) {
-            var layoutYo = measure(yoText, '700 ' + fontSize + 'px ' + mainFontFamily, contentW);
+        if (primaryText) {
+            var layoutP = measure(primaryText, primaryWeight + ' ' + fontSize + 'px ' + mainFontFamily, contentW);
             mainSub.push({
-                layout: layoutYo,
-                font: '700 ' + fontSize + 'px ' + mainFontFamily,
+                layout: layoutP,
+                font: primaryWeight + ' ' + fontSize + 'px ' + mainFontFamily,
                 size: fontSize,
                 lineH: lineHeight,
-                opacity: (state.yoOpacity !== undefined ? state.yoOpacity : 100) / 100,
+                opacity: 1,
                 marginTop: 0
             });
         }
-        if (state.showEnglish !== false && enText) {
+        if (secondaryText) {
             var enSize = fontSize * 0.70;
             var enLineH = enSize * (state.lineSpacing || 1.7);
-            var layoutEn = measure(enText, '400 ' + enSize + 'px ' + mainFontFamily, contentW);
+            var layoutS = measure(secondaryText, '400 ' + enSize + 'px ' + mainFontFamily, contentW);
             mainSub.push({
-                layout: layoutEn,
+                layout: layoutS,
                 font: '400 ' + enSize + 'px ' + mainFontFamily,
                 size: enSize,
                 lineH: enLineH,
-                opacity: (state.enOpacity !== undefined ? state.enOpacity : 85) / 100,
+                opacity: 0.85,
                 marginTop: mainSub.length > 0 ? gapPx : 0
             });
         }
@@ -365,8 +380,6 @@ window.RenderEngine = (function () {
         var refH = refSize * 1.35;
         var blocks = [];
 
-        // Fixed visual order (top → bottom):
-        //   sec(top) → ref(top) → sec(above) → main → ref(bottom) → sec(bottom)
         if (state.secText && state.secPos === 'top') blocks.push({ kind: 'sec', height: secH });
         if (state.refShow && opts.referenceText && state.refPos === 'top') blocks.push({ kind: 'ref', height: refH });
         if (state.secText && state.secPos === 'above') blocks.push({ kind: 'sec', height: secH });
@@ -386,7 +399,7 @@ window.RenderEngine = (function () {
         else if (vpos === 'bottom') startY = contentBottom - totalH;
         else startY = contentTop + Math.max(0, (contentH - totalH) / 2);
 
-        // ============ DRAW BLOCKS ============
+        // ---------- DRAW BLOCKS ----------
         var cursorY = startY;
         blocks.forEach(function (b, i) {
             if (i > 0) cursorY += gapPx;
@@ -432,8 +445,8 @@ window.RenderEngine = (function () {
             cursorY += b.height;
         });
 
-        // ============ LOGO ============
-        if (state.logoData) {
+        // ---------- LOGO ----------
+         if (state.logoData) {
             try {
                 var logo = await loadImage(state.logoData);
                 var logoSize = (state.logoSize || 60) * scale;
@@ -447,7 +460,6 @@ window.RenderEngine = (function () {
 
                 ctx.save();
                 ctx.globalAlpha = (state.logoOpacity !== undefined ? state.logoOpacity : 100) / 100;
-
                 if (state.logoBgOn) {
                     ctx.fillStyle = state.logoBgColor || '#ffffff';
                     roundRectPath(ctx, lx - 4 * scale, ly - 4 * scale, logoSize + 8 * scale, logoSize + 8 * scale, 8 * scale);
@@ -466,7 +478,7 @@ window.RenderEngine = (function () {
             } catch (e) {}
         }
 
-        // ============ WATERMARK ============
+        // ---------- WATERMARK ----------
         if (state.watermarkOn !== false) {
             var wmSize = 11 * scale;
             ctx.save();
@@ -479,10 +491,9 @@ window.RenderEngine = (function () {
             ctx.restore();
         }
 
-        // Release content clip
         ctx.restore();
 
-        // ============ BORDER (unclipped) ============
+        // ---------- BORDER ----------
         if (bwPx > 0) {
             ctx.save();
             var br = Math.max(0, radiusPx - bwPx / 2);
