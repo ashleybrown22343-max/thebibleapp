@@ -3,521 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Image Studio – Bibeli Mimo</title>
+    <title>Studio – Bibeli Mimo</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/studio/studio.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f172a'/><text x='50' y='68' font-size='60' font-family='Arial' font-weight='bold' fill='%23f59e0b' text-anchor='middle'>B</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>S</text></svg>">
     <link rel="manifest" href="/manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@400;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;600&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Lora:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .studio-landing { padding: 8px 20px 40px; max-width: 640px; margin: 0 auto; }
+        .studio-hero { text-align: center; padding: 24px 0 8px; }
+        .studio-hero h1 {
+            font-family: var(--font-head);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+        .studio-hero p {
+            font-size: 15px;
+            color: var(--text-soft);
+            line-height: 1.5;
+        }
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 28px;
+        }
+        .mode-card {
+            position: relative;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 26px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            min-height: 180px;
+            justify-content: center;
+        }
+        .mode-card:active { transform: scale(0.97); box-shadow: var(--shadow-md); }
+        .mode-card.disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+        .mode-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, #D19A34 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(232,177,75,0.35);
+        }
+        .mode-card-icon.video {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+            box-shadow: 0 6px 16px rgba(79,70,229,0.35);
+        }
+        .mode-card-icon svg { width: 26px; height: 26px; }
+        .mode-card h3 {
+            font-family: var(--font-head);
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+        .mode-card p {
+            font-size: 12px;
+            color: var(--text-soft);
+            line-height: 1.45;
+            margin: 0;
+        }
+        .mode-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 3px 8px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 999px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .recent-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            scrollbar-width: none;
+        }
+        .recent-strip::-webkit-scrollbar { display: none; }
+    </style>
 </head>
 <body>
 
-    <!-- ================= HEADER ================= -->
-    <header class="header">
-    <a href="/" class="icon-btn" aria-label="Back">
-        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-    </a>
+    <main class="studio-landing">
+        <section class="studio-hero">
+            <h1>Studio</h1>
+            <p>Design beautiful Scripture content<br>in any language</p>
+        </section>
 
-    <h1>Image Studio</h1>
-
-    <div class="header-actions">
-        <button class="icon-btn" id="undo-btn" aria-label="Undo">
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a5 5 0 015 5v3M3 10l5-5M3 10l5 5"/>
-            </svg>
-        </button>
-        <button class="icon-btn" id="reset-all-btn" aria-label="Reset">
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M20 10a8 8 0 00-14.93-4M4 14a8 8 0 0014.93 4"/>
-            </svg>
-        </button>
-        <button class="icon-btn" id="save-preset-btn" aria-label="Save Preset">
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-            </svg>
-        </button>
-    </div>
-    </header>
-
-    <!-- ================= STICKY EXPORT BAR ================= -->
-    <div class="sticky-actions">
-        <button class="export-btn" id="export-open-btn">
-            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Export Image
-        </button>
-    </div>
-
-    <!-- ================= STUDIO CONTAINER ================= -->
-    <div class="studio-container">
-
-        <!-- STICKY PREVIEW -->
-        <div class="sticky-preview">
-            <div id="preview-card" class="preview-card ratio-square" title="Tap to zoom">
-                <div id="preview-bg" class="preview-bg"></div>
-                <div id="preview-bg-filter" class="preview-bg-filter"></div>
-                <div id="preview-dark-overlay" class="preview-dark-overlay"></div>
-                <div id="preview-duotone" class="preview-duotone" style="display:none;"></div>
-                <div id="preview-gradient-overlay" class="preview-gradient-overlay" style="display:none;"></div>
-                <div id="preview-vignette" class="preview-vignette"></div>
-                <div class="preview-content">
-                    <div id="preview-ref" class="preview-ref"></div>
-                    <div id="preview-text" class="preview-text">Loading...</div>
-                    <div id="preview-secondary" class="preview-secondary" style="display:none;"></div>
+        <div class="mode-grid">
+            <a href="/studio/image/" class="mode-card">
+                <div class="mode-card-icon">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
                 </div>
-                <div id="preview-logo-wrap" class="preview-logo-wrap" style="display:none;">
-                    <div id="preview-logo-bg" class="preview-logo-bg"></div>
-                    <img id="preview-logo-img" class="preview-logo-img" alt="logo">
+                <h3>Image</h3>
+                <p>Create a verse image</p>
+            </a>
+
+            <div class="mode-card disabled">
+                <span class="mode-badge">Soon</span>
+                <div class="mode-card-icon video">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <polygon points="23 7 16 12 23 17 23 7"/>
+                        <rect x="1" y="5" width="15" height="14" rx="2"/>
+                    </svg>
                 </div>
-                <div id="preview-decoration" class="preview-decoration"></div>
-                <div id="preview-watermark" class="preview-watermark">Bibeli Mimo</div>
-                <div id="preview-safezone" class="preview-safezone" style="display:none;">
-                    <div class="safe-top"></div>
-                    <div class="safe-bottom"></div>
-                </div>
-                <div class="preview-zoom-hint"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg></div>
+                <h3>Video</h3>
+                <p>Animated verses</p>
             </div>
         </div>
 
-        <!-- TAB BAR -->
-        <div class="tab-bar">
-            <button class="tab-btn active" data-tab="verse"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span>Verse</span></button>
-            <button class="tab-btn" data-tab="templates"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg><span>Templates</span></button>
-            <button class="tab-btn" data-tab="design"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg><span>Design</span></button>
-            <button class="tab-btn" data-tab="extras"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg><span>Extras</span></button>
-            <button class="tab-btn" data-tab="presets"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><span>Presets</span></button>
+        <div class="section-head" style="margin-top:36px;">
+            <h2>Coming soon</h2>
         </div>
-
-        <!-- ================= PANEL: VERSE ================= -->
-        <div class="panel active" id="panel-verse">
-
-            <h3 class="panel-title">Find Verse</h3>
-            <input type="text" id="topic-search" class="text-input" placeholder="Search: love, hope, faith...">
-            <div id="topic-results" class="topic-results"></div>
-
-            <h3 class="panel-title">Select Verse</h3>
-            <div class="picker-row">
-                <button id="pick-book" class="picker-btn">Genesis</button>
-                <button id="pick-chapter" class="picker-btn">1</button>
-                <button id="pick-verse" class="picker-btn">1</button>
-            </div>
-            <div class="picker-row">
-                <button id="random-verse" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Random</button>
-                <button id="votd-fill" class="action-mini"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/></svg> Today</button>
-            </div>
-
-            <h3 class="panel-title">Language</h3>
-            <div class="toggle-row">
-                <span>Show Yoruba</span>
-                <button class="switch active" id="lang-yo-toggle"></button>
-            </div>
-            <div class="toggle-row">
-                <span>Show English</span>
-                <button class="switch active" id="lang-en-toggle"></button>
-            </div>
-
-            <h3 class="panel-title">Recently Used</h3>
-            <div id="recent-verses" class="recent-list"></div>
-        </div>
-
-        <!-- ================= PANEL: TEMPLATES ================= -->
-        <div class="panel" id="panel-templates">
-            <h3 class="panel-title">Recently Used</h3>
-            <div id="recent-templates" class="recent-templates"></div>
-
-            <h3 class="panel-title">Templates</h3>
-            <div class="template-tabs">
-                <button class="tpl-tab active" data-cat="photos">Photos</button>
-                <button class="tpl-tab" data-cat="gradients">Gradients</button>
-                <button class="tpl-tab" data-cat="solids">Solids</button>
-                <button class="tpl-tab" data-cat="favorites">Favorites</button>
-            </div>
-            <div id="template-grid" class="template-grid"></div>
-        </div>
-
-        <!-- ================= PANEL: DESIGN ================= -->
-        <div class="panel" id="panel-design">
-
-            <h3 class="panel-title">Quick Presets</h3>
-            <div class="quick-presets" id="quick-presets"></div>
-
-            <h3 class="panel-title">Layout</h3>
-            <label class="field-label">Aspect Ratio</label>
-            <div class="button-grid-3" id="ratio-group">
-                <button class="opt-btn active" data-ratio="square"><span class="opt-btn-label">1:1</span><span class="opt-btn-sub">Post</span></button>
-                <button class="opt-btn" data-ratio="portrait"><span class="opt-btn-label">4:5</span><span class="opt-btn-sub">Portrait</span></button>
-                <button class="opt-btn" data-ratio="story"><span class="opt-btn-label">9:16</span><span class="opt-btn-sub">Story</span></button>
-                <button class="opt-btn" data-ratio="landscape"><span class="opt-btn-label">16:9</span><span class="opt-btn-sub">Thumb</span></button>
-                <button class="opt-btn" data-ratio="pin"><span class="opt-btn-label">3:4</span><span class="opt-btn-sub">Pin</span></button>
-            </div>
-            <div class="toggle-row">
-                <span>Safe Zone Guides</span>
-                <button class="switch" id="safezone-toggle"></button>
-            </div>
-
-            <label class="field-label">Border Width <span id="border-label">0</span>px</label>
-            <input type="range" id="border-slider" min="0" max="30" value="0" class="slider">
-            <div class="inline-row">
-                <button class="color-pick-btn" id="border-color-btn" style="background:#ffffff"></button>
-                <span class="inline-label">Border Color</span>
-            </div>
-
-            <label class="field-label">Corner Radius <span id="radius-label">0</span>px</label>
-            <input type="range" id="radius-slider" min="0" max="60" value="0" class="slider">
-
-            <h3 class="panel-title">Background Effects</h3>
-            <label class="field-label">Blur <span id="blur-label">0</span>px</label>
-            <input type="range" id="blur-slider" min="0" max="20" step="0.5" value="0" class="slider">
-
-            <label class="field-label">Dark Overlay <span id="dark-label">0</span>%</label>
-            <input type="range" id="dark-slider" min="0" max="80" value="0" class="slider">
-
-            <label class="field-label">Brightness <span id="brightness-label">100</span>%</label>
-            <input type="range" id="brightness-slider" min="30" max="150" value="100" class="slider">
-
-            <label class="field-label">Saturation <span id="saturation-label">100</span>%</label>
-            <input type="range" id="saturation-slider" min="0" max="200" value="100" class="slider">
-
-            <div class="toggle-row">
-                <span>Duotone Effect</span>
-                <button class="switch" id="duotone-toggle"></button>
-            </div>
-            <div class="inline-row">
-                <button class="color-pick-btn" id="duotone-shadow-btn" style="background:#1a237e"></button>
-                <span class="inline-label">Duotone Shadow</span>
-            </div>
-            <div class="inline-row">
-                <button class="color-pick-btn" id="duotone-highlight-btn" style="background:#f59e0b"></button>
-                <span class="inline-label">Duotone Highlight</span>
-            </div>
-
-            <div class="toggle-row">
-                <span>Gradient Overlay</span>
-                <button class="switch" id="gradient-overlay-toggle"></button>
-            </div>
-            <div class="inline-row">
-                <button class="color-pick-btn" id="gradient-color-btn" style="background:#1a237e"></button>
-                <span class="inline-label">Gradient Color</span>
-                <input type="range" id="gradient-opacity-slider" min="0" max="100" value="40" class="slider-small">
-            </div>
-
-            <label class="field-label">Vignette <span id="vignette-label">0</span>%</label>
-            <input type="range" id="vignette-slider" min="0" max="100" value="0" class="slider">
-
-            <h3 class="panel-title">Typography</h3>
-            <button class="opt-btn wide" id="font-family-btn">Poppins</button>
-
-            <label class="field-label">Font Size <span id="font-size-label">24</span>px</label>
-            <input type="range" id="font-size-slider" min="12" max="80" value="24" class="slider">
-            <button class="action-mini wide" id="autofit-btn" style="margin-bottom:10px;">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                Auto-Fit Text
-            </button>
-
-            <label class="field-label">Line Spacing <span id="line-spacing-label">1.7</span></label>
-            <input type="range" id="line-spacing-slider" min="1.0" max="2.5" step="0.1" value="1.7" class="slider">
-
-            <label class="field-label">Letter Spacing <span id="letter-spacing-label">0</span>px</label>
-            <input type="range" id="letter-spacing-slider" min="-2" max="10" value="0" class="slider">
-
-            <label class="field-label">Text Padding <span id="padding-label">10</span>%</label>
-            <input type="range" id="padding-slider" min="8" max="20" step="0.5" value="10" class="slider">
-
-            <label class="field-label">Block Gap <span id="block-gap-label">1.5</span>x</label>
-            <input type="range" id="block-gap-slider" min="0.5" max="3" step="0.1" value="1.5" class="slider">
-
-            <label class="field-label">Alignment</label>
-            <div class="button-grid-3" id="align-group">
-                <button class="opt-btn" data-align="left">Left</button>
-                <button class="opt-btn active" data-align="center">Center</button>
-                <button class="opt-btn" data-align="right">Right</button>
-            </div>
-
-            <label class="field-label">Vertical Position</label>
-            <div class="button-grid-3" id="vpos-group">
-                <button class="opt-btn" data-vpos="top">Top</button>
-                <button class="opt-btn active" data-vpos="center">Center</button>
-                <button class="opt-btn" data-vpos="bottom">Bottom</button>
-            </div>
-
-            <div class="inline-row">
-                <button class="color-pick-btn" id="text-color-btn" style="background:#ffffff"></button>
-                <span class="inline-label">Text Color</span>
-            </div>
-
-            <label class="field-label">Text Shadow</label>
-            <div class="button-grid-3" id="shadow-group">
-                <button class="opt-btn" data-shadow="none">None</button>
-                <button class="opt-btn" data-shadow="soft">Soft</button>
-                <button class="opt-btn active" data-shadow="strong">Strong</button>
-                <button class="opt-btn" data-shadow="glow">Glow</button>
-                <button class="opt-btn" data-shadow="outline">Outline</button>
-            </div>
-
-            <label class="field-label">Text Case</label>
-            <div class="button-grid-3" id="case-group">
-                <button class="opt-btn active" data-case="normal">Normal</button>
-                <button class="opt-btn" data-case="upper">UPPER</button>
-                <button class="opt-btn" data-case="title">Title</button>
-            </div>
-
-            <label class="field-label">Yoruba Opacity <span id="yo-opacity-label">100</span>%</label>
-            <input type="range" id="yo-opacity-slider" min="10" max="100" value="100" class="slider">
-
-            <label class="field-label">English Opacity <span id="en-opacity-label">85</span>%</label>
-            <input type="range" id="en-opacity-slider" min="10" max="100" value="85" class="slider">
-
-            <h3 class="panel-title">Word Highlight</h3>
-            <input type="text" id="highlight-word-input" class="text-input" placeholder="Word to highlight (e.g., grace)" maxlength="30">
-            <div class="inline-row">
-                <button class="color-pick-btn" id="highlight-color-btn" style="background:#f59e0b"></button>
-                <span class="inline-label">Highlight Color</span>
-            </div>
-
-            <h3 class="panel-title">Reference</h3>
-            <div class="toggle-row"><span>Show Reference</span><button class="switch active" id="ref-toggle"></button></div>
-            <label class="field-label">Position</label>
-            <div class="button-grid-3" id="refpos-group">
-                <button class="opt-btn active" data-refpos="top">Top</button>
-                <button class="opt-btn" data-refpos="bottom">Bottom</button>
-            </div>
-            <label class="field-label">Reference Size <span id="ref-size-label">14</span>px</label>
-            <input type="range" id="ref-size-slider" min="10" max="40" value="14" class="slider">
-            <div class="inline-row">
-                <button class="color-pick-btn" id="ref-color-btn" style="background:#f59e0b"></button>
-                <span class="inline-label">Reference Color</span>
-            </div>
-            <label class="field-label">Reference Shadow</label>
-            <div class="button-grid-3" id="ref-shadow-group">
-                <button class="opt-btn" data-refshadow="none">None</button>
-                <button class="opt-btn active" data-refshadow="soft">Soft</button>
-                <button class="opt-btn" data-refshadow="strong">Strong</button>
-            </div>
-            <div class="toggle-row">
-                <span>Match Main Font</span>
-                <button class="switch active" id="ref-match-font-toggle"></button>
-            </div>
-            <button class="opt-btn wide" id="ref-font-btn" style="display:none;">Playfair Display</button>
-        </div>
-
-           <!-- ================= PANEL: EXTRAS ================= -->
-        <div class="panel" id="panel-extras">
-
-            <h3 class="panel-title">Secondary Text</h3>
-            <input type="text" id="secondary-input" class="text-input" placeholder="e.g. @yourchurch" maxlength="40">
-            <label class="field-label">Position</label>
-            <div class="button-grid-3" id="secpos-group">
-                <button class="opt-btn" data-secpos="top">Top</button>
-                <button class="opt-btn" data-secpos="bottom">Bottom</button>
-                <button class="opt-btn active" data-secpos="above">Above</button>
-            </div>
-            <label class="field-label">Size <span id="sec-size-label">12</span>px</label>
-            <input type="range" id="sec-size-slider" min="10" max="30" value="12" class="slider">
-            <label class="field-label">Opacity <span id="sec-opacity-label">85</span>%</label>
-            <input type="range" id="sec-opacity-slider" min="10" max="100" value="85" class="slider">
-            <div class="inline-row">
-                <button class="color-pick-btn" id="sec-color-btn" style="background:#ffffff"></button>
-                <span class="inline-label">Secondary Color</span>
-            </div>
-
-            <h3 class="panel-title">Logo / Watermark</h3>
-            <input type="file" id="logo-input" accept="image/*" class="hidden-input">
-            <button class="opt-btn wide" id="logo-upload-btn">Upload Logo</button>
-            <button class="opt-btn wide" id="logo-remove-btn" style="background:#dc2626;color:white;margin-top:8px;">Remove Logo</button>
-
-            <label class="field-label">Logo Position</label>
-            <div class="button-grid-3" id="logo-pos-group">
-                <button class="opt-btn" data-logopos="tl">Top Left</button>
-                <button class="opt-btn" data-logopos="tr">Top Right</button>
-                <button class="opt-btn" data-logopos="bl">Bottom Left</button>
-                <button class="opt-btn active" data-logopos="br">Bottom Right</button>
-            </div>
-            <label class="field-label">Logo Size <span id="logo-size-label">60</span>px</label>
-            <input type="range" id="logo-size-slider" min="30" max="200" value="60" class="slider">
-            <label class="field-label">Logo Opacity <span id="logo-opacity-label">100</span>%</label>
-            <input type="range" id="logo-opacity-slider" min="10" max="100" value="100" class="slider">
-            <div class="toggle-row">
-                <span>Logo Border</span>
-                <button class="switch" id="logo-border-toggle"></button>
-            </div>
-            <div class="inline-row">
-                <button class="color-pick-btn" id="logo-border-color-btn" style="background:#ffffff"></button>
-                <span class="inline-label">Logo Border Color</span>
-            </div>
-            <div class="toggle-row">
-                <span>Logo Background Pill</span>
-                <button class="switch" id="logo-bg-toggle"></button>
-            </div>
-            <div class="inline-row">
-                <button class="color-pick-btn" id="logo-bg-color-btn" style="background:#ffffff"></button>
-                <span class="inline-label">Logo Background Color</span>
-            </div>
-
-            <h3 class="panel-title">App Watermark</h3>
-            <div class="toggle-row">
-                <span>Show "Bibeli Mimo" watermark</span>
-                <button class="switch active" id="watermark-toggle"></button>
-            </div>
-        </div>
-
-        <!-- ================= PANEL: PRESETS ================= -->
-        <div class="panel" id="panel-presets">
-            <h3 class="panel-title">My Presets</h3>
-            <p class="hint-text">Save your current look — font, size, color, shadow, layout — as a preset.</p>
-            <div id="presets-list" class="presets-list"></div>
-
-            <h3 class="panel-title">Brand Colors</h3>
-            <p class="hint-text">Save 3 brand colors to reuse across your designs.</p>
-            <div class="brand-colors-row" id="brand-colors-row"></div>
-        </div>
-
-    </div>
-
-    <!-- ================= MODAL: VERSE PICKER ================= -->
-    <div id="verse-modal" class="modal-overlay" onclick="if(event.target.id==='verse-modal') closeVerseModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="verse-modal-title">Select Book</h3>
-                <button class="icon-btn" onclick="closeVerseModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-            <div id="verse-modal-list" class="modal-list"></div>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: COLOR PICKER ================= -->
-    <div id="color-modal" class="modal-overlay" onclick="if(event.target.id==='color-modal') closeColorModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Pick Color</h3>
-                <button class="icon-btn" onclick="closeColorModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-            <div class="color-preview" id="color-preview"></div>
-            <label class="field-label">Hue <span id="hue-label">0</span></label>
-            <input type="range" id="hue-slider" min="0" max="360" value="0" class="slider hue-slider">
-            <label class="field-label">Saturation <span id="sat-label">0</span>%</label>
-            <input type="range" id="sat-slider" min="0" max="100" value="0" class="slider">
-            <label class="field-label">Lightness <span id="light-label">100</span>%</label>
-            <input type="range" id="light-slider" min="0" max="100" value="100" class="slider">
-            <label class="field-label">Hex Code</label>
-            <input type="text" id="hex-input" class="text-input" placeholder="#ffffff" maxlength="7">
-            <label class="field-label">Presets</label>
-            <div class="color-swatches" id="color-swatches"></div>
-            <label class="field-label">Save as Brand Color</label>
-            <button class="opt-btn wide" id="save-brand-color-btn" style="margin-bottom:10px;">+ Save This Color as Brand</button>
-            <button class="action-btn primary wide" id="color-confirm-btn">Apply Color</button>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: FONT PICKER ================= -->
-    <div id="font-modal" class="modal-overlay" onclick="if(event.target.id==='font-modal') closeFontModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="font-modal-title">Font Family</h3>
-                <button class="icon-btn" onclick="closeFontModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-            <div id="font-list" class="font-list"></div>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: PRESET SAVE ================= -->
-    <div id="preset-modal" class="modal-overlay" onclick="if(event.target.id==='preset-modal') closePresetModal()">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Save Preset</h3>
-                <button class="icon-btn" onclick="closePresetModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-            <input type="text" id="preset-name-input" class="text-input" placeholder="Preset name" maxlength="30">
-            <button class="action-btn primary wide" id="preset-confirm-btn">Save Preset</button>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: EXPORT ================= -->
-    <div id="export-modal" class="modal-overlay" onclick="if(event.target.id==='export-modal') closeExportModal()">
-        <div class="modal-content export-modal-content">
-            <div class="modal-header">
-                <h3>Export Image</h3>
-                <button class="icon-btn" onclick="closeExportModal()"><svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-
-            <label class="field-label">Format</label>
-            <div class="button-grid-2" id="format-group">
-                <button class="opt-btn active" data-format="png">PNG</button>
-                <button class="opt-btn" data-format="jpg">JPG</button>
-            </div>
-
-            <div id="jpg-quality-row" style="display:none;">
-                <label class="field-label">JPG Quality <span id="jpg-quality-label">90</span>%</label>
-                <input type="range" id="jpg-quality-slider" min="60" max="100" value="90" class="slider">
-            </div>
-
-            <label class="field-label">Resolution</label>
-            <div class="button-grid-4" id="resolution-group">
-                <button class="opt-btn" data-res="720"><span class="opt-btn-label">720p</span><span class="opt-btn-sub">Fast</span></button>
-                <button class="opt-btn active" data-res="1080"><span class="opt-btn-label">1080p</span><span class="opt-btn-sub">HD</span></button>
-                <button class="opt-btn" data-res="1440"><span class="opt-btn-label">1440p</span><span class="opt-btn-sub">2K</span></button>
-                <button class="opt-btn" data-res="2160"><span class="opt-btn-label">2160p</span><span class="opt-btn-sub">4K</span></button>
-            </div>
-
-            <div class="export-estimate" id="export-estimate">Estimated size: ~1.2 MB</div>
-
-            <button class="action-btn primary wide" id="export-download-btn" style="margin-top:20px;">
-                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Download
-            </button>
-        </div>
-    </div>
-
-    <!-- ================= MODAL: PREVIEW ZOOM ================= -->
-    <div id="zoom-modal" class="modal-overlay zoom-overlay" onclick="if(event.target.id==='zoom-modal') closeZoomModal()">
-        <div class="zoom-content" id="zoom-content"></div>
-        <button class="zoom-close" onclick="closeZoomModal()">Close</button>
-    </div>
-
-    <!-- ================= MODAL: ONBOARDING ================= -->
-    <div id="onboarding-overlay" class="onboarding-overlay">
-        <div class="onboarding-card">
-            <div class="onboarding-slide" id="ob-slide-1">
-                <div class="onboarding-icon"><svg width="60" height="60" fill="none" stroke="#f59e0b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
-                <h3>1. Pick a Verse</h3>
-                <p>Select any Bible verse in Yoruba, English, or both. Or search by topic like "love" or "hope".</p>
-            </div>
-            <div class="onboarding-slide" id="ob-slide-2" style="display:none;">
-                <div class="onboarding-icon"><svg width="60" height="60" fill="none" stroke="#f59e0b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
-                <h3>2. Choose a Template</h3>
-                <p>Pick from photos, gradients, or solid colors. Tap the heart to save favorites.</p>
-            </div>
-            <div class="onboarding-slide" id="ob-slide-3" style="display:none;">
-                <div class="onboarding-icon"><svg width="60" height="60" fill="none" stroke="#f59e0b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></div>
-                <h3>3. Export</h3>
-                <p>Pick your resolution, and we handle the rest. Your image saves directly to your device.</p>
-            </div>
-            <div class="onboarding-dots">
-                <span class="dot active" data-slide="1"></span>
-                <span class="dot" data-slide="2"></span>
-                <span class="dot" data-slide="3"></span>
-            </div>
-            <button class="action-btn primary wide" id="onboarding-next-btn">Next</button>
-            <button class="onboarding-skip" id="onboarding-skip-btn">Skip</button>
-        </div>
-    </div>
-
-    <!-- ================= CONFIRM MODAL (for Reset All) ================= -->
-    <div id="confirm-modal" class="modal-overlay" onclick="if(event.target.id==='confirm-modal') closeConfirmModal()">
-        <div class="modal-content confirm-content">
-            <h3 id="confirm-title">Are you sure?</h3>
-            <p id="confirm-message">This action cannot be undone.</p>
-            <div class="confirm-actions">
-                <button class="action-mini" id="confirm-cancel-btn">Cancel</button>
-                <button class="action-mini" id="confirm-ok-btn" style="background:#dc2626;color:white;">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= TOAST CONTAINER ================= -->
-    <div id="toast-container" class="toast-container"></div>
+        <p style="font-size:14px; color:var(--text-soft); line-height:1.6;">
+            Video export is next. Same look you design here — animated for stories and reels.
+        </p>
+    </main>
 
     <script src="/shared.js"></script>
-<script src="/studio/studio.js"></script>
+    <script src="/shared-nav.js"></script>
+    <script>
+        if (window.SharedNav) {
+            window.SharedNav.init({
+                title: 'Studio',
+                showBack: false,
+                showSearch: false,
+                showBell: false,
+                showMenu: true,
+                showBottomNav: true,
+                activeNav: ''
+            });
+        }
+    </script>
 </body>
-                    </html>
+</html>
