@@ -1,8 +1,9 @@
 // ============================================================
-// SERVICE WORKER — Offline caching (Studio requires internet)
+// SERVICE WORKER — Offline caching
+// NOTE: /studio/* is intentionally NOT cached (network-only)
 // ============================================================
 
-const CACHE_NAME = 'bibeli-mimo-v3';
+const CACHE_NAME = 'bibeli-mimo-v4';
 
 const APP_SHELL = [
     '/',
@@ -53,7 +54,6 @@ const APP_SHELL = [
     '/data/english_nkj.json'
 ];
 
-// ---------- INSTALL ----------
 self.addEventListener('install', function (event) {
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
@@ -69,7 +69,6 @@ self.addEventListener('install', function (event) {
     self.skipWaiting();
 });
 
-// ---------- ACTIVATE ----------
 self.addEventListener('activate', function (event) {
     event.waitUntil(
         caches.keys().then(function (keys) {
@@ -82,14 +81,11 @@ self.addEventListener('activate', function (event) {
     self.clients.claim();
 });
 
-// ---------- FETCH ----------
 self.addEventListener('fetch', function (event) {
     var url = new URL(event.request.url);
-
-    // Only handle GET
     if (event.request.method !== 'GET') return;
 
-    // STUDIO — always network. If offline, show offline page.
+    // STUDIO — always network (monetization: no offline use).
     if (url.pathname.indexOf('/studio') === 0) {
         event.respondWith(
             fetch(event.request).catch(function () {
@@ -99,7 +95,6 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // NAVIGATION (HTML pages) — network first, cache fallback
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).then(function (response) {
@@ -111,11 +106,8 @@ self.addEventListener('fetch', function (event) {
                 }
                 return response;
             }).catch(function () {
-                // Offline: match by path, ignoring query string
                 return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
                     if (cached) return cached;
-
-                    // Try the folder's index.html
                     var base = url.pathname;
                     if (base.charAt(base.length - 1) === '/') base += 'index.html';
                     return caches.match(base).then(function (c) {
@@ -127,7 +119,6 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // OTHER ASSETS — cache first
     event.respondWith(
         caches.match(event.request).then(function (cached) {
             if (cached) return cached;
@@ -139,9 +130,7 @@ self.addEventListener('fetch', function (event) {
                     });
                 }
                 return response;
-            }).catch(function () {
-                return null;
-            });
+            }).catch(function () { return null; });
         })
     );
 });
