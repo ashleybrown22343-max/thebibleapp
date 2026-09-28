@@ -1,10 +1,14 @@
 // ============================================================
-// BIBELI MIMO – EXPORT PAGE (Native Canvas)
+// BIBELI MIMO – EXPORT PAGE (Native Canvas + IndexedDB handoff)
 // ============================================================
 
 var exportData = null;
 var generatedBlob = null;
 var generatedFilename = '';
+
+var EXPORT_DB = 'bibeli_export';
+var EXPORT_STORE = 'blobs';
+var EXPORT_KEY = 'current';
 
 function showView(id) {
     document.querySelectorAll('.export-view').forEach(function (v) { v.classList.remove('active'); });
@@ -52,6 +56,44 @@ function computeTargetHeight(w, ratio) {
     return Math.round(w * 4 / 3);
 }
 
+// ---------- INDEXEDDB READ + DELETE ----------
+function idbGet(key) {
+    return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(EXPORT_DB, 1);
+        req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(EXPORT_STORE)) {
+                db.createObjectStore(EXPORT_STORE);
+            }
+        };
+        req.onsuccess = function () {
+            var db = req.result;
+            var tx = db.transaction(EXPORT_STORE, 'readonly');
+            var get = tx.objectStore(EXPORT_STORE).get(key);
+            get.onsuccess = function () { resolve(get.result || null); };
+            get.onerror = function () { reject(get.error); };
+        };
+        req.onerror = function () { reject(req.error); };
+    });
+}
+
+function idbDelete(key) {
+    return new Promise(function (resolve) {
+        var req = indexedDB.open(EXPORT_DB, 1);
+        req.onsuccess = function () {
+            var db = req.result;
+            try {
+                var tx = db.transaction(EXPORT_STORE, 'readwrite');
+                tx.objectStore(EXPORT_STORE).delete(key);
+                tx.oncomplete = function () { resolve(); };
+                tx.onerror = function () { resolve(); };
+            } catch (e) { resolve(); }
+        };
+        req.onerror = function () { resolve(); };
+    });
+}
+
+// ---------- MAIN FLOW ----------
 async function runExportFlow() {
     showView('processing-view');
     setProgress(0, 'Starting…');
@@ -152,13 +194,19 @@ function initExport() {
     document.getElementById('share-action').onclick = shareGenerated;
     document.getElementById('copy-action').onclick = copyGenerated;
 
-    try {
-        var raw = localStorage.getItem('studio_export_state');
-        if (!raw) { showError('No export data found. Go back to the Studio and try again.'); return; }
-        exportData = JSON.parse(raw);
-    } catch (e) { showError('Failed to read export data.'); return; }
-
-    runExportFlow();
+    idbGet(EXPORT_KEY).then(function (data) {
+        if (!data) {
+            showError('No export data found. Go back to the Studio and try again.');
+            return;
+        }
+        exportData = data;
+        // Delete immediately — the payload lives in this page's memory only
+        idbDelete(EXPORT_KEY);
+        runExportFlow();
+    }).catch(function (err) {
+        console.error('IndexedDB read failed:', err);
+        showError('Could not read export data.');
+    });
 }
 
 window.addEventListener('load', initExport);
