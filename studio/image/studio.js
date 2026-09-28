@@ -263,14 +263,22 @@ function applyUrlParams() {
     }
 }
 
+// ---------- AUTOSAVE (image never persists) ----------
 function saveDraft() {
-    try { localStorage.setItem('studio_draft', JSON.stringify(state)); } catch (e) {}
+    try {
+        var draft = JSON.parse(JSON.stringify(state));
+        delete draft.bgImageData;
+        localStorage.setItem('studio_draft', JSON.stringify(draft));
+    } catch (e) {}
 }
 
 // ---------- UNDO / REDO ----------
 function pushUndo() {
     try {
-        undoStack.push(JSON.parse(JSON.stringify(state)));
+        var snap = JSON.parse(JSON.stringify(state));
+        // Never push the base64 image into the undo stack — it's huge
+        if (snap.bgImageData) snap.bgImageData = state.bgImageData ? '[img]' : null;
+        undoStack.push(snap);
         if (undoStack.length > 30) undoStack.shift();
         redoStack = [];
     } catch (e) {}
@@ -278,7 +286,10 @@ function pushUndo() {
 function performUndo() {
     if (undoStack.length === 0) { showToast('Nothing to undo', 'info'); return; }
     redoStack.push(JSON.parse(JSON.stringify(state)));
-    state = undoStack.pop();
+    var prev = undoStack.pop();
+    // Preserve the current image through undo (undo snapshots carry only a marker)
+    if (prev.bgImageData === '[img]') prev.bgImageData = state.bgImageData;
+    state = prev;
     syncAllUI();
     updatePreview();
     showPreviewLogo();
@@ -289,7 +300,9 @@ function performUndo() {
 function performRedo() {
     if (redoStack.length === 0) { showToast('Nothing to redo', 'info'); return; }
     undoStack.push(JSON.parse(JSON.stringify(state)));
-    state = redoStack.pop();
+    var next = redoStack.pop();
+    if (next.bgImageData === '[img]') next.bgImageData = state.bgImageData;
+    state = next;
     syncAllUI();
     updatePreview();
     showPreviewLogo();
@@ -420,7 +433,7 @@ function attachCanvasGestures() {
     };
 }
 
-// ---------- LANGUAGE MENU (NEW) ----------
+// ---------- LANGUAGE MENU ----------
 function attachLangMenuGlobal() {
     document.addEventListener('pointerdown', closeLangOnOutside, true);
 }
@@ -1333,7 +1346,6 @@ function attachExportModalEvents() {
         try { localStorage.setItem('studio_export_quality', state.exportQuality); } catch (e) {}
         try { localStorage.setItem('studio_export_res', state.exportRes); } catch (e) {}
         saveExportState();
-        window.location.href = '/studio/image/export/';
     };
 }
 
@@ -1344,6 +1356,36 @@ function updateExportEstimate() {
         ? (pixels * (state.exportQuality / 100) * 0.00000025).toFixed(2)
         : (pixels * 0.0000007).toFixed(2);
     document.getElementById('export-estimate').textContent = 'Estimated: ~' + sizeMB + ' MB';
+}
+
+// ---------- INDEXEDDB (image handoff — never touches localStorage) ----------
+var EXPORT_DB = 'bibeli_export';
+var EXPORT_STORE = 'blobs';
+var EXPORT_KEY = 'current';
+
+function openExportDB() {
+    return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(EXPORT_DB, 1);
+        req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(EXPORT_STORE)) {
+                db.createObjectStore(EXPORT_STORE);
+            }
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+    });
+}
+
+function idbPut(key, value) {
+    return openExportDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            var tx = db.transaction(EXPORT_STORE, 'readwrite');
+            tx.objectStore(EXPORT_STORE).put(value, key);
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function () { reject(tx.error); };
+        });
+    });
 }
 
 function saveExportState() {
@@ -1365,6 +1407,10 @@ function saveExportState() {
         }
     }
 
+    // Strip the image from the settings clone — it's delivered separately as backgroundURL
+    var settingsClone = JSON.parse(JSON.stringify(state));
+    delete settingsClone.bgImageData;
+
     var exportData = {
         verseYoruba: primary,
         verseEnglish: secondary,
@@ -1374,13 +1420,21 @@ function saveExportState() {
         bgSolid: bgSolid,
         previewW: previewCard.offsetWidth,
         previewH: previewCard.offsetHeight,
-        settings: JSON.parse(JSON.stringify(state)),
+        settings: settingsClone,
         exportFormat: state.exportFormat,
         exportQuality: state.exportQuality,
         exportRes: state.exportRes
     };
 
-    try { localStorage.setItem('studio_export_state', JSON.stringify(exportData)); } catch (e) {}
+    // Free any stale localStorage from previous versions
+    try { localStorage.removeItem('studio_export_state'); } catch (e) {}
+
+    idbPut(EXPORT_KEY, exportData)
+        .then(function () { window.location.href = '/studio/image/export/'; })
+        .catch(function (err) {
+            console.error('Export handoff failed:', err);
+            showToast('Could not prepare export. Try again.', 'error');
+        });
 }
 
 // ---------- MODALS ----------
