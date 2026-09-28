@@ -1863,7 +1863,7 @@ function attachExportModalEvents() {
         try { localStorage.setItem('studio_export_quality', state.exportQuality); } catch (e) {}
         try { localStorage.setItem('studio_export_res', state.exportRes); } catch (e) {}
         saveExportState();
-        window.location.href = '/studio/export';
+        window.location.href = '/studio/image/export/index.html';
     };
 }
 
