@@ -2,7 +2,7 @@
 // SERVICE WORKER — Offline caching (Studio requires internet)
 // ============================================================
 
-const CACHE_NAME = 'bibeli-mimo-v2';
+const CACHE_NAME = 'bibeli-mimo-v3';
 
 const APP_SHELL = [
     '/',
