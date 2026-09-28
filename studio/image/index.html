@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Image Studio – Bibeli Mimo</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/studio/image/studio.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>B</text></svg>">
+    <link rel="manifest" href="/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;600;700&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+</head>
+<body class="studio-body">
+
+    <!-- ================= HEADER ================= -->
+    <header class="studio-header">
+        <a href="/studio/" class="studio-icon-btn" aria-label="Back">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </a>
+        <h1 class="studio-title">Studio</h1>
+        <div class="studio-header-actions">
+            <button class="studio-icon-btn" id="undo-btn" aria-label="Undo">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
+            </button>
+            <button class="studio-icon-btn" id="redo-btn" aria-label="Redo">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg>
+            </button>
+            <button class="studio-icon-btn" id="overflow-btn" aria-label="More options">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= CANVAS AREA ================= -->
+    <div class="studio-canvas-area" id="canvas-area">
+        <div id="preview-card" class="preview-card ratio-square" title="Tap to zoom">
+            <div id="preview-bg" class="preview-bg"></div>
+            <div id="preview-bg-filter" class="preview-bg-filter"></div>
+            <div id="preview-dark-overlay" class="preview-dark-overlay"></div>
+            <div id="preview-duotone" class="preview-duotone" style="display:none;"></div>
+            <div id="preview-gradient-overlay" class="preview-gradient-overlay" style="display:none;"></div>
+            <div id="preview-vignette" class="preview-vignette"></div>
+            <div class="preview-content">
+                <div id="preview-ref" class="preview-ref"></div>
+                <div id="preview-text" class="preview-text">Loading...</div>
+                <div id="preview-secondary" class="preview-secondary" style="display:none;"></div>
+            </div>
+            <div id="preview-logo-wrap" class="preview-logo-wrap" style="display:none;">
+                <div id="preview-logo-bg" class="preview-logo-bg"></div>
+                <img id="preview-logo-img" class="preview-logo-img" alt="logo">
+            </div>
+            <div id="preview-decoration" class="preview-decoration"></div>
+            <div id="preview-watermark" class="preview-watermark">BIBELI MIMO</div>
+            <div id="preview-safezone" class="preview-safezone" style="display:none;">
+                <div class="safe-top"></div>
+                <div class="safe-bottom"></div>
+            </div>
+            <div class="preview-zoom-hint">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+            </div>
+        </div>
+        <button class="fullscreen-exit" id="fullscreen-exit-btn" aria-label="Exit fullscreen">
+            <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+    </div>
+
+    <!-- ================= CHIP RAIL ================= -->
+    <nav class="chip-rail" id="chip-rail">
+        <button class="chip active" data-sheet="verse">Verse</button>
+        <button class="chip" data-sheet="look">Look</button>
+        <button class="chip" data-sheet="type">Type</button>
+        <button class="chip" data-sheet="more">More</button>
+    </nav>
+
+    <!-- ================= SHEET ================= -->
+    <section class="sheet" id="sheet">
+        <div class="sheet-handle" id="sheet-handle"></div>
+        <div class="sheet-content">
+
+            <!-- ---------- PANE: VERSE ---------- -->
+            <div class="sheet-pane active" data-pane="verse">
+                <div class="sheet-section">
+                    <div class="row">
+                        <span class="row-label">Primary</span>
+                        <button class="row-value" id="primary-lang-btn">Yoruba</button>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">Secondary</span>
+                        <button class="row-value" id="secondary-lang-btn">English (NKJV)</button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="picker-row">
+                        <button id="pick-book" class="picker-btn">Genesis</button>
+                        <button id="pick-chapter" class="picker-btn">1</button>
+                        <button id="pick-verse" class="picker-btn">1</button>
+                    </div>
+                    <div class="picker-row">
+                        <button id="random-verse" class="action-mini">
+                            <svg class="mini-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                            Random
+                        </button>
+                        <button id="votd-fill" class="action-mini">
+                            <svg class="mini-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            Today
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <input type="text" id="topic-search" class="text-input" placeholder="Search by topic: love, hope, faith…">
+                    <div id="topic-results" class="topic-results"></div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Recently used</div>
+                    <div id="recent-verses" class="recent-list"></div>
+                </div>
+            </div>
+
+            <!-- ---------- PANE: LOOK ---------- -->
+            <div class="sheet-pane" data-pane="look">
+                <div class="look-tabs" id="look-tabs">
+                    <button class="look-tab active" data-cat="photos">Photos</button>
+                    <button class="look-tab" data-cat="gradients">Gradients</button>
+                    <button class="look-tab" data-cat="solids">Solids</button>
+                    <button class="look-tab" data-cat="favorites">♥</button>
+                </div>
+
+                <div class="filmstrip" id="filmstrip"></div>
+
+                <button class="upload-btn" id="bg-upload-btn">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    Upload photo
+                </button>
+                <input type="file" id="bg-upload-input" accept="image/*" hidden>
+
+                <button class="ghost-link" id="bg-remove-btn" style="display:none;">Remove uploaded photo</button>
+
+                <div class="sheet-section">
+                    <div class="slider-row">
+                        <label>Opacity</label>
+                        <input type="range" id="bg-opacity-slider" min="0" max="100" value="100">
+                        <span id="bg-opacity-label">100</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Blur</label>
+                        <input type="range" id="blur-slider" min="0" max="20" step="0.5" value="0">
+                        <span id="blur-label">0</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Brightness</label>
+                        <input type="range" id="brightness-slider" min="30" max="150" value="100">
+                        <span id="brightness-label">100</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Dark</label>
+                        <input type="range" id="dark-slider" min="0" max="80" value="0">
+                        <span id="dark-label">0</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Vignette</label>
+                        <input type="range" id="vignette-slider" min="0" max="100" value="0">
+                        <span id="vignette-label">0</span>
+                    </div>
+                </div>
+
+                <details class="sheet-details">
+                    <summary>Advanced effects</summary>
+                    <div class="slider-row">
+                        <label>Saturation</label>
+                        <input type="range" id="saturation-slider" min="0" max="200" value="100">
+                        <span id="saturation-label">100</span>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Duotone</span>
+                        <button class="switch" id="duotone-toggle"></button>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="duotone-shadow-btn" style="background:#1a237e"></button>
+                        <span class="inline-label">Shadow</span>
+                        <button class="color-pick-btn" id="duotone-highlight-btn" style="background:#f59e0b"></button>
+                        <span class="inline-label">Highlight</span>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Gradient overlay</span>
+                        <button class="switch" id="gradient-overlay-toggle"></button>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="gradient-color-btn" style="background:#1a237e"></button>
+                        <span class="inline-label">Color</span>
+                        <input type="range" id="gradient-opacity-slider" min="0" max="100" value="40" class="slider-small">
+                    </div>
+                </details>
+            </div>
+
+            <!-- ---------- PANE: TYPE ---------- -->
+            <div class="sheet-pane" data-pane="type">
+                <div class="font-strip" id="font-strip"></div>
+
+                <div class="chip-row" id="weight-chips">
+                    <button class="chip-sm" data-weight="400">Regular</button>
+                    <button class="chip-sm active" data-weight="700">Bold</button>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="slider-row">
+                        <label>Size</label>
+                        <input type="range" id="font-size-slider" min="12" max="80" value="24">
+                        <span id="font-size-label">24</span>
+                    </div>
+                    <button class="ghost-btn" id="autofit-btn">Auto-fit text</button>
+                </div>
+
+                <div class="slider-row">
+                    <label>Line spacing</label>
+                    <input type="range" id="line-spacing-slider" min="1.0" max="2.5" step="0.1" value="1.7">
+                    <span id="line-spacing-label">1.7</span>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Position</div>
+                    <div class="pos-grid" id="pos-grid">
+                        <button data-pos="tl">↖</button>
+                        <button data-pos="tc">↑</button>
+                        <button data-pos="tr">↗</button>
+                        <button data-pos="ml">←</button>
+                        <button data-pos="mc" class="active">·</button>
+                        <button data-pos="mr">→</button>
+                        <button data-pos="bl">↙</button>
+                        <button data-pos="bc">↓</button>
+                        <button data-pos="br">↘</button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Color</div>
+                    <div class="swatch-row" id="text-swatches"></div>
+                    <button class="ghost-btn" id="text-color-custom-btn">Custom color</button>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Shadow</div>
+                    <div class="chip-row" id="shadow-chips">
+                        <button class="chip-sm" data-shadow="none">None</button>
+                        <button class="chip-sm" data-shadow="soft">Soft</button>
+                        <button class="chip-sm active" data-shadow="strong">Strong</button>
+                        <button class="chip-sm" data-shadow="glow">Glow</button>
+                        <button class="chip-sm" data-shadow="outline">Outline</button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Highlight word</div>
+                    <input type="text" id="highlight-word-input" class="text-input" placeholder="e.g. grace" maxlength="30">
+                    <div class="swatch-row" id="highlight-swatches"></div>
+                </div>
+
+                <details class="sheet-details">
+                    <summary>Advanced typography</summary>
+                    <div class="slider-row">
+                        <label>Letter spacing</label>
+                        <input type="range" id="letter-spacing-slider" min="-2" max="10" value="0">
+                        <span id="letter-spacing-label">0</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Block gap</label>
+                        <input type="range" id="block-gap-slider" min="0.5" max="3" step="0.1" value="1.5">
+                        <span id="block-gap-label">1.5</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Padding</label>
+                        <input type="range" id="padding-slider" min="8" max="20" step="0.5" value="10">
+                        <span id="padding-label">10</span>
+                    </div>
+                    <div class="sheet-section-title">Text case</div>
+                    <div class="chip-row" id="case-chips">
+                        <button class="chip-sm active" data-case="normal">Normal</button>
+                        <button class="chip-sm" data-case="upper">UPPER</button>
+                        <button class="chip-sm" data-case="title">Title</button>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Show reference</span>
+                        <button class="switch active" id="ref-toggle"></button>
+                    </div>
+                    <div class="chip-row" id="refpos-chips">
+                        <button class="chip-sm active" data-refpos="top">Top</button>
+                        <button class="chip-sm" data-refpos="bottom">Bottom</button>
+                    </div>
+                    <div class="slider-row">
+                        <label>Ref size</label>
+                        <input type="range" id="ref-size-slider" min="10" max="40" value="14">
+                        <span id="ref-size-label">14</span>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="ref-color-btn" style="background:#f59e0b"></button>
+                        <span class="inline-label">Reference color</span>
+                    </div>
+                </details>
+            </div>
+
+            <!-- ---------- PANE: MORE ---------- -->
+            <div class="sheet-pane" data-pane="more">
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Aspect ratio</div>
+                    <div class="chip-row" id="ratio-chips">
+                        <button class="chip-sm active" data-ratio="square">1:1</button>
+                        <button class="chip-sm" data-ratio="portrait">4:5</button>
+                        <button class="chip-sm" data-ratio="story">9:16</button>
+                        <button class="chip-sm" data-ratio="landscape">16:9</button>
+                        <button class="chip-sm" data-ratio="pin">3:4</button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="slider-row">
+                        <label>Border</label>
+                        <input type="range" id="border-slider" min="0" max="30" value="0">
+                        <span id="border-label">0</span>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="border-color-btn" style="background:#ffffff"></button>
+                        <span class="inline-label">Border color</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Corner radius</label>
+                        <input type="range" id="radius-slider" min="0" max="60" value="0">
+                        <span id="radius-label">0</span>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Secondary text</div>
+                    <input type="text" id="secondary-input" class="text-input" placeholder="e.g. @yourchurch" maxlength="40">
+                    <div class="chip-row" id="secpos-chips">
+                        <button class="chip-sm" data-secpos="top">Top</button>
+                        <button class="chip-sm active" data-secpos="above">Above</button>
+                        <button class="chip-sm" data-secpos="bottom">Bottom</button>
+                    </div>
+                    <div class="slider-row">
+                        <label>Size</label>
+                        <input type="range" id="sec-size-slider" min="10" max="30" value="12">
+                        <span id="sec-size-label">12</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Opacity</label>
+                        <input type="range" id="sec-opacity-slider" min="10" max="100" value="85">
+                        <span id="sec-opacity-label">85</span>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="sec-color-btn" style="background:#ffffff"></button>
+                        <span class="inline-label">Color</span>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Logo</div>
+                    <input type="file" id="logo-input" accept="image/*" hidden>
+                    <button class="action-mini wide" id="logo-upload-btn">Upload logo</button>
+                    <button class="action-mini wide danger" id="logo-remove-btn" style="margin-top:6px;">Remove logo</button>
+                    <div class="chip-row" id="logo-pos-chips">
+                        <button class="chip-sm" data-logopos="tl">TL</button>
+                        <button class="chip-sm" data-logopos="tr">TR</button>
+                        <button class="chip-sm" data-logopos="bl">BL</button>
+                        <button class="chip-sm active" data-logopos="br">BR</button>
+                    </div>
+                    <div class="slider-row">
+                        <label>Size</label>
+                        <input type="range" id="logo-size-slider" min="30" max="200" value="60">
+                        <span id="logo-size-label">60</span>
+                    </div>
+                    <div class="slider-row">
+                        <label>Opacity</label>
+                        <input type="range" id="logo-opacity-slider" min="10" max="100" value="100">
+                        <span id="logo-opacity-label">100</span>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Logo border</span>
+                        <button class="switch" id="logo-border-toggle"></button>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="logo-border-color-btn" style="background:#ffffff"></button>
+                        <span class="inline-label">Border color</span>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Logo background</span>
+                        <button class="switch" id="logo-bg-toggle"></button>
+                    </div>
+                    <div class="inline-row">
+                        <button class="color-pick-btn" id="logo-bg-color-btn" style="background:#ffffff"></button>
+                        <span class="inline-label">Background color</span>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">My presets</div>
+                    <button class="action-mini wide" id="save-preset-btn" style="margin-bottom:10px;">+ Save current as preset</button>
+                    <div id="presets-list" class="presets-list"></div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Settings</div>
+                    <div class="toggle-row">
+                        <span>App watermark</span>
+                        <button class="switch active" id="watermark-toggle"></button>
+                    </div>
+                    <div class="toggle-row">
+                        <span>Safe-zone guides</span>
+                        <button class="switch" id="safezone-toggle"></button>
+                    </div>
+                    <button class="action-mini wide danger" id="reset-all-btn" style="margin-top:12px;">Reset studio</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ================= ACTION BAR ================= -->
+    <div class="action-bar">
+        <button class="action-bar-btn" id="action-random-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Random
+        </button>
+        <button class="action-bar-btn primary" id="export-open-btn">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M12 3v12m0 0l-4-4m4 4l4-4"/></svg>
+            Export
+        </button>
+    </div>
+
+    <!-- ================= MODALS ================= -->
+
+    <div id="verse-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="verse-modal-title">Select</h3>
+                <button class="icon-btn" data-close="verse-modal"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div id="verse-modal-list" class="modal-list"></div>
+        </div>
+    </div>
+
+    <div id="color-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pick color</h3>
+                <button class="icon-btn" data-close="color-modal"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="color-preview" id="color-preview"></div>
+            <label class="field-label">Hue <span id="hue-label">0</span></label>
+            <input type="range" id="hue-slider" min="0" max="360" value="0" class="slider hue-slider">
+            <label class="field-label">Saturation <span id="sat-label">0</span>%</label>
+            <input type="range" id="sat-slider" min="0" max="100" value="0" class="slider">
+            <label class="field-label">Lightness <span id="light-label">100</span>%</label>
+            <input type="range" id="light-slider" min="0" max="100" value="100" class="slider">
+            <label class="field-label">Hex</label>
+            <input type="text" id="hex-input" class="text-input" placeholder="#ffffff" maxlength="7">
+            <label class="field-label">Presets</label>
+            <div class="color-swatches" id="color-swatches"></div>
+            <button class="action-mini wide primary" id="color-confirm-btn" style="margin-top:14px;">Apply</button>
+        </div>
+    </div>
+
+    <div id="preset-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Save preset</h3>
+                <button class="icon-btn" data-close="preset-modal"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <input type="text" id="preset-name-input" class="text-input" placeholder="Preset name" maxlength="30">
+            <button class="action-mini wide primary" id="preset-confirm-btn" style="margin-top:14px;">Save</button>
+        </div>
+    </div>
+
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export</h3>
+                <button class="icon-btn" data-close="export-modal"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <label class="field-label">Format</label>
+            <div class="chip-row" id="format-chips">
+                <button class="chip-sm active" data-format="png">PNG</button>
+                <button class="chip-sm" data-format="jpg">JPG</button>
+            </div>
+            <div id="jpg-quality-row" style="display:none;">
+                <label class="field-label">JPG quality <span id="jpg-quality-label">90</span>%</label>
+                <input type="range" id="jpg-quality-slider" min="60" max="100" value="90" class="slider">
+            </div>
+            <label class="field-label">Resolution</label>
+            <div class="chip-row" id="resolution-chips">
+                <button class="chip-sm" data-res="720">720p</button>
+                <button class="chip-sm active" data-res="1080">1080p</button>
+                <button class="chip-sm" data-res="1440">1440p</button>
+                <button class="chip-sm" data-res="2160">4K</button>
+            </div>
+            <div class="export-estimate" id="export-estimate">Estimated: ~1.2 MB</div>
+            <button class="action-mini wide primary" id="export-download-btn" style="margin-top:18px;">Download</button>
+        </div>
+    </div>
+
+    <div id="zoom-modal" class="modal-overlay zoom-overlay">
+        <div class="zoom-content" id="zoom-content"></div>
+        <button class="zoom-close" data-close="zoom-modal">Close</button>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content confirm-content">
+            <h3 id="confirm-title">Are you sure?</h3>
+            <p id="confirm-message">This action cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="action-mini" id="confirm-cancel-btn">Cancel</button>
+                <button class="action-mini danger" id="confirm-ok-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/shared.js"></script>
+    <script src="/studio/image/studio.js"></script>
+</body>
+  </html>
