@@ -25,8 +25,9 @@
             <button class="studio-icon-btn" id="redo-btn" aria-label="Redo">
                 <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/></svg>
             </button>
-            <button class="studio-icon-btn" id="overflow-btn" aria-label="More options">
-                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            <button class="header-export-btn" id="header-export-btn">
+                <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M12 3v12m0 0l-4-4m4 4l4-4"/></svg>
+                <span>Export</span>
             </button>
         </div>
     </header>
@@ -331,8 +332,8 @@
                 </div>
 
                 <div class="sheet-section">
-                    <div class="sheet-section-title">Secondary text</div>
-                    <input type="text" id="secondary-input" class="text-input" placeholder="e.g. @yourchurch" maxlength="40">
+                    <div class="sheet-section-title">Footer text</div>
+                    <input type="text" id="secondary-input" class="text-input" placeholder="@yourchurch · A Word Today" maxlength="40">
                     <div class="chip-row" id="secpos-chips">
                         <button class="chip-sm" data-secpos="top">Top</button>
                         <button class="chip-sm active" data-secpos="above">Above</button>
@@ -359,7 +360,7 @@
                     <input type="file" id="logo-input" accept="image/*" hidden>
                     <button class="action-mini wide" id="logo-upload-btn">Upload logo</button>
                     <button class="action-mini wide danger" id="logo-remove-btn" style="margin-top:6px;">Remove logo</button>
-                    <div class="chip-row" id="logo-pos-chips">
+                    <div class="chip-row" id="logo-pos-chips" style="margin-top:10px;">
                         <button class="chip-sm" data-logopos="tl">TL</button>
                         <button class="chip-sm" data-logopos="tr">TR</button>
                         <button class="chip-sm" data-logopos="bl">BL</button>
@@ -415,18 +416,6 @@
 
         </div>
     </section>
-
-    <!-- ================= ACTION BAR ================= -->
-    <div class="action-bar">
-        <button class="action-bar-btn" id="action-random-btn">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-            Random
-        </button>
-        <button class="action-bar-btn primary" id="export-open-btn">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="18" height="18"><path d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1M12 3v12m0 0l-4-4m4 4l4-4"/></svg>
-            Export
-        </button>
-    </div>
 
     <!-- ================= MODALS ================= -->
 
@@ -515,9 +504,12 @@
         </div>
     </div>
 
+    <!-- Language dropdown (fixed-position popup) -->
+    <div id="lang-menu" class="lang-menu" style="display:none;"></div>
+
     <div id="toast-container" class="toast-container"></div>
 
     <script src="/shared.js"></script>
     <script src="/studio/image/studio.js"></script>
 </body>
-  </html>
+    </html>
