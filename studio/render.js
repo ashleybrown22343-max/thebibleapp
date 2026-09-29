@@ -1,7 +1,7 @@
 // ============================================================
-// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V4)
+// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V4.1)
 // Shared by /studio/image/export and /studio/video.
-// V4 adds: word-by-word animated reveal + blur-fill backgrounds.
+// V4.1: blur-fill is now opt-in only (was opt-out).
 // ============================================================
 
 window.RenderEngine = (function () {
@@ -122,11 +122,11 @@ window.RenderEngine = (function () {
         // ---------- MOTION INPUT ----------
         var m = opts.motion || {};
         var textOpacity    = m.textOpacity    !== undefined ? m.textOpacity    : 1;
-        var textOffsetX    = m.textOffsetX    || 0;      // preview-px (scaled below)
+        var textOffsetX    = m.textOffsetX    || 0;
         var textOffsetY    = m.textOffsetY    || 0;
         var textScale      = m.textScale      !== undefined ? m.textScale      : 1;
-        var visibleChars   = m.visibleChars;             // number | undefined — typewriter
-        var wordReveal     = m.wordReveal;               // 0..1 | undefined — smooth word-by-word
+        var visibleChars   = m.visibleChars;
+        var wordReveal     = m.wordReveal;
         var bgScale        = m.bgScale        !== undefined ? m.bgScale        : 1;
         var bgOffsetX      = m.bgOffsetX      || 0;
         var bgOffsetY      = m.bgOffsetY      || 0;
@@ -173,11 +173,12 @@ window.RenderEngine = (function () {
 
                     var imgAspect = bgImg.width / bgImg.height;
                     var boxAspect = W / H;
-                    var useBlurFill = state.bgBlurFill !== false &&
+                    // Blur-fill is OPT-IN only. Never on by default.
+                    var useBlurFill = state.bgBlurFill === true &&
                                       Math.abs(imgAspect - boxAspect) / boxAspect > 0.08;
 
                     if (useBlurFill) {
-                        // Layer 1: blurred + oversaturated cover fill
+                        // Layer 1: blurred cover fill
                         ctx.filter = (baseFilter ? baseFilter + ' ' : '') + 'blur(' + (60 * scale) + 'px)';
                         drawImageCover(ctx, bgImg, -30, -30, W + 60, H + 60, 'center');
                         ctx.filter = baseFilter || 'none';
@@ -397,9 +398,6 @@ window.RenderEngine = (function () {
                     var isHl = hw && w.text.toLowerCase().indexOf(hw) >= 0;
 
                     if (doWordReveal) {
-                        // Per-word animated reveal:
-                        //   - words stagger across the first 65% of the reveal window
-                        //   - each word takes 35% of the window to animate in
                         var idx = currentWordIndex;
                         var start = (idx / N) * 0.65;
                         var dur = 0.35;
@@ -438,7 +436,6 @@ window.RenderEngine = (function () {
         var primaryText = applyCase(opts.verseYoruba || '', state.textCase);
         var secondaryText = applyCase(opts.verseEnglish || '', state.textCase);
 
-        // Typewriter: truncate the primary text BEFORE measuring
         if (visibleChars !== undefined && visibleChars !== null) {
             if (primaryText.length > visibleChars) {
                 primaryText = primaryText.substring(0, visibleChars);
