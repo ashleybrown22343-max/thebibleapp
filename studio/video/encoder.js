@@ -1,232 +1,361 @@
 // ============================================================
-// BIBELI MIMO – VIDEO ENCODER (V5)
-// Root cause of previous failures: Chrome throttles
-// canvas.captureStream() when the canvas is offscreen/hidden.
-// Fix: render the canvas VISIBLY inside the render overlay.
-// Chrome cannot throttle a canvas the user can see.
+// BIBELI MIMO – VIDEO ENCODER (V6, WebCodecs + mp4-muxer)
+//
+// Why this exists: MediaRecorder stamps frames with the time the
+// browser *received* them, so any main-thread stall = wrong video.
+// Here YOU set every timestamp (frame i => i/fps seconds), so the
+// output duration is exact no matter how slow rendering is.
+//
+// Requires (load BEFORE this file):
+//   <script src="/studio/video/muxer.js"></script>   (exposes window.Mp4Muxer)
+//   <script src="/studio/render.js"></script>        (window.RenderEngine)
+//
+// IMPORTANT: this file replaces window.VideoEncoder (your API name).
+// That name is ALSO the native WebCodecs class, so we capture the
+// native one first and keep it in NativeVideoEncoder below.
 // ============================================================
 
 window.VideoEncoder = (function () {
+    'use strict';
 
-    function pickBestMimeType() {
-        var candidates = [
-            'video/mp4;codecs=h264',
-            'video/mp4;codecs=avc1',
-            'video/mp4',
-            'video/webm;codecs=vp9',
-            'video/webm;codecs=vp8',
-            'video/webm'
-        ];
-        if (!window.MediaRecorder) return '';
-        for (var i = 0; i < candidates.length; i++) {
-            try { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; } catch (e) {}
-        }
-        return '';
-    }
+    // ---- Keep the NATIVE WebCodecs VideoEncoder before we shadow it ----
+    var prev = window.VideoEncoder;
+    var NativeVideoEncoder = (prev && prev.__bibeliWrapper) ? prev.__native : prev;
 
-    function fileExtFor(mime) {
-        return mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
-    }
+    var AUDIO_SAMPLE_RATE = 48000;
 
     function delay(ms) {
         return new Promise(function (r) { setTimeout(r, Math.max(0, ms)); });
     }
 
+    function even(n) {
+        n = Math.round(n);
+        return n % 2 === 0 ? n : n + 1;
+    }
+
+    // ---------- FEATURE DETECTION ----------
+    function unsupportedReason() {
+        if (typeof NativeVideoEncoder !== 'function') {
+            return 'This browser cannot encode video (WebCodecs missing). Please use Chrome on Android.';
+        }
+        if (typeof window.VideoFrame !== 'function') {
+            return 'This browser is missing VideoFrame support. Please update Chrome.';
+        }
+        if (!window.Mp4Muxer || !window.Mp4Muxer.Muxer) {
+            return 'Video muxer not loaded. Check that /studio/video/muxer.js is included before encoder.js.';
+        }
+        return null;
+    }
+
+    // ---------- PICK A WORKING H.264 CONFIG ----------
+    // Tries several H.264 profiles/levels, hardware first then software,
+    // and steps the resolution down if the phone can't do full size.
+    async function pickVideoConfig(w, h, fps, bitrate) {
+        var codecs = [
+            'avc1.42002a', // Baseline L4.2 (best compatibility for 1080x1920@30)
+            'avc1.4d002a', // Main L4.2
+            'avc1.640028', // High L4.0
+            'avc1.42001f', // Baseline L3.1 (fine up to ~720p)
+            'avc1.42001e'  // Baseline L3.0 (last resort)
+        ];
+        var hw = ['prefer-hardware', 'no-preference'];
+        var scales = [1, 0.6667, 0.5];
+
+        for (var s = 0; s < scales.length; s++) {
+            var cw = even(w * scales[s]);
+            var ch = even(h * scales[s]);
+            var br = Math.round(bitrate * scales[s] * scales[s]);
+            for (var c = 0; c < codecs.length; c++) {
+                for (var a = 0; a < hw.length; a++) {
+                    var cfg = {
+                        codec: codecs[c],
+                        width: cw,
+                        height: ch,
+                        bitrate: br,
+                        framerate: fps,
+                        hardwareAcceleration: hw[a],
+                        avc: { format: 'avc' } // AVCC format: what MP4 needs
+                    };
+                    try {
+                        var sup = await NativeVideoEncoder.isConfigSupported(cfg);
+                        if (sup && sup.supported) return cfg;
+                    } catch (e) { /* try next */ }
+                }
+            }
+        }
+        return null;
+    }
+
+    // ---------- AUDIO: decode, apply volume/fades, render to exact length ----------
+    async function prepareAudio(audioOpts, duration) {
+        if (!audioOpts || !audioOpts.dataURL) return null;
+        if (typeof window.AudioEncoder !== 'function' || typeof window.AudioData !== 'function') return null;
+        if (!(window.OfflineAudioContext || window.webkitOfflineAudioContext)) return null;
+
+        try {
+            // Find a supported audio codec (AAC preferred, Opus fallback)
+            var codecs = [
+                { codec: 'mp4a.40.2', mux: 'aac' },
+                { codec: 'opus', mux: 'opus' }
+            ];
+            var chosen = null;
+            for (var i = 0; i < codecs.length; i++) {
+                try {
+                    var sup = await window.AudioEncoder.isConfigSupported({
+                        codec: codecs[i].codec,
+                        sampleRate: AUDIO_SAMPLE_RATE,
+                        numberOfChannels: 2,
+                        bitrate: 128000
+                    });
+                    if (sup && sup.supported) { chosen = codecs[i]; break; }
+                } catch (e) {}
+            }
+            if (!chosen) return null;
+
+            // Decode the file
+            var resp = await fetch(audioOpts.dataURL);
+            var arr = await resp.arrayBuffer();
+            var tmpCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var decoded = await tmpCtx.decodeAudioData(arr);
+            try { tmpCtx.close(); } catch (e) {}
+
+            // Render to exactly `duration` seconds with volume + fades baked in
+            var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+            var totalSamples = Math.ceil(AUDIO_SAMPLE_RATE * duration);
+            var off = new OAC(2, totalSamples, AUDIO_SAMPLE_RATE);
+            var src = off.createBufferSource();
+            src.buffer = decoded;
+            src.loop = !!audioOpts.loop;
+            var gain = off.createGain();
+            src.connect(gain);
+            gain.connect(off.destination);
+
+            var vol = (audioOpts.volume == null ? 80 : audioOpts.volume) / 100;
+            var fadeIn = audioOpts.fadeIn || 0;
+            var fadeOut = audioOpts.fadeOut || 0;
+            gain.gain.setValueAtTime(fadeIn > 0 ? 0 : vol, 0);
+            if (fadeIn > 0) gain.gain.linearRampToValueAtTime(vol, fadeIn);
+            if (fadeOut > 0) {
+                gain.gain.setValueAtTime(vol, Math.max(fadeIn, duration - fadeOut));
+                gain.gain.linearRampToValueAtTime(0, duration);
+            }
+            src.start(0);
+            var rendered = await off.startRendering();
+
+            var left = rendered.getChannelData(0);
+            var right = rendered.numberOfChannels > 1 ? rendered.getChannelData(1) : left;
+
+            return {
+                codec: chosen.codec,
+                muxCodec: chosen.mux,
+                left: left,
+                right: right,
+                total: rendered.length
+            };
+        } catch (e) {
+            console.warn('Audio preparation failed, exporting without audio:', e);
+            return null;
+        }
+    }
+
+    // ---------- MAIN ENCODE ----------
     async function encode(opts) {
+        var reason = unsupportedReason();
+        if (reason) throw new Error(reason);
+
         var fps = opts.fps || 30;
         var duration = opts.duration || 15;
         var targetW = opts.targetW;
         var targetH = opts.targetH;
         var totalFrames = Math.round(duration * fps);
-        var frameInterval = 1000 / fps;
+        var frameDurUs = 1000000 / fps;
 
-        var mime = pickBestMimeType();
-        if (!mime) throw new Error('Video recording not supported on this browser');
+        function progress(p, msg) {
+            if (opts.onProgress) opts.onProgress(p, msg);
+        }
 
-        // ---------- CANVAS (VISIBLE, inside render overlay) ----------
-        var canvas = document.createElement('canvas');
-        canvas.width = targetW;
-        canvas.height = targetH;
-        canvas.style.cssText = [
-            'display:block',
-            'width:100%',
-            'max-width:220px',
-            'height:auto',
-            'max-height:34vh',
-            'margin:0 auto 18px',
-            'border-radius:12px',
-            'background:#000',
-            'object-fit:contain'
-        ].join(';');
+        progress(0, 'Preparing encoder…');
 
-        // Insert into the render overlay so Chrome keeps it painted
-        var renderCard = document.querySelector('#render-overlay .render-card') || document.body;
-        renderCard.insertBefore(canvas, renderCard.firstChild);
-
-        var ctx = canvas.getContext('2d', { alpha: false });
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, targetW, targetH);
-
-        // ---------- STREAM ----------
-        var stream = canvas.captureStream();
+        // ---------- VIDEO CONFIG ----------
+        var baseBitrate = targetW >= 1440 ? 10000000 : (targetW >= 1080 ? 6000000 : 3500000);
+        var vcfg = await pickVideoConfig(targetW, targetH, fps, baseBitrate);
+        if (!vcfg) {
+            throw new Error('This phone cannot encode H.264 video at this size. Try a lower quality/resolution.');
+        }
+        var outW = vcfg.width;
+        var outH = vcfg.height;
 
         // ---------- AUDIO ----------
-        var audioCtx = null;
-        var audioEl = null;
-        var gainNode = null;
+        progress(1, 'Preparing audio…');
+        var audio = await prepareAudio(opts.audio, duration);
 
-        if (opts.audio && opts.audio.dataURL) {
-            try {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                audioEl = new Audio(opts.audio.dataURL);
-                audioEl.crossOrigin = 'anonymous';
-                audioEl.loop = !!opts.audio.loop;
-                await new Promise(function (res, rej) {
-                    audioEl.oncanplaythrough = res;
-                    audioEl.onerror = rej;
-                    audioEl.load();
+        // ---------- MUXER ----------
+        var muxerOpts = {
+            target: new window.Mp4Muxer.ArrayBufferTarget(),
+            video: { codec: 'avc', width: outW, height: outH, frameRate: fps },
+            fastStart: 'in-memory',
+            firstTimestampBehavior: 'offset'
+        };
+        if (audio) {
+            muxerOpts.audio = {
+                codec: audio.muxCodec,
+                numberOfChannels: 2,
+                sampleRate: AUDIO_SAMPLE_RATE
+            };
+        }
+        var muxer = new window.Mp4Muxer.Muxer(muxerOpts);
+
+        // ---------- ENCODERS ----------
+        var encError = null;
+
+        var videoEncoder = new NativeVideoEncoder({
+            output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); },
+            error: function (e) { encError = e; console.error('VideoEncoder error:', e); }
+        });
+        videoEncoder.configure(vcfg);
+
+        var audioEncoder = null;
+        if (audio) {
+            audioEncoder = new window.AudioEncoder({
+                output: function (chunk, meta) { muxer.addAudioChunk(chunk, meta); },
+                error: function (e) { encError = e; console.error('AudioEncoder error:', e); }
+            });
+            audioEncoder.configure({
+                codec: audio.codec,
+                sampleRate: AUDIO_SAMPLE_RATE,
+                numberOfChannels: 2,
+                bitrate: 128000
+            });
+        }
+
+        // Feed audio up to a given time so audio/video chunks stay interleaved
+        var audioPos = 0;
+        var AUDIO_CHUNK = 4096;
+        function feedAudioUpTo(sec) {
+            if (!audio) return;
+            var limit = Math.min(audio.total, Math.floor(sec * AUDIO_SAMPLE_RATE));
+            while (audioPos < limit) {
+                var n = Math.min(AUDIO_CHUNK, audio.total - audioPos);
+                var data = new Float32Array(n * 2);
+                data.set(audio.left.subarray(audioPos, audioPos + n), 0);
+                data.set(audio.right.subarray(audioPos, audioPos + n), n);
+                var ad = new window.AudioData({
+                    format: 'f32-planar',
+                    sampleRate: AUDIO_SAMPLE_RATE,
+                    numberOfFrames: n,
+                    numberOfChannels: 2,
+                    timestamp: Math.round((audioPos / AUDIO_SAMPLE_RATE) * 1000000),
+                    data: data
                 });
-
-                var source = audioCtx.createMediaElementSource(audioEl);
-                gainNode = audioCtx.createGain();
-                source.connect(gainNode);
-
-                var dest = audioCtx.createMediaStreamDestination();
-                gainNode.connect(dest);
-
-                var vol = (opts.audio.volume || 80) / 100;
-                var fadeIn = opts.audio.fadeIn || 0;
-                var fadeOut = opts.audio.fadeOut || 0;
-                var t0 = audioCtx.currentTime;
-                gainNode.gain.cancelScheduledValues(t0);
-                gainNode.gain.setValueAtTime(fadeIn > 0 ? 0 : vol, t0);
-                if (fadeIn > 0) gainNode.gain.linearRampToValueAtTime(vol, t0 + fadeIn);
-                if (fadeOut > 0) {
-                    gainNode.gain.setValueAtTime(vol, t0 + Math.max(fadeIn, duration - fadeOut));
-                    gainNode.gain.linearRampToValueAtTime(0, t0 + duration);
-                }
-
-                dest.stream.getAudioTracks().forEach(function (track) {
-                    stream.addTrack(track);
-                });
-            } catch (e) {
-                console.warn('Audio setup failed, continuing without audio:', e);
-                audioCtx = null;
-                audioEl = null;
+                audioEncoder.encode(ad);
+                ad.close();
+                audioPos += n;
             }
         }
 
-        // ---------- RECORDER ----------
-        var recorder = new MediaRecorder(stream, {
-            mimeType: mime,
-            videoBitsPerSecond: targetW >= 1440 ? 10000000 : (targetW >= 1080 ? 6000000 : 3500000),
-            audioBitsPerSecond: 128000
-        });
+        // Scratch canvas (only used if RenderEngine's output size differs from encoder size)
+        var scratch = null;
+        var scratchCtx = null;
 
-        var chunks = [];
-        recorder.ondataavailable = function (e) {
-            if (e.data && e.data.size > 0) chunks.push(e.data);
-        };
-        var stopped = new Promise(function (resolve) {
-            recorder.onstop = function () { resolve(); };
-        });
+        // ---------- FRAME LOOP (NOT real-time: runs as fast as the phone can render) ----------
+        try {
+            for (var i = 0; i < totalFrames; i++) {
+                if (encError) throw encError;
 
-        // ---------- GO ----------
-        if (audioEl) {
-            try { await audioEl.play(); } catch (e) {}
-        }
-        recorder.start(100);
-
-        var startWall = performance.now();
-
-        // ---------- RENDER LOOP (RAF-driven, real-time) ----------
-        await new Promise(function (resolve) {
-            var nextFrameAt = 0;
-            var frameIndex = 0;
-
-            async function tick() {
-                if (frameIndex >= totalFrames) {
-                    resolve();
-                    return;
-                }
-
-                var elapsed = performance.now() - startWall;
-                if (elapsed < nextFrameAt) {
-                    requestAnimationFrame(tick);
-                    return;
-                }
-
-                var t = frameIndex / fps;
+                var t = i / fps;
                 var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
 
-                try {
-                    var frameCanvas = await window.RenderEngine.render({
-                        state: opts.state,
-                        verseYoruba: opts.verseYoruba,
-                        verseEnglish: opts.verseEnglish,
-                        referenceText: opts.referenceText,
-                        backgroundURL: opts.backgroundURL,
-                        bgGradient: opts.bgGradient,
-                        bgSolid: opts.bgSolid,
-                        targetW: targetW,
-                        targetH: targetH,
-                        previewW: 350,
-                        motion: motion
-                    });
-                    ctx.drawImage(frameCanvas, 0, 0, targetW, targetH);
-                } catch (e) {
-                    console.error('Frame ' + frameIndex + ' render failed:', e);
+                var frameCanvas = await window.RenderEngine.render({
+                    state: opts.state,
+                    verseYoruba: opts.verseYoruba,
+                    verseEnglish: opts.verseEnglish,
+                    referenceText: opts.referenceText,
+                    backgroundURL: opts.backgroundURL,
+                    bgGradient: opts.bgGradient,
+                    bgSolid: opts.bgSolid,
+                    targetW: targetW,
+                    targetH: targetH,
+                    previewW: 350,
+                    motion: motion
+                });
+
+                var source = frameCanvas;
+                if (frameCanvas.width !== outW || frameCanvas.height !== outH) {
+                    if (!scratch) {
+                        scratch = document.createElement('canvas');
+                        scratch.width = outW;
+                        scratch.height = outH;
+                        scratchCtx = scratch.getContext('2d', { alpha: false });
+                    }
+                    scratchCtx.drawImage(frameCanvas, 0, 0, outW, outH);
+                    source = scratch;
                 }
 
-                frameIndex++;
-                nextFrameAt = frameIndex * frameInterval;
+                // THE KEY LINE: we set the timestamp ourselves. Frame i is at i/fps seconds. Always.
+                var vf = new window.VideoFrame(source, {
+                    timestamp: Math.round(i * frameDurUs),
+                    duration: Math.round(frameDurUs)
+                });
+                videoEncoder.encode(vf, { keyFrame: i % (fps * 2) === 0 });
+                vf.close();
 
-                if (opts.onProgress) {
-                    opts.onProgress(
-                        Math.round((frameIndex / totalFrames) * 95),
-                        'Recording frame ' + frameIndex + ' / ' + totalFrames
+                feedAudioUpTo(t + 0.5);
+
+                // Backpressure: don't let the encoder queue balloon in RAM
+                while (videoEncoder.encodeQueueSize > 6) {
+                    if (encError) throw encError;
+                    await delay(4);
+                }
+
+                // Let the UI breathe and update progress
+                if (i % 3 === 0) {
+                    progress(
+                        Math.min(95, Math.round(((i + 1) / totalFrames) * 95)),
+                        'Encoding frame ' + (i + 1) + ' / ' + totalFrames
                     );
+                    await delay(0);
                 }
-
-                requestAnimationFrame(tick);
             }
 
-            requestAnimationFrame(tick);
-        });
+            // ---------- FINALIZE ----------
+            progress(96, 'Finalizing…');
+            feedAudioUpTo(duration + 1);
+            await videoEncoder.flush();
+            if (audioEncoder) await audioEncoder.flush();
+            if (encError) throw encError;
 
-        // ---------- HOLD until wall clock reaches duration ----------
-        var elapsedTotal = performance.now() - startWall;
-        var remaining = (duration * 1000) - elapsedTotal;
-        if (remaining > 0) {
-            await delay(remaining);
+            videoEncoder.close();
+            if (audioEncoder) audioEncoder.close();
+            muxer.finalize();
+        } catch (e) {
+            try { videoEncoder.close(); } catch (e1) {}
+            try { if (audioEncoder) audioEncoder.close(); } catch (e2) {}
+            throw e;
         }
 
-        // ---------- FINALIZE ----------
-        if (audioEl) {
-            try { audioEl.pause(); } catch (e) {}
-        }
-        await delay(300);
-        recorder.stop();
-        await stopped;
+        var buffer = muxer.target.buffer;
+        var blob = new Blob([buffer], { type: 'video/mp4' });
 
-        if (audioCtx) {
-            try { await audioCtx.close(); } catch (e) {}
-        }
-
-        try { canvas.remove(); } catch (e) {}
-
-        if (opts.onProgress) opts.onProgress(100, 'Finalizing…');
+        progress(100, 'Done');
 
         return {
-            blob: new Blob(chunks, { type: mime }),
-            mimeType: mime,
-            ext: fileExtFor(mime),
-            durationSec: duration
+            blob: blob,
+            mimeType: 'video/mp4',
+            ext: 'mp4',
+            durationSec: totalFrames / fps,
+            width: outW,
+            height: outH,
+            codec: vcfg.codec,
+            hasAudio: !!audio
         };
     }
 
     return {
         encode: encode,
-        isSupported: function () { return !!window.MediaRecorder; }
+        isSupported: function () { return unsupportedReason() === null; },
+        unsupportedReason: unsupportedReason,
+        __bibeliWrapper: true,
+        __native: NativeVideoEncoder
     };
 })();
+                    
