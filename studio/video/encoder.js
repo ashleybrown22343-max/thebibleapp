@@ -1,15 +1,14 @@
 // ============================================================
-// BIBELI MIMO – VIDEO ENCODER (V2 – deterministic timing)
-// Uses a producer/consumer pattern: one loop renders frames,
-// another plays them back at exact fps into the recorder.
-// This guarantees the exported video matches the requested duration.
+// BIBELI MIMO – VIDEO ENCODER (V3 – WebCodecs deterministic)
+// Frames are timestamped explicitly, so duration is exact.
+// Falls back to MediaRecorder on browsers without
+// MediaStreamTrackGenerator (Safari/Firefox).
 // ============================================================
 
 window.VideoEncoder = (function () {
 
     function pickBestMimeType() {
         var candidates = [
-            'video/mp4;codecs=h264',
             'video/mp4;codecs=avc1',
             'video/mp4',
             'video/webm;codecs=vp9',
@@ -18,53 +17,45 @@ window.VideoEncoder = (function () {
         ];
         if (!window.MediaRecorder) return '';
         for (var i = 0; i < candidates.length; i++) {
-            try {
-                if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i];
-            } catch (e) {}
+            try { if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]; } catch (e) {}
         }
         return '';
     }
 
     function fileExtFor(mime) {
-        if (mime.indexOf('mp4') >= 0) return 'mp4';
-        if (mime.indexOf('webm') >= 0) return 'webm';
-        return 'webm';
+        return mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
     }
 
-    function delay(ms) {
-        return new Promise(function (r) { setTimeout(r, Math.max(0, ms)); });
+    function delay(ms) { return new Promise(function (r) { setTimeout(r, Math.max(0, ms)); }); }
+
+    function hasWebCodecs() {
+        return typeof window.MediaStreamTrackGenerator !== 'undefined' &&
+               typeof window.VideoFrame !== 'undefined';
     }
 
-    async function encode(opts) {
+    // ============================================================
+    // PRIMARY PATH — WebCodecs MediaStreamTrackGenerator
+    // Timestamps are explicit, so duration is exact regardless of
+    // how fast or slow rendering takes.
+    // ============================================================
+    async function encodeWithGenerator(opts) {
         var fps = opts.fps || 30;
         var duration = opts.duration || 15;
         var targetW = opts.targetW;
         var targetH = opts.targetH;
         var totalFrames = Math.round(duration * fps);
-        var frameInterval = 1000 / fps;
+        var frameDuration = Math.round(1000000 / fps); // microseconds
 
         var mime = pickBestMimeType();
-        if (!mime) throw new Error('Video recording not supported on this browser');
+        if (!mime) throw new Error('No supported mime type');
 
-        // ---------- RENDER SURFACE (attached to DOM for reliable capture) ----------
-        var canvas = document.createElement('canvas');
-        canvas.width = targetW;
-        canvas.height = targetH;
-        // Offscreen but DOM-attached — otherwise Chrome throttles captureStream
-        canvas.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
-        document.body.appendChild(canvas);
-        var ctx = canvas.getContext('2d', { alpha: false });
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, targetW, targetH);
+        // --- Track generator (accepts VideoFrames, produces a MediaStreamTrack)
+        var generator = new MediaStreamTrackGenerator({ kind: 'video' });
+        var writer = generator.writable.getWriter();
+        var stream = new MediaStream([generator]);
 
-        // ---------- STREAM + RECORDER ----------
-        var stream = canvas.captureStream(fps);
-
-        // ---------- AUDIO ----------
-        var audioCtx = null;
-        var audioEl = null;
-        var gainNode = null;
-
+        // --- Optional audio
+        var audioCtx = null, audioEl = null, gainNode = null;
         if (opts.audio && opts.audio.dataURL) {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -76,14 +67,11 @@ window.VideoEncoder = (function () {
                     audioEl.onerror = rej;
                     audioEl.load();
                 });
-
                 var source = audioCtx.createMediaElementSource(audioEl);
                 gainNode = audioCtx.createGain();
                 source.connect(gainNode);
-
                 var dest = audioCtx.createMediaStreamDestination();
                 gainNode.connect(dest);
-
                 var vol = (opts.audio.volume || 80) / 100;
                 var fadeIn = opts.audio.fadeIn || 0;
                 var fadeOut = opts.audio.fadeOut || 0;
@@ -95,15 +83,156 @@ window.VideoEncoder = (function () {
                     gainNode.gain.setValueAtTime(vol, t0 + Math.max(fadeIn, duration - fadeOut));
                     gainNode.gain.linearRampToValueAtTime(0, t0 + duration);
                 }
-
-                dest.stream.getAudioTracks().forEach(function (track) {
-                    stream.addTrack(track);
-                });
+                dest.stream.getAudioTracks().forEach(function (t) { stream.addTrack(t); });
             } catch (e) {
                 console.warn('Audio setup failed:', e);
-                audioCtx = null;
-                audioEl = null;
+                audioCtx = null; audioEl = null;
             }
+        }
+
+        // --- Recorder on the generator stream
+        var recorder = new MediaRecorder(stream, {
+            mimeType: mime,
+            videoBitsPerSecond: targetW >= 1440 ? 10000000 : (targetW >= 1080 ? 6000000 : 3500000),
+            audioBitsPerSecond: 128000
+        });
+        var chunks = [];
+        recorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        var stopped = new Promise(function (r) { recorder.onstop = function () { r(); }; });
+
+        if (audioEl) { try { await audioEl.play(); } catch (e) {} }
+        recorder.start();
+
+        // --- Render surface
+        var canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        // --- Render loop — as fast as possible, timestamps explicit
+        for (var i = 0; i < totalFrames; i++) {
+            var t = i / fps;
+            var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
+
+            var frameCanvas;
+            try {
+                frameCanvas = await window.RenderEngine.render({
+                    state: opts.state,
+                    verseYoruba: opts.verseYoruba,
+                    verseEnglish: opts.verseEnglish,
+                    referenceText: opts.referenceText,
+                    backgroundURL: opts.backgroundURL,
+                    bgGradient: opts.bgGradient,
+                    bgSolid: opts.bgSolid,
+                    targetW: targetW,
+                    targetH: targetH,
+                    previewW: 350,
+                    motion: motion
+                });
+            } catch (e) {
+                console.error('Frame ' + i + ' render failed:', e);
+                continue;
+            }
+
+            ctx.clearRect(0, 0, targetW, targetH);
+            ctx.drawImage(frameCanvas, 0, 0);
+
+            var videoFrame = new VideoFrame(canvas, {
+                timestamp: i * frameDuration,
+                duration: frameDuration
+            });
+
+            try {
+                await writer.write(videoFrame);
+            } catch (e) {
+                console.warn('write failed at frame ' + i, e);
+            }
+            videoFrame.close();
+
+            if (opts.onProgress) {
+                opts.onProgress(
+                    Math.round(((i + 1) / totalFrames) * 95),
+                    'Rendering frame ' + (i + 1) + ' / ' + totalFrames
+                );
+            }
+        }
+
+        // --- Finalize
+        try { await writer.close(); } catch (e) {}
+        await delay(300);
+        if (audioEl) { try { audioEl.pause(); } catch (e) {} }
+        recorder.stop();
+        await stopped;
+        if (audioCtx) { try { await audioCtx.close(); } catch (e) {} }
+
+        if (opts.onProgress) opts.onProgress(100, 'Finalizing…');
+
+        return {
+            blob: new Blob(chunks, { type: mime }),
+            mimeType: mime,
+            ext: fileExtFor(mime),
+            durationSec: duration
+        };
+    }
+
+    // ============================================================
+    // FALLBACK — MediaRecorder + canvas.captureStream
+    // Used only on browsers without MediaStreamTrackGenerator.
+    // Uses RAF-based scheduling to try to hold real time.
+    // ============================================================
+    async function encodeWithCaptureStream(opts) {
+        var fps = opts.fps || 30;
+        var duration = opts.duration || 15;
+        var targetW = opts.targetW;
+        var targetH = opts.targetH;
+        var totalFrames = Math.round(duration * fps);
+        var frameInterval = 1000 / fps;
+
+        var mime = pickBestMimeType();
+        if (!mime) throw new Error('No supported mime type');
+
+        var canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        canvas.style.cssText = 'position:fixed;left:-10px;top:-10px;width:4px;height:4px;opacity:0;pointer-events:none;';
+        document.body.appendChild(canvas);
+        var ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        var stream = canvas.captureStream(fps);
+
+        var audioCtx = null, audioEl = null;
+        if (opts.audio && opts.audio.dataURL) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                audioEl = new Audio(opts.audio.dataURL);
+                audioEl.crossOrigin = 'anonymous';
+                audioEl.loop = !!opts.audio.loop;
+                await new Promise(function (res, rej) {
+                    audioEl.oncanplaythrough = res;
+                    audioEl.onerror = rej;
+                    audioEl.load();
+                });
+                var source = audioCtx.createMediaElementSource(audioEl);
+                var gainNode = audioCtx.createGain();
+                source.connect(gainNode);
+                var dest = audioCtx.createMediaStreamDestination();
+                gainNode.connect(dest);
+                var vol = (opts.audio.volume || 80) / 100;
+                var fadeIn = opts.audio.fadeIn || 0;
+                var fadeOut = opts.audio.fadeOut || 0;
+                var t0 = audioCtx.currentTime;
+                gainNode.gain.setValueAtTime(fadeIn > 0 ? 0 : vol, t0);
+                if (fadeIn > 0) gainNode.gain.linearRampToValueAtTime(vol, t0 + fadeIn);
+                if (fadeOut > 0) {
+                    gainNode.gain.setValueAtTime(vol, t0 + Math.max(fadeIn, duration - fadeOut));
+                    gainNode.gain.linearRampToValueAtTime(0, t0 + duration);
+                }
+                dest.stream.getAudioTracks().forEach(function (t) { stream.addTrack(t); });
+            } catch (e) { audioCtx = null; audioEl = null; }
         }
 
         var recorder = new MediaRecorder(stream, {
@@ -111,117 +240,94 @@ window.VideoEncoder = (function () {
             videoBitsPerSecond: targetW >= 1440 ? 10000000 : (targetW >= 1080 ? 6000000 : 3500000),
             audioBitsPerSecond: 128000
         });
-
         var chunks = [];
-        recorder.ondataavailable = function (e) {
-            if (e.data && e.data.size > 0) chunks.push(e.data);
-        };
-        var stopped = new Promise(function (resolve) {
-            recorder.onstop = function () { resolve(); };
-        });
+        recorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        var stopped = new Promise(function (r) { recorder.onstop = function () { r(); }; });
 
-        // ---------- PRODUCER / CONSUMER ----------
-        var frameQueue = [];
-        var renderDone = false;
-        var renderError = null;
-        var MAX_QUEUE = 60;   // cap memory ~2 seconds of buffered frames
-
-        async function renderAll() {
-            try {
-                for (var i = 0; i < totalFrames; i++) {
-                    while (frameQueue.length >= MAX_QUEUE) {
-                        await delay(20);
-                    }
-                    var t = i / fps;
-                    var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
-                    var frameCanvas = await window.RenderEngine.render({
-                        state: opts.state,
-                        verseYoruba: opts.verseYoruba,
-                        verseEnglish: opts.verseEnglish,
-                        referenceText: opts.referenceText,
-                        backgroundURL: opts.backgroundURL,
-                        bgGradient: opts.bgGradient,
-                        bgSolid: opts.bgSolid,
-                        targetW: targetW,
-                        targetH: targetH,
-                        previewW: 350,
-                        motion: motion
-                    });
-                    var bmp = await createImageBitmap(frameCanvas);
-                    frameQueue.push(bmp);
-
-                    if (opts.onProgress) {
-                        var pct = Math.round((i / totalFrames) * 90);
-                        opts.onProgress(pct, 'Rendering frame ' + (i + 1) + ' / ' + totalFrames);
-                    }
-                }
-            } catch (e) {
-                renderError = e;
-            }
-            renderDone = true;
-        }
-
-        // Start audio before playback
-        if (audioEl) {
-            try { await audioEl.play(); } catch (e) {}
-        }
-
+        if (audioEl) { try { await audioEl.play(); } catch (e) {} }
         recorder.start(100);
 
-        // Start producer in parallel
-        var producerPromise = renderAll();
+        var startWall = performance.now();
+        var scheduled = 0;
 
-        // Consumer: play frames back at exact fps
-        var startTime = performance.now();
         for (var i = 0; i < totalFrames; i++) {
-            // Wait for the next frame
-            while (frameQueue.length === 0 && !renderDone && !renderError) {
-                await delay(5);
+            // Target wall time for this frame
+            scheduled = startWall + i * frameInterval;
+            var now = performance.now();
+            if (now < scheduled) {
+                await delay(scheduled - now);
             }
-            if (renderError) break;
-            if (frameQueue.length === 0 && renderDone) break;
 
-            var bmp = frameQueue.shift();
-            ctx.drawImage(bmp, 0, 0, targetW, targetH);
-            if (bmp.close) bmp.close();
+            var t = i / fps;
+            var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
 
-            // Wait so we hit the target fps (real time)
-            var target = (i + 1) * frameInterval;
-            var elapsed = performance.now() - startTime;
-            if (elapsed < target) {
-                await delay(target - elapsed);
+            var frameCanvas;
+            try {
+                frameCanvas = await window.RenderEngine.render({
+                    state: opts.state,
+                    verseYoruba: opts.verseYoruba,
+                    verseEnglish: opts.verseEnglish,
+                    referenceText: opts.referenceText,
+                    backgroundURL: opts.backgroundURL,
+                    bgGradient: opts.bgGradient,
+                    bgSolid: opts.bgSolid,
+                    targetW: targetW,
+                    targetH: targetH,
+                    previewW: 350,
+                    motion: motion
+                });
+            } catch (e) { continue; }
+
+            ctx.clearRect(0, 0, targetW, targetH);
+            ctx.drawImage(frameCanvas, 0, 0);
+
+            if (opts.onProgress) {
+                opts.onProgress(
+                    Math.round(((i + 1) / totalFrames) * 95),
+                    'Rendering frame ' + (i + 1) + ' / ' + totalFrames
+                );
             }
         }
 
-        // Wait for producer to finish (should already be done)
-        await producerPromise;
+        // Wait out the remaining wall time in case rendering is faster than real time
+        var finalTarget = startWall + duration * 1000;
+        var remaining = finalTarget - performance.now();
+        if (remaining > 0) await delay(remaining);
 
-        if (renderError) {
-            if (audioEl) try { audioEl.pause(); } catch (e) {}
-            recorder.stop();
-            await stopped;
-            try { canvas.remove(); } catch (e) {}
-            if (audioCtx) try { await audioCtx.close(); } catch (e) {}
-            throw renderError;
-        }
-
-        // Let the final frame land
-        await delay(400);
-
-        if (audioEl) try { audioEl.pause(); } catch (e) {}
-
+        await delay(300);
+        if (audioEl) { try { audioEl.pause(); } catch (e) {} }
         recorder.stop();
         await stopped;
-
-        if (audioCtx) try { await audioCtx.close(); } catch (e) {}
-
+        if (audioCtx) { try { await audioCtx.close(); } catch (e) {} }
         try { canvas.remove(); } catch (e) {}
 
         if (opts.onProgress) opts.onProgress(100, 'Finalizing…');
 
-        var blob = new Blob(chunks, { type: mime });
-        return { blob: blob, mimeType: mime, ext: fileExtFor(mime), durationSec: duration };
+        return {
+            blob: new Blob(chunks, { type: mime }),
+            mimeType: mime,
+            ext: fileExtFor(mime),
+            durationSec: duration
+        };
     }
 
-    return { encode: encode, isSupported: function () { return !!window.MediaRecorder; } };
+    async function encode(opts) {
+        if (hasWebCodecs()) {
+            try {
+                return await encodeWithGenerator(opts);
+            } catch (e) {
+                console.warn('WebCodecs path failed, using fallback:', e);
+                return await encodeWithCaptureStream(opts);
+            }
+        }
+        return await encodeWithCaptureStream(opts);
+    }
+
+    return {
+        encode: encode,
+        isSupported: function () {
+            return !!window.MediaRecorder;
+        },
+        usesWebCodecs: hasWebCodecs
+    };
 })();
