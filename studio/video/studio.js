@@ -188,14 +188,39 @@ function performRedo() {
 
 // ---------- PREVIEW CANVAS ----------
 function resizePreview() {
+    var area = document.querySelector('.video-canvas-area');
     var wrap = document.getElementById('preview-wrap');
-    if (!wrap) return;
+    if (!area || !wrap) return;
+
     wrap.className = 'video-preview-wrap ratio-' + state.ratio;
 
-    var rect = wrap.getBoundingClientRect();
+    // Compute the wrap size explicitly — do NOT rely on CSS aspect-ratio,
+    // because it silently breaks for square and landscape on tall screens.
+    var availW = area.clientWidth - 20;
+    var availH = area.clientHeight - 20;
+
+    var ratioMap = { square: 1, portrait: 4 / 5, story: 9 / 16, landscape: 16 / 9 };
+    var r = ratioMap[state.ratio] || 9 / 16;
+
+    var w, h;
+    if (r <= 1) {
+        // Portrait / square — height is the constraint
+        h = availH;
+        w = h * r;
+        if (w > availW) { w = availW; h = w / r; }
+    } else {
+        // Landscape — width is the constraint
+        w = availW;
+        h = w / r;
+        if (h > availH) { h = availH; w = h * r; }
+    }
+
+    wrap.style.width = w + 'px';
+    wrap.style.height = h + 'px';
+
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var cxW = Math.max(320, Math.round(rect.width * dpr));
-    var cxH = Math.max(320, Math.round(rect.height * dpr));
+    var cxW = Math.max(320, Math.round(w * dpr));
+    var cxH = Math.max(320, Math.round(h * dpr));
     previewRenderW = cxW;
     previewRenderH = cxH;
     previewCanvas.width = cxW;
