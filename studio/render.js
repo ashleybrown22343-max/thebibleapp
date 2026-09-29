@@ -1,6 +1,7 @@
 // ============================================================
-// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V3 — motion-enabled)
+// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V4)
 // Shared by /studio/image/export and /studio/video.
+// V4 adds: word-by-word animated reveal + blur-fill backgrounds.
 // ============================================================
 
 window.RenderEngine = (function () {
@@ -118,22 +119,23 @@ window.RenderEngine = (function () {
         var previewW = opts.previewW || 350;
         var scale = W / previewW;
 
-        // Motion — all default to "no motion" so image export is unaffected
+        // ---------- MOTION INPUT ----------
         var m = opts.motion || {};
-        var textOpacity = m.textOpacity !== undefined ? m.textOpacity : 1;
-        var textOffsetX = m.textOffsetX || 0;   // in preview px, scaled below
-        var textOffsetY = m.textOffsetY || 0;
-        var textScale   = m.textScale !== undefined ? m.textScale : 1;
-        var visibleChars = m.visibleChars;      // null = all, number = typewriter
-        var bgScale  = m.bgScale !== undefined ? m.bgScale : 1;
-        var bgOffsetX = m.bgOffsetX || 0;
-        var bgOffsetY = m.bgOffsetY || 0;
-        var refOpacity = m.refOpacity !== undefined ? m.refOpacity : 1;
-        var secOpacity = m.secOpacity !== undefined ? m.secOpacity : 1;
-        var logoOpacityMotion = m.logoOpacity !== undefined ? m.logoOpacity : 1;
-        var wordReveal = m.wordRevealProgress;  // null = all, 0..1 = reveal fraction
+        var textOpacity    = m.textOpacity    !== undefined ? m.textOpacity    : 1;
+        var textOffsetX    = m.textOffsetX    || 0;      // preview-px (scaled below)
+        var textOffsetY    = m.textOffsetY    || 0;
+        var textScale      = m.textScale      !== undefined ? m.textScale      : 1;
+        var visibleChars   = m.visibleChars;             // number | undefined — typewriter
+        var wordReveal     = m.wordReveal;               // 0..1 | undefined — smooth word-by-word
+        var bgScale        = m.bgScale        !== undefined ? m.bgScale        : 1;
+        var bgOffsetX      = m.bgOffsetX      || 0;
+        var bgOffsetY      = m.bgOffsetY      || 0;
+        var refOpacity     = m.refOpacity     !== undefined ? m.refOpacity     : 1;
+        var secOpacityM    = m.secOpacity     !== undefined ? m.secOpacity     : 1;
+        var logoOpacityM   = m.logoOpacity    !== undefined ? m.logoOpacity    : 1;
 
         if (textOpacity <= 0.001) textOpacity = 0;
+        if (bgScale <= 0) bgScale = 1;
 
         var canvas = document.createElement('canvas');
         canvas.width = W;
@@ -167,22 +169,47 @@ window.RenderEngine = (function () {
                     if (state.blur > 0) filters.push('blur(' + (state.blur * scale) + 'px)');
                     if (state.brightness !== undefined && state.brightness !== 100) filters.push('brightness(' + (state.brightness / 100) + ')');
                     if (state.saturation !== undefined && state.saturation !== 100) filters.push('saturate(' + (state.saturation / 100) + ')');
-                    if (filters.length) ctx.filter = filters.join(' ');
+                    var baseFilter = filters.length ? filters.join(' ') : '';
 
-                    // Apply bg transform (motion)
-                    var bleed = Math.ceil((state.blur || 0) * scale * 2) + 2;
-                    var drawW = W + bleed * 2;
-                    var drawH = H + bleed * 2;
-                    var scaledW = drawW * bgScale;
-                    var scaledH = drawH * bgScale;
-                    var dx = (drawW - scaledW) / 2 + bgOffsetX * scale;
-                    var dy = (drawH - scaledH) / 2 + bgOffsetY * scale;
-                    drawImageCover(
-                        ctx, bgImg,
-                        -bleed + dx, -bleed + dy, scaledW, scaledH,
-                        state.bgPosition || 'center'
-                    );
-                    ctx.filter = 'none';
+                    var imgAspect = bgImg.width / bgImg.height;
+                    var boxAspect = W / H;
+                    var useBlurFill = state.bgBlurFill !== false &&
+                                      Math.abs(imgAspect - boxAspect) / boxAspect > 0.08;
+
+                    if (useBlurFill) {
+                        // Layer 1: blurred + oversaturated cover fill
+                        ctx.filter = (baseFilter ? baseFilter + ' ' : '') + 'blur(' + (60 * scale) + 'px)';
+                        drawImageCover(ctx, bgImg, -30, -30, W + 60, H + 60, 'center');
+                        ctx.filter = baseFilter || 'none';
+                        // Layer 2: slight darken for contrast
+                        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+                        ctx.fillRect(0, 0, W, H);
+                        // Layer 3: sharp fit image centered, with Ken Burns
+                        var fitScale = Math.min(W / bgImg.width, H / bgImg.height);
+                        var sw = bgImg.width * fitScale * bgScale;
+                        var sh = bgImg.height * fitScale * bgScale;
+                        var sx = (W - sw) / 2 + bgOffsetX * scale;
+                        var sy = (H - sh) / 2 + bgOffsetY * scale;
+                        ctx.filter = baseFilter || 'none';
+                        ctx.drawImage(bgImg, sx, sy, sw, sh);
+                        ctx.filter = 'none';
+                    } else {
+                        // Standard cover fill
+                        if (baseFilter) ctx.filter = baseFilter;
+                        var bleed = Math.ceil((state.blur || 0) * scale * 2) + 2;
+                        var drawW = W + bleed * 2;
+                        var drawH = H + bleed * 2;
+                        var scaledW = drawW * bgScale;
+                        var scaledH = drawH * bgScale;
+                        var dx = (drawW - scaledW) / 2 + bgOffsetX * scale;
+                        var dy = (drawH - scaledH) / 2 + bgOffsetY * scale;
+                        drawImageCover(
+                            ctx, bgImg,
+                            -bleed + dx, -bleed + dy, scaledW, scaledH,
+                            state.bgPosition || 'center'
+                        );
+                        ctx.filter = 'none';
+                    }
                 } catch (e) {}
             } else if (opts.bgGradient) {
                 var gg = parseCssGradient(ctx, opts.bgGradient, W, H);
@@ -308,18 +335,8 @@ window.RenderEngine = (function () {
             }
         }
 
-        // Global word index counter for word reveal
         var currentWordIndex = 0;
         var totalWordsToReveal = 0;
-
-        function shouldRevealWord() {
-            if (wordReveal === undefined || wordReveal === null) return true;
-            if (totalWordsToReveal === 0) return true;
-            var threshold = wordReveal * totalWordsToReveal;
-            var visible = currentWordIndex < threshold;
-            currentWordIndex++;
-            return visible;
-        }
 
         function drawWord(word, x, centerY, font, sizePx, color, style, isHl) {
             ctx.font = font;
@@ -364,6 +381,9 @@ window.RenderEngine = (function () {
 
         function drawParagraph(layout, x, y, lineH, font, sizePx, color, style) {
             var cy = y;
+            var N = totalWordsToReveal || 1;
+            var doWordReveal = (wordReveal !== undefined && wordReveal !== null);
+
             for (var li = 0; li < layout.lines.length; li++) {
                 var ln = layout.lines[li];
                 var startX = x;
@@ -371,23 +391,54 @@ window.RenderEngine = (function () {
                 else if (align === 'right') startX = x + contentW - ln.width;
                 var cx = startX;
                 var centerY = cy + lineH / 2;
+
                 for (var wi = 0; wi < ln.words.length; wi++) {
                     var w = ln.words[wi];
-                    var visible = shouldRevealWord();
-                    if (!visible) { cx += w.width + layout.spaceW; continue; }
                     var isHl = hw && w.text.toLowerCase().indexOf(hw) >= 0;
+
+                    if (doWordReveal) {
+                        // Per-word animated reveal:
+                        //   - words stagger across the first 65% of the reveal window
+                        //   - each word takes 35% of the window to animate in
+                        var idx = currentWordIndex;
+                        var start = (idx / N) * 0.65;
+                        var dur = 0.35;
+                        var p = (wordReveal - start) / dur;
+                        if (p < 0) p = 0;
+                        if (p > 1) p = 1;
+                        var eased = 1 - Math.pow(1 - p, 3);
+
+                        if (eased > 0.001) {
+                            var dy = (1 - eased) * 14 * scale;
+                            var sc = 0.90 + 0.10 * eased;
+                            var pivotX = cx + w.width / 2;
+                            var pivotY = centerY + dy;
+                            ctx.save();
+                            ctx.globalAlpha *= eased;
+                            ctx.translate(pivotX, pivotY);
+                            ctx.scale(sc, sc);
+                            ctx.translate(-pivotX, -pivotY);
+                            drawWord(w, cx, centerY + dy, font, sizePx, color, style, isHl);
+                            ctx.restore();
+                        }
+                        currentWordIndex++;
+                        cx += w.width + layout.spaceW;
+                        continue;
+                    }
+
                     drawWord(w, cx, centerY, font, sizePx, color, style, isHl);
                     cx += w.width + layout.spaceW;
+                    currentWordIndex++;
                 }
                 cy += lineH;
             }
         }
 
-        // ---------- MEASURE ----------
+        // ---------- MEASURE TEXT ----------
         var primaryText = applyCase(opts.verseYoruba || '', state.textCase);
         var secondaryText = applyCase(opts.verseEnglish || '', state.textCase);
 
-        // Typewriter: truncate primary text
+        // Typewriter: truncate the primary text BEFORE measuring
         if (visibleChars !== undefined && visibleChars !== null) {
             if (primaryText.length > visibleChars) {
                 primaryText = primaryText.substring(0, visibleChars);
@@ -422,7 +473,6 @@ window.RenderEngine = (function () {
             totalWordsToReveal += layoutS.wordCount;
         }
 
-        // Reset word index for actual draw
         currentWordIndex = 0;
 
         var mainHeight = 0;
@@ -486,7 +536,7 @@ window.RenderEngine = (function () {
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetY = 0;
             } else if (b.kind === 'sec') {
-                ctx.globalAlpha = textOpacity * ((state.secOpacity !== undefined ? state.secOpacity : 85) / 100) * secOpacity;
+                ctx.globalAlpha = textOpacity * ((state.secOpacity !== undefined ? state.secOpacity : 85) / 100) * secOpacityM;
                 ctx.font = '500 ' + secSize + 'px ' + mainFontFamily;
                 var st = state.secText;
                 var sw = ctx.measureText(st).width;
@@ -505,7 +555,7 @@ window.RenderEngine = (function () {
         ctx.globalAlpha = 1;
 
         // ---------- LOGO ----------
-        if (state.logoData && logoOpacityMotion > 0.001) {
+        if (state.logoData && logoOpacityM > 0.001) {
             try {
                 var logo = await loadImage(state.logoData);
                 var logoSize = (state.logoSize || 60) * scale;
@@ -518,7 +568,7 @@ window.RenderEngine = (function () {
                 else { lx = W - logoGap - logoSize; ly = H - logoGap - logoSize; }
 
                 ctx.save();
-                ctx.globalAlpha = ((state.logoOpacity !== undefined ? state.logoOpacity : 100) / 100) * logoOpacityMotion;
+                ctx.globalAlpha = ((state.logoOpacity !== undefined ? state.logoOpacity : 100) / 100) * logoOpacityM;
                 if (state.logoBgOn) {
                     ctx.fillStyle = state.logoBgColor || '#ffffff';
                     roundRectPath(ctx, lx - 4 * scale, ly - 4 * scale, logoSize + 8 * scale, logoSize + 8 * scale, 8 * scale);
