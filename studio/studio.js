@@ -1594,6 +1594,35 @@ function buildTextHTML() {
     return html || 'Verse not found';
 }
 
+var EXPORT_DB = 'bibeli_export';
+var EXPORT_STORE = 'blobs';
+var EXPORT_KEY = 'current';
+
+function openExportDB() {
+    return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(EXPORT_DB, 1);
+        req.onupgradeneeded = function () {
+            var db = req.result;
+            if (!db.objectStoreNames.contains(EXPORT_STORE)) {
+                db.createObjectStore(EXPORT_STORE);
+            }
+        };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+    });
+}
+
+function idbPut(key, value) {
+    return openExportDB().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            var tx = db.transaction(EXPORT_STORE, 'readwrite');
+            tx.objectStore(EXPORT_STORE).put(value, key);
+            tx.oncomplete = function () { resolve(); };
+            tx.onerror = function () { reject(tx.error); };
+        });
+    });
+}
+
 function getShadowCSS(style) {
     if (style === 'none') return 'none';
     if (style === 'soft') return '0 2px 8px rgba(0,0,0,0.4)';
