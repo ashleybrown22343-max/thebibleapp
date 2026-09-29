@@ -1,6 +1,4 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": true,
   "headers": [
     {
       "source": "/.well-known/assetlinks.json",
@@ -13,16 +11,6 @@
       "headers": [
         { "key": "Content-Type", "value": "text/html; charset=utf-8" }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/studio/image/export",
-      "destination": "/studio/image/export/index.html"
-    },
-    {
-      "source": "/studio/image/export/",
-      "destination": "/studio/image/export/index.html"
     }
   ]
 }
