@@ -1,6 +1,6 @@
 // ============================================================
-// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V2)
-// Shared by /studio/image/export and (later) /studio/video.
+// BIBELI MIMO – NATIVE CANVAS 2D RENDERER (V3 — motion-enabled)
+// Shared by /studio/image/export and /studio/video.
 // ============================================================
 
 window.RenderEngine = (function () {
@@ -56,7 +56,6 @@ window.RenderEngine = (function () {
         ctx.closePath();
     }
 
-    // Cover-crop image, honouring position ('center'|'top'|'bottom'|'left'|'right')
     function drawImageCover(ctx, img, x, y, w, h, position) {
         var iw = img.width, ih = img.height;
         var s = Math.max(w / iw, h / ih);
@@ -119,6 +118,23 @@ window.RenderEngine = (function () {
         var previewW = opts.previewW || 350;
         var scale = W / previewW;
 
+        // Motion — all default to "no motion" so image export is unaffected
+        var m = opts.motion || {};
+        var textOpacity = m.textOpacity !== undefined ? m.textOpacity : 1;
+        var textOffsetX = m.textOffsetX || 0;   // in preview px, scaled below
+        var textOffsetY = m.textOffsetY || 0;
+        var textScale   = m.textScale !== undefined ? m.textScale : 1;
+        var visibleChars = m.visibleChars;      // null = all, number = typewriter
+        var bgScale  = m.bgScale !== undefined ? m.bgScale : 1;
+        var bgOffsetX = m.bgOffsetX || 0;
+        var bgOffsetY = m.bgOffsetY || 0;
+        var refOpacity = m.refOpacity !== undefined ? m.refOpacity : 1;
+        var secOpacity = m.secOpacity !== undefined ? m.secOpacity : 1;
+        var logoOpacityMotion = m.logoOpacity !== undefined ? m.logoOpacity : 1;
+        var wordReveal = m.wordRevealProgress;  // null = all, 0..1 = reveal fraction
+
+        if (textOpacity <= 0.001) textOpacity = 0;
+
         var canvas = document.createElement('canvas');
         canvas.width = W;
         canvas.height = H;
@@ -139,7 +155,7 @@ window.RenderEngine = (function () {
         ctx.fillStyle = '#1a237e';
         ctx.fillRect(0, 0, W, H);
 
-        var bgAlpha = state.bgOpacity !== undefined ? state.bgOpacity / 100 : 1;
+        var bgAlpha = (state.bgOpacity !== undefined ? state.bgOpacity : 100) / 100;
         if (bgAlpha > 0) {
             ctx.save();
             ctx.globalAlpha = bgAlpha;
@@ -152,8 +168,20 @@ window.RenderEngine = (function () {
                     if (state.brightness !== undefined && state.brightness !== 100) filters.push('brightness(' + (state.brightness / 100) + ')');
                     if (state.saturation !== undefined && state.saturation !== 100) filters.push('saturate(' + (state.saturation / 100) + ')');
                     if (filters.length) ctx.filter = filters.join(' ');
+
+                    // Apply bg transform (motion)
                     var bleed = Math.ceil((state.blur || 0) * scale * 2) + 2;
-                    drawImageCover(ctx, bgImg, -bleed, -bleed, W + bleed * 2, H + bleed * 2, state.bgPosition || 'center');
+                    var drawW = W + bleed * 2;
+                    var drawH = H + bleed * 2;
+                    var scaledW = drawW * bgScale;
+                    var scaledH = drawH * bgScale;
+                    var dx = (drawW - scaledW) / 2 + bgOffsetX * scale;
+                    var dy = (drawH - scaledH) / 2 + bgOffsetY * scale;
+                    drawImageCover(
+                        ctx, bgImg,
+                        -bleed + dx, -bleed + dy, scaledW, scaledH,
+                        state.bgPosition || 'center'
+                    );
                     ctx.filter = 'none';
                 } catch (e) {}
             } else if (opts.bgGradient) {
@@ -201,14 +229,15 @@ window.RenderEngine = (function () {
         var mainFontFamily = getFontCss(state.fontFamily || 'Poppins');
         var refFontFamily = state.refMatchFont ? mainFontFamily : getFontCss(state.refFontFamily || 'Playfair Display');
 
-        var fontSize = (state.fontSize || 24) * scale;
+        var baseFontSize = (state.fontSize || 24) * scale;
+        var fontSize = baseFontSize * textScale;
         var refSize = (state.refSize || 14) * scale;
         var secSize = (state.secSize || 12) * scale;
         var lineHeight = fontSize * (state.lineSpacing || 1.7);
         var gapPx = fontSize * (state.blockGap || 1.5) * 0.5;
 
         var padPx = ((state.padding || 10) / 100) * W;
-        var contentX = padPx;
+        var contentX = padPx + textOffsetX * scale;
         var contentW = W - padPx * 2;
         var contentTop = padPx;
         var contentBottom = H - padPx;
@@ -219,15 +248,12 @@ window.RenderEngine = (function () {
         var align = state.align || 'center';
         var hw = (state.highlightWord || '').trim().toLowerCase();
         var hlColor = state.highlightColor || '#f59e0b';
-
-        // Font weight — main text uses state.fontWeight (default 700).
-        // Secondary language (English block) always uses 400 for contrast.
         var primaryWeight = state.fontWeight || '700';
 
         function measure(text, font, maxW) {
             ctx.font = font;
             var words = text.split(/\s+/).filter(Boolean);
-            if (words.length === 0) return { lines: [], spaceW: 0 };
+            if (words.length === 0) return { lines: [], spaceW: 0, wordCount: 0 };
             var spaceW = ctx.measureText(' ').width;
             var lines = [];
             var line = [];
@@ -246,7 +272,9 @@ window.RenderEngine = (function () {
                 }
             }
             if (line.length) lines.push({ words: line, width: lineW });
-            return { lines: lines, spaceW: spaceW };
+            var total = 0;
+            lines.forEach(function (l) { total += l.words.length; });
+            return { lines: lines, spaceW: spaceW, wordCount: total };
         }
 
         function applyShadowForText(style) {
@@ -278,6 +306,19 @@ window.RenderEngine = (function () {
                 ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 0;
             }
+        }
+
+        // Global word index counter for word reveal
+        var currentWordIndex = 0;
+        var totalWordsToReveal = 0;
+
+        function shouldRevealWord() {
+            if (wordReveal === undefined || wordReveal === null) return true;
+            if (totalWordsToReveal === 0) return true;
+            var threshold = wordReveal * totalWordsToReveal;
+            var visible = currentWordIndex < threshold;
+            currentWordIndex++;
+            return visible;
         }
 
         function drawWord(word, x, centerY, font, sizePx, color, style, isHl) {
@@ -332,6 +373,8 @@ window.RenderEngine = (function () {
                 var centerY = cy + lineH / 2;
                 for (var wi = 0; wi < ln.words.length; wi++) {
                     var w = ln.words[wi];
+                    var visible = shouldRevealWord();
+                    if (!visible) { cx += w.width + layout.spaceW; continue; }
                     var isHl = hw && w.text.toLowerCase().indexOf(hw) >= 0;
                     drawWord(w, cx, centerY, font, sizePx, color, style, isHl);
                     cx += w.width + layout.spaceW;
@@ -344,6 +387,13 @@ window.RenderEngine = (function () {
         var primaryText = applyCase(opts.verseYoruba || '', state.textCase);
         var secondaryText = applyCase(opts.verseEnglish || '', state.textCase);
 
+        // Typewriter: truncate primary text
+        if (visibleChars !== undefined && visibleChars !== null) {
+            if (primaryText.length > visibleChars) {
+                primaryText = primaryText.substring(0, visibleChars);
+            }
+        }
+
         var mainSub = [];
         if (primaryText) {
             var layoutP = measure(primaryText, primaryWeight + ' ' + fontSize + 'px ' + mainFontFamily, contentW);
@@ -355,6 +405,7 @@ window.RenderEngine = (function () {
                 opacity: 1,
                 marginTop: 0
             });
+            totalWordsToReveal += layoutP.wordCount;
         }
         if (secondaryText) {
             var enSize = fontSize * 0.70;
@@ -368,7 +419,11 @@ window.RenderEngine = (function () {
                 opacity: 0.85,
                 marginTop: mainSub.length > 0 ? gapPx : 0
             });
+            totalWordsToReveal += layoutS.wordCount;
         }
+
+        // Reset word index for actual draw
+        currentWordIndex = 0;
 
         var mainHeight = 0;
         mainSub.forEach(function (s) {
@@ -398,8 +453,11 @@ window.RenderEngine = (function () {
         if (vpos === 'top') startY = contentTop;
         else if (vpos === 'bottom') startY = contentBottom - totalH;
         else startY = contentTop + Math.max(0, (contentH - totalH) / 2);
+        startY += textOffsetY * scale;
 
         // ---------- DRAW BLOCKS ----------
+        ctx.globalAlpha = textOpacity;
+
         var cursorY = startY;
         blocks.forEach(function (b, i) {
             if (i > 0) cursorY += gapPx;
@@ -408,12 +466,13 @@ window.RenderEngine = (function () {
                 var subY = cursorY;
                 mainSub.forEach(function (s) {
                     subY += s.marginTop;
-                    ctx.globalAlpha = s.opacity;
+                    ctx.globalAlpha = textOpacity * s.opacity;
                     drawParagraph(s.layout, contentX, subY, s.lineH, s.font, s.size, textColor, shadowStyle);
                     subY += s.layout.lines.length * s.lineH;
                 });
-                ctx.globalAlpha = 1;
+                ctx.globalAlpha = textOpacity;
             } else if (b.kind === 'ref') {
+                ctx.globalAlpha = textOpacity * refOpacity;
                 ctx.font = '700 ' + refSize + 'px ' + refFontFamily;
                 var refText = opts.referenceText;
                 var rw = ctx.measureText(refText).width;
@@ -427,7 +486,7 @@ window.RenderEngine = (function () {
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetY = 0;
             } else if (b.kind === 'sec') {
-                ctx.globalAlpha = (state.secOpacity !== undefined ? state.secOpacity : 85) / 100;
+                ctx.globalAlpha = textOpacity * ((state.secOpacity !== undefined ? state.secOpacity : 85) / 100) * secOpacity;
                 ctx.font = '500 ' + secSize + 'px ' + mainFontFamily;
                 var st = state.secText;
                 var sw = ctx.measureText(st).width;
@@ -440,13 +499,13 @@ window.RenderEngine = (function () {
                 ctx.shadowColor = 'transparent';
                 ctx.shadowBlur = 0;
                 ctx.shadowOffsetY = 0;
-                ctx.globalAlpha = 1;
             }
             cursorY += b.height;
         });
+        ctx.globalAlpha = 1;
 
         // ---------- LOGO ----------
-         if (state.logoData) {
+        if (state.logoData && logoOpacityMotion > 0.001) {
             try {
                 var logo = await loadImage(state.logoData);
                 var logoSize = (state.logoSize || 60) * scale;
@@ -459,7 +518,7 @@ window.RenderEngine = (function () {
                 else { lx = W - logoGap - logoSize; ly = H - logoGap - logoSize; }
 
                 ctx.save();
-                ctx.globalAlpha = (state.logoOpacity !== undefined ? state.logoOpacity : 100) / 100;
+                ctx.globalAlpha = ((state.logoOpacity !== undefined ? state.logoOpacity : 100) / 100) * logoOpacityMotion;
                 if (state.logoBgOn) {
                     ctx.fillStyle = state.logoBgColor || '#ffffff';
                     roundRectPath(ctx, lx - 4 * scale, ly - 4 * scale, logoSize + 8 * scale, logoSize + 8 * scale, 8 * scale);
