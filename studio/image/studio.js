@@ -1430,7 +1430,7 @@ function saveExportState() {
     try { localStorage.removeItem('studio_export_state'); } catch (e) {}
 
     idbPut(EXPORT_KEY, exportData)
-        .then(function () { window.location.href = '/studio/image/export/'; })
+        .then(function () { window.location.href = '/studio/image/export/export.html'; })
         .catch(function (err) {
             console.error('Export handoff failed:', err);
             showToast('Could not prepare export. Try again.', 'error');
