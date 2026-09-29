@@ -1859,12 +1859,11 @@ function attachExportModalEvents() {
     };
 
     document.getElementById('export-download-btn').onclick = function () {
-        try { localStorage.setItem('studio_export_format', state.exportFormat); } catch (e) {}
-        try { localStorage.setItem('studio_export_quality', state.exportQuality); } catch (e) {}
-        try { localStorage.setItem('studio_export_res', state.exportRes); } catch (e) {}
-        saveExportState();
-        window.location.href = '/studio/image/export/index.html';
-    };
+    try { localStorage.setItem('studio_export_format', state.exportFormat); } catch (e) {}
+    try { localStorage.setItem('studio_export_quality', state.exportQuality); } catch (e) {}
+    try { localStorage.setItem('studio_export_res', state.exportRes); } catch (e) {}
+    saveExportState();
+};
 }
 
 function updateExportEstimate() {
@@ -1905,22 +1904,35 @@ function saveExportState() {
         bgSolid = getCurrentBackgroundCSS();
     }
 
-    const exportData = {
-    verseYoruba: texts.yo,
-    verseEnglish: texts.en,
-    referenceText: getReferenceText(),
-    backgroundURL: backgroundURL,
-    bgGradient: bgGradient,
-    bgSolid: bgSolid,
-    previewW: previewW,
-    previewH: previewH,
-    settings: JSON.parse(JSON.stringify(state)),
-    exportFormat: state.exportFormat,
-    exportQuality: state.exportQuality,
-    exportRes: state.exportRes
-};
+    // Strip the base64 image from the settings clone — it's delivered separately as backgroundURL
+    var settingsClone = JSON.parse(JSON.stringify(state));
+    delete settingsClone.bgImageData;
 
-    try { localStorage.setItem('studio_export_state', JSON.stringify(exportData)); } catch (e) {}
+    const exportData = {
+        verseYoruba: texts.yo,
+        verseEnglish: texts.en,
+        referenceText: getReferenceText(),
+        backgroundURL: backgroundURL,
+        bgGradient: bgGradient,
+        bgSolid: bgSolid,
+        previewW: previewW,
+        previewH: previewH,
+        settings: settingsClone,
+        exportFormat: state.exportFormat,
+        exportQuality: state.exportQuality,
+        exportRes: state.exportRes
+    };
+
+    try { localStorage.removeItem('studio_export_state'); } catch (e) {}
+
+    idbPut(EXPORT_KEY, exportData)
+        .then(function () {
+            window.location.href = '/studio/image/export/index.html';
+        })
+        .catch(function (err) {
+            console.error('Export handoff failed:', err);
+            alert('Could not prepare export. Try again.');
+        });
 }
 
 // ============================================================
