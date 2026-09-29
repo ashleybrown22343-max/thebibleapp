@@ -1,7 +1,8 @@
 // ============================================================
-// BIBELI MIMO – VIDEO ENCODER
-// Uses MediaRecorder (universal) with canvas + optional audio.
-// Real-time capture: a 15s video takes ~15s to encode.
+// BIBELI MIMO – VIDEO ENCODER (V2 – deterministic timing)
+// Uses a producer/consumer pattern: one loop renders frames,
+// another plays them back at exact fps into the recorder.
+// This guarantees the exported video matches the requested duration.
 // ============================================================
 
 window.VideoEncoder = (function () {
@@ -30,16 +31,10 @@ window.VideoEncoder = (function () {
         return 'webm';
     }
 
-    // Main encode function.
-    // opts: {
-    //   state, verseYoruba, verseEnglish, referenceText, backgroundURL,
-    //   bgGradient, bgSolid,
-    //   duration, fps, targetW, targetH,
-    //   motionFn: (t) => motionObject,
-    //   audio: null | { dataURL, volume (0-100), fadeIn, fadeOut, loop }
-    //   onProgress: (percent, status) => void
-    // }
-    // Returns: { blob, mimeType, ext, durationSec }
+    function delay(ms) {
+        return new Promise(function (r) { setTimeout(r, Math.max(0, ms)); });
+    }
+
     async function encode(opts) {
         var fps = opts.fps || 30;
         var duration = opts.duration || 15;
@@ -51,18 +46,25 @@ window.VideoEncoder = (function () {
         var mime = pickBestMimeType();
         if (!mime) throw new Error('Video recording not supported on this browser');
 
-        // Render surface
+        // ---------- RENDER SURFACE (attached to DOM for reliable capture) ----------
         var canvas = document.createElement('canvas');
         canvas.width = targetW;
         canvas.height = targetH;
-        var ctx = canvas.getContext('2d');
+        // Offscreen but DOM-attached — otherwise Chrome throttles captureStream
+        canvas.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
+        document.body.appendChild(canvas);
+        var ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, targetW, targetH);
 
+        // ---------- STREAM + RECORDER ----------
         var stream = canvas.captureStream(fps);
+
+        // ---------- AUDIO ----------
         var audioCtx = null;
         var audioEl = null;
         var gainNode = null;
 
-        // Audio setup
         if (opts.audio && opts.audio.dataURL) {
             try {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -82,7 +84,6 @@ window.VideoEncoder = (function () {
                 var dest = audioCtx.createMediaStreamDestination();
                 gainNode.connect(dest);
 
-                // Fade in / out applied via gain automation
                 var vol = (opts.audio.volume || 80) / 100;
                 var fadeIn = opts.audio.fadeIn || 0;
                 var fadeOut = opts.audio.fadeOut || 0;
@@ -115,74 +116,106 @@ window.VideoEncoder = (function () {
         recorder.ondataavailable = function (e) {
             if (e.data && e.data.size > 0) chunks.push(e.data);
         };
-
         var stopped = new Promise(function (resolve) {
             recorder.onstop = function () { resolve(); };
         });
 
+        // ---------- PRODUCER / CONSUMER ----------
+        var frameQueue = [];
+        var renderDone = false;
+        var renderError = null;
+        var MAX_QUEUE = 60;   // cap memory ~2 seconds of buffered frames
+
+        async function renderAll() {
+            try {
+                for (var i = 0; i < totalFrames; i++) {
+                    while (frameQueue.length >= MAX_QUEUE) {
+                        await delay(20);
+                    }
+                    var t = i / fps;
+                    var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
+                    var frameCanvas = await window.RenderEngine.render({
+                        state: opts.state,
+                        verseYoruba: opts.verseYoruba,
+                        verseEnglish: opts.verseEnglish,
+                        referenceText: opts.referenceText,
+                        backgroundURL: opts.backgroundURL,
+                        bgGradient: opts.bgGradient,
+                        bgSolid: opts.bgSolid,
+                        targetW: targetW,
+                        targetH: targetH,
+                        previewW: 350,
+                        motion: motion
+                    });
+                    var bmp = await createImageBitmap(frameCanvas);
+                    frameQueue.push(bmp);
+
+                    if (opts.onProgress) {
+                        var pct = Math.round((i / totalFrames) * 90);
+                        opts.onProgress(pct, 'Rendering frame ' + (i + 1) + ' / ' + totalFrames);
+                    }
+                }
+            } catch (e) {
+                renderError = e;
+            }
+            renderDone = true;
+        }
+
+        // Start audio before playback
         if (audioEl) {
             try { await audioEl.play(); } catch (e) {}
         }
 
         recorder.start(100);
 
+        // Start producer in parallel
+        var producerPromise = renderAll();
+
+        // Consumer: play frames back at exact fps
         var startTime = performance.now();
-
         for (var i = 0; i < totalFrames; i++) {
-            var t = i / fps;
-            var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
-
-            var frameCanvas;
-            try {
-                frameCanvas = await window.RenderEngine.render({
-                    state: opts.state,
-                    verseYoruba: opts.verseYoruba,
-                    verseEnglish: opts.verseEnglish,
-                    referenceText: opts.referenceText,
-                    backgroundURL: opts.backgroundURL,
-                    bgGradient: opts.bgGradient,
-                    bgSolid: opts.bgSolid,
-                    targetW: targetW,
-                    targetH: targetH,
-                    previewW: targetW,
-                    motion: motion
-                });
-            } catch (e) {
-                console.error('Frame render failed:', e);
-                continue;
+            // Wait for the next frame
+            while (frameQueue.length === 0 && !renderDone && !renderError) {
+                await delay(5);
             }
+            if (renderError) break;
+            if (frameQueue.length === 0 && renderDone) break;
 
-            ctx.clearRect(0, 0, targetW, targetH);
-            ctx.drawImage(frameCanvas, 0, 0);
+            var bmp = frameQueue.shift();
+            ctx.drawImage(bmp, 0, 0, targetW, targetH);
+            if (bmp.close) bmp.close();
 
-            if (opts.onProgress) {
-                opts.onProgress(
-                    Math.round(((i + 1) / totalFrames) * 95),
-                    'Rendering frame ' + (i + 1) + ' / ' + totalFrames
-                );
-            }
-
-            // Pace the render in real time (captureStream samples in real time)
-            var elapsed = performance.now() - startTime;
+            // Wait so we hit the target fps (real time)
             var target = (i + 1) * frameInterval;
+            var elapsed = performance.now() - startTime;
             if (elapsed < target) {
-                await new Promise(function (r) { setTimeout(r, target - elapsed); });
+                await delay(target - elapsed);
             }
         }
 
-        // Let the last frame land in the recorder
-        await new Promise(function (r) { setTimeout(r, 300); });
+        // Wait for producer to finish (should already be done)
+        await producerPromise;
 
-        if (audioEl) {
-            try { audioEl.pause(); } catch (e) {}
+        if (renderError) {
+            if (audioEl) try { audioEl.pause(); } catch (e) {}
+            recorder.stop();
+            await stopped;
+            try { canvas.remove(); } catch (e) {}
+            if (audioCtx) try { await audioCtx.close(); } catch (e) {}
+            throw renderError;
         }
+
+        // Let the final frame land
+        await delay(400);
+
+        if (audioEl) try { audioEl.pause(); } catch (e) {}
 
         recorder.stop();
         await stopped;
 
-        if (audioCtx) {
-            try { await audioCtx.close(); } catch (e) {}
-        }
+        if (audioCtx) try { await audioCtx.close(); } catch (e) {}
+
+        try { canvas.remove(); } catch (e) {}
 
         if (opts.onProgress) opts.onProgress(100, 'Finalizing…');
 
