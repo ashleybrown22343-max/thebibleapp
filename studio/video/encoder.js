@@ -1,10 +1,9 @@
 // ============================================================
-// BIBELI MIMO – VIDEO ENCODER (V4 – real-time, correct duration)
-//
-// IMPORTANT: MediaRecorder records the WALL CLOCK.
-// A 15-second video takes 15 seconds to record, no exceptions.
-// We schedule renders at exact wall-clock times so the exported
-// duration matches the requested duration exactly.
+// BIBELI MIMO – VIDEO ENCODER (V5)
+// Root cause of previous failures: Chrome throttles
+// canvas.captureStream() when the canvas is offscreen/hidden.
+// Fix: render the canvas VISIBLY inside the render overlay.
+// Chrome cannot throttle a canvas the user can see.
 // ============================================================
 
 window.VideoEncoder = (function () {
@@ -44,31 +43,34 @@ window.VideoEncoder = (function () {
         var mime = pickBestMimeType();
         if (!mime) throw new Error('Video recording not supported on this browser');
 
-        // ---------- CANVAS (must be in DOM & non-zero size for captureStream) ----------
+        // ---------- CANVAS (VISIBLE, inside render overlay) ----------
         var canvas = document.createElement('canvas');
         canvas.width = targetW;
         canvas.height = targetH;
         canvas.style.cssText = [
-            'position:fixed',
-            'left:0',
-            'top:0',
-            'width:320px',
+            'display:block',
+            'width:100%',
+            'max-width:220px',
             'height:auto',
-            'opacity:0.001',
-            'pointer-events:none',
-            'z-index:-9999'
+            'max-height:34vh',
+            'margin:0 auto 18px',
+            'border-radius:12px',
+            'background:#000',
+            'object-fit:contain'
         ].join(';');
-        document.body.appendChild(canvas);
-        var ctx = canvas.getContext('2d', { alpha: false });
 
-        // Fill with black so the first captured frame is not transparent
+        // Insert into the render overlay so Chrome keeps it painted
+        var renderCard = document.querySelector('#render-overlay .render-card') || document.body;
+        renderCard.insertBefore(canvas, renderCard.firstChild);
+
+        var ctx = canvas.getContext('2d', { alpha: false });
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, targetW, targetH);
 
         // ---------- STREAM ----------
-        var stream = canvas.captureStream(fps);
+        var stream = canvas.captureStream();
 
-        // ---------- AUDIO (optional) ----------
+        // ---------- AUDIO ----------
         var audioCtx = null;
         var audioEl = null;
         var gainNode = null;
@@ -129,64 +131,72 @@ window.VideoEncoder = (function () {
             recorder.onstop = function () { resolve(); };
         });
 
-        // ---------- START ----------
+        // ---------- GO ----------
         if (audioEl) {
             try { await audioEl.play(); } catch (e) {}
         }
         recorder.start(100);
 
-        // The moment we start recording — this is the time base.
         var startWall = performance.now();
 
-        // ---------- RENDER LOOP (real-time, hard wall-clock schedule) ----------
-        for (var i = 0; i < totalFrames; i++) {
-            var targetTime = startWall + (i * frameInterval);
-            var now = performance.now();
-            var waitFor = targetTime - now;
+        // ---------- RENDER LOOP (RAF-driven, real-time) ----------
+        await new Promise(function (resolve) {
+            var nextFrameAt = 0;
+            var frameIndex = 0;
 
-            // If we're behind, skip ahead. If we're ahead, wait.
-            if (waitFor > 2) {
-                await delay(waitFor - 1);
+            async function tick() {
+                if (frameIndex >= totalFrames) {
+                    resolve();
+                    return;
+                }
+
+                var elapsed = performance.now() - startWall;
+                if (elapsed < nextFrameAt) {
+                    requestAnimationFrame(tick);
+                    return;
+                }
+
+                var t = frameIndex / fps;
+                var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
+
+                try {
+                    var frameCanvas = await window.RenderEngine.render({
+                        state: opts.state,
+                        verseYoruba: opts.verseYoruba,
+                        verseEnglish: opts.verseEnglish,
+                        referenceText: opts.referenceText,
+                        backgroundURL: opts.backgroundURL,
+                        bgGradient: opts.bgGradient,
+                        bgSolid: opts.bgSolid,
+                        targetW: targetW,
+                        targetH: targetH,
+                        previewW: 350,
+                        motion: motion
+                    });
+                    ctx.drawImage(frameCanvas, 0, 0, targetW, targetH);
+                } catch (e) {
+                    console.error('Frame ' + frameIndex + ' render failed:', e);
+                }
+
+                frameIndex++;
+                nextFrameAt = frameIndex * frameInterval;
+
+                if (opts.onProgress) {
+                    opts.onProgress(
+                        Math.round((frameIndex / totalFrames) * 95),
+                        'Recording frame ' + frameIndex + ' / ' + totalFrames
+                    );
+                }
+
+                requestAnimationFrame(tick);
             }
 
-            var t = i / fps;
-            var motion = opts.motionFn ? opts.motionFn(t, duration) : {};
+            requestAnimationFrame(tick);
+        });
 
-            var frameCanvas = null;
-            try {
-                frameCanvas = await window.RenderEngine.render({
-                    state: opts.state,
-                    verseYoruba: opts.verseYoruba,
-                    verseEnglish: opts.verseEnglish,
-                    referenceText: opts.referenceText,
-                    backgroundURL: opts.backgroundURL,
-                    bgGradient: opts.bgGradient,
-                    bgSolid: opts.bgSolid,
-                    targetW: targetW,
-                    targetH: targetH,
-                    previewW: 350,
-                    motion: motion
-                });
-            } catch (e) {
-                console.error('Frame ' + i + ' render failed:', e);
-            }
-
-            if (frameCanvas) {
-                ctx.clearRect(0, 0, targetW, targetH);
-                ctx.drawImage(frameCanvas, 0, 0, targetW, targetH);
-            }
-
-            if (opts.onProgress) {
-                var pct = Math.round(((i + 1) / totalFrames) * 95);
-                opts.onProgress(pct, 'Recording ' + (i + 1) + ' / ' + totalFrames + ' frames');
-            }
-        }
-
-        // ---------- HOLD until the wall clock reaches `duration` ----------
-        // This is the critical step: even if rendering was fast, we make sure
-        // MediaRecorder has recorded for at least the full duration.
-        var elapsed = performance.now() - startWall;
-        var remaining = (duration * 1000) - elapsed;
+        // ---------- HOLD until wall clock reaches duration ----------
+        var elapsedTotal = performance.now() - startWall;
+        var remaining = (duration * 1000) - elapsedTotal;
         if (remaining > 0) {
             await delay(remaining);
         }
@@ -195,20 +205,20 @@ window.VideoEncoder = (function () {
         if (audioEl) {
             try { audioEl.pause(); } catch (e) {}
         }
-        await delay(200);
+        await delay(300);
         recorder.stop();
         await stopped;
 
         if (audioCtx) {
             try { await audioCtx.close(); } catch (e) {}
         }
+
         try { canvas.remove(); } catch (e) {}
 
         if (opts.onProgress) opts.onProgress(100, 'Finalizing…');
 
-        var blob = new Blob(chunks, { type: mime });
         return {
-            blob: blob,
+            blob: new Blob(chunks, { type: mime }),
             mimeType: mime,
             ext: fileExtFor(mime),
             durationSec: duration
