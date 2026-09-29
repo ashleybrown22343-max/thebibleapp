@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/studio/image/studio.css">
     <link rel="stylesheet" href="/studio/video/video.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B1E39'/><text x='50' y='68' font-size='60' font-family='Georgia,serif' font-weight='bold' fill='%23E8B14B' text-anchor='middle'>V</text></svg>">
-    <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;600;700&family=Lora:wght@400;600&family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;600;700&family=Merriweather:wght@400;700&family=Josefin+Sans:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
 </head>
 <body class="studio-body video-body">
@@ -32,8 +31,9 @@
         </div>
     </header>
 
-    <div class="video-canvas-area" id="canvas-area">
-        <div class="video-preview-wrap" id="preview-wrap">
+    <!-- CANVAS -->
+    <div class="video-canvas-area">
+        <div class="video-preview-wrap ratio-story" id="preview-wrap">
             <canvas id="video-canvas"></canvas>
             <button class="play-overlay-btn" id="play-overlay-btn" aria-label="Play">
                 <svg id="play-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -42,8 +42,9 @@
         </div>
     </div>
 
+    <!-- TIMELINE -->
     <div class="video-timeline">
-        <button class="timeline-play-btn" id="timeline-play-btn" aria-label="Play">
+        <button class="timeline-play-btn" id="timeline-play-btn">
             <svg id="tl-play-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             <svg id="tl-pause-icon" style="display:none;" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
         </button>
@@ -51,19 +52,64 @@
         <span class="time-display" id="time-display">0.0 / 15.0s</span>
     </div>
 
+    <!-- CHIP RAIL -->
     <nav class="chip-rail" id="chip-rail">
-        <button class="chip active" data-sheet="motion">Motion</button>
+        <button class="chip active" data-sheet="verse">Verse</button>
+        <button class="chip" data-sheet="motion">Motion</button>
         <button class="chip" data-sheet="look">Look</button>
         <button class="chip" data-sheet="type">Type</button>
         <button class="chip" data-sheet="more">More</button>
     </nav>
 
+    <!-- SHEET -->
     <section class="sheet" id="sheet">
-        <div class="sheet-handle" id="sheet-handle"></div>
-        <div class="sheet-content">
+        <div class="sheet-handle" id="sheet-handle"><span></span></div>
+        <div class="sheet-content" id="sheet-content">
+
+            <!-- VERSE -->
+            <div class="sheet-pane active" data-pane="verse">
+                <div class="sheet-section">
+                    <div class="row">
+                        <span class="row-label">Primary</span>
+                        <button class="row-value" id="primary-lang-btn">Yoruba</button>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">Secondary</span>
+                        <button class="row-value" id="secondary-lang-btn">English (NKJV)</button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="picker-row">
+                        <button id="pick-book" class="picker-btn">Genesis</button>
+                        <button id="pick-chapter" class="picker-btn">1</button>
+                        <button id="pick-verse" class="picker-btn">1</button>
+                    </div>
+                    <div class="picker-row">
+                        <button id="random-verse" class="action-mini">
+                            <svg class="mini-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+                            Random
+                        </button>
+                        <button id="votd-fill" class="action-mini">
+                            <svg class="mini-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                            Today
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sheet-section">
+                    <input type="text" id="topic-search" class="text-input" placeholder="Search by topic: love, hope, faith…">
+                    <div id="topic-results" class="topic-results"></div>
+                </div>
+
+                <div class="sheet-section">
+                    <div class="sheet-section-title">Recently used</div>
+                    <div id="recent-verses" class="recent-list"></div>
+                </div>
+            </div>
 
             <!-- MOTION -->
-            <div class="sheet-pane active" data-pane="motion">
+            <div class="sheet-pane" data-pane="motion">
                 <div class="sheet-section">
                     <div class="sheet-section-title">Text animation</div>
                     <div class="chip-row" id="text-motion-chips">
@@ -72,7 +118,7 @@
                         <button class="chip-sm" data-motion="fade">Fade</button>
                         <button class="chip-sm" data-motion="slide-left">Slide in</button>
                         <button class="chip-sm" data-motion="typewriter">Typewriter</button>
-                        <button class="chip-sm" data-motion="word">Word reveal</button>
+                        <button class="chip-sm" data-motion="word">Word by word</button>
                         <button class="chip-sm" data-motion="scale">Scale in</button>
                     </div>
                 </div>
@@ -109,7 +155,7 @@
                 </div>
 
                 <div class="sheet-section">
-                    <div class="sheet-section-title">Motion speed</div>
+                    <div class="sheet-section-title">Speed</div>
                     <div class="chip-row" id="motion-speed-chips">
                         <button class="chip-sm" data-speed="slow">Slow</button>
                         <button class="chip-sm active" data-speed="medium">Medium</button>
@@ -127,7 +173,7 @@
                 </div>
             </div>
 
-            <!-- LOOK (same as image studio) -->
+            <!-- LOOK -->
             <div class="sheet-pane" data-pane="look">
                 <div class="look-tabs" id="look-tabs">
                     <button class="look-tab active" data-cat="photos">Photos</button>
@@ -146,6 +192,10 @@
                 <button class="ghost-link" id="bg-remove-btn" style="display:none;">Remove uploaded photo</button>
 
                 <div class="sheet-section">
+                    <div class="toggle-row">
+                        <span>Blur-fill background</span>
+                        <button class="switch active" id="bg-blurfill-toggle"></button>
+                    </div>
                     <div class="slider-row">
                         <label>Opacity</label>
                         <input type="range" id="bg-opacity-slider" min="0" max="100" value="100">
@@ -172,45 +222,15 @@
                         <span id="vignette-label">0</span>
                     </div>
                 </div>
-
-                <details class="sheet-details">
-                    <summary>Advanced effects</summary>
-                    <div class="slider-row">
-                        <label>Saturation</label>
-                        <input type="range" id="saturation-slider" min="0" max="200" value="100">
-                        <span id="saturation-label">100</span>
-                    </div>
-                    <div class="toggle-row">
-                        <span>Duotone</span>
-                        <button class="switch" id="duotone-toggle"></button>
-                    </div>
-                    <div class="inline-row">
-                        <button class="color-pick-btn" id="duotone-shadow-btn" style="background:#1a237e"></button>
-                        <span class="inline-label">Shadow</span>
-                        <button class="color-pick-btn" id="duotone-highlight-btn" style="background:#f59e0b"></button>
-                        <span class="inline-label">Highlight</span>
-                    </div>
-                    <div class="toggle-row">
-                        <span>Gradient overlay</span>
-                        <button class="switch" id="gradient-overlay-toggle"></button>
-                    </div>
-                    <div class="inline-row">
-                        <button class="color-pick-btn" id="gradient-color-btn" style="background:#1a237e"></button>
-                        <span class="inline-label">Color</span>
-                        <input type="range" id="gradient-opacity-slider" min="0" max="100" value="40" class="slider-small">
-                    </div>
-                </details>
             </div>
 
             <!-- TYPE -->
             <div class="sheet-pane" data-pane="type">
                 <div class="font-strip" id="font-strip"></div>
-
                 <div class="chip-row" id="weight-chips">
                     <button class="chip-sm" data-weight="400">Regular</button>
                     <button class="chip-sm active" data-weight="700">Bold</button>
                 </div>
-
                 <div class="sheet-section">
                     <div class="slider-row">
                         <label>Size</label>
@@ -219,13 +239,11 @@
                     </div>
                     <button class="ghost-btn" id="autofit-btn">Auto-fit text</button>
                 </div>
-
                 <div class="slider-row">
                     <label>Line spacing</label>
                     <input type="range" id="line-spacing-slider" min="1.0" max="2.5" step="0.1" value="1.7">
                     <span id="line-spacing-label">1.7</span>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Position</div>
                     <div class="pos-grid" id="pos-grid">
@@ -240,13 +258,11 @@
                         <button data-pos="br">↘</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Color</div>
                     <div class="swatch-row" id="text-swatches"></div>
                     <button class="ghost-btn" id="text-color-custom-btn">Custom color</button>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Shadow</div>
                     <div class="chip-row" id="shadow-chips">
@@ -257,7 +273,6 @@
                         <button class="chip-sm" data-shadow="outline">Outline</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Highlight word</div>
                     <input type="text" id="highlight-word-input" class="text-input" placeholder="e.g. grace" maxlength="30">
@@ -281,7 +296,6 @@
                         <button class="chip-sm" data-dur="30">30s</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Aspect ratio</div>
                     <div class="chip-row" id="ratio-chips">
@@ -291,7 +305,6 @@
                         <button class="chip-sm" data-ratio="landscape">16:9</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Frame rate</div>
                     <div class="chip-row" id="fps-chips">
@@ -300,7 +313,6 @@
                         <button class="chip-sm" data-fps="60">60 fps</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Resolution</div>
                     <div class="chip-row" id="resolution-chips">
@@ -309,9 +321,8 @@
                         <button class="chip-sm" data-res="1440">1440p</button>
                     </div>
                 </div>
-
                 <div class="sheet-section">
-                    <div class="sheet-section-title">Music</div>
+                <div class="sheet-section-title">Music</div>
                     <input type="file" id="audio-input" accept="audio/*" hidden>
                     <button class="action-mini wide" id="audio-upload-btn">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="16" height="16"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
@@ -319,46 +330,18 @@
                     </button>
                     <button class="ghost-link" id="audio-remove-btn" style="display:none;">Remove music</button>
                     <div id="audio-controls" style="display:none;">
-                        <div class="slider-row">
-                            <label>Volume</label>
-                            <input type="range" id="audio-volume-slider" min="0" max="100" value="80">
-                            <span id="audio-volume-label">80</span>
-                        </div>
-                        <div class="slider-row">
-                            <label>Fade in</label>
-                            <input type="range" id="audio-fadein-slider" min="0" max="5" step="0.5" value="1">
-                            <span id="audio-fadein-label">1</span>
-                        </div>
-                        <div class="slider-row">
-                            <label>Fade out</label>
-                            <input type="range" id="audio-fadeout-slider" min="0" max="5" step="0.5" value="1">
-                            <span id="audio-fadeout-label">1</span>
-                        </div>
-                        <div class="toggle-row">
-                            <span>Loop if shorter</span>
-                            <button class="switch active" id="audio-loop-toggle"></button>
-                        </div>
+                        <div class="slider-row"><label>Volume</label><input type="range" id="audio-volume-slider" min="0" max="100" value="80"><span id="audio-volume-label">80</span></div>
+                        <div class="slider-row"><label>Fade in</label><input type="range" id="audio-fadein-slider" min="0" max="5" step="0.5" value="1"><span id="audio-fadein-label">1</span></div>
+                        <div class="slider-row"><label>Fade out</label><input type="range" id="audio-fadeout-slider" min="0" max="5" step="0.5" value="1"><span id="audio-fadeout-label">1</span></div>
+                        <div class="toggle-row"><span>Loop if shorter</span><button class="switch active" id="audio-loop-toggle"></button></div>
                     </div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Border & radius</div>
-                    <div class="slider-row">
-                        <label>Border</label>
-                        <input type="range" id="border-slider" min="0" max="30" value="0">
-                        <span id="border-label">0</span>
-                    </div>
-                    <div class="inline-row">
-                        <button class="color-pick-btn" id="border-color-btn" style="background:#ffffff"></button>
-                        <span class="inline-label">Border color</span>
-                    </div>
-                    <div class="slider-row">
-                        <label>Corner radius</label>
-                        <input type="range" id="radius-slider" min="0" max="60" value="0">
-                        <span id="radius-label">0</span>
-                    </div>
+                    <div class="slider-row"><label>Border</label><input type="range" id="border-slider" min="0" max="30" value="0"><span id="border-label">0</span></div>
+                    <div class="inline-row"><button class="color-pick-btn" id="border-color-btn" style="background:#ffffff"></button><span class="inline-label">Border color</span></div>
+                    <div class="slider-row"><label>Corner radius</label><input type="range" id="radius-slider" min="0" max="60" value="0"><span id="radius-label">0</span></div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Footer text</div>
                     <input type="text" id="secondary-input" class="text-input" placeholder="@yourchurch · A Word Today" maxlength="40">
@@ -367,36 +350,20 @@
                         <button class="chip-sm active" data-secpos="above">Above</button>
                         <button class="chip-sm" data-secpos="bottom">Bottom</button>
                     </div>
-                    <div class="slider-row">
-                        <label>Size</label>
-                        <input type="range" id="sec-size-slider" min="10" max="30" value="12">
-                        <span id="sec-size-label">12</span>
-                    </div>
-                    <div class="slider-row">
-                        <label>Opacity</label>
-                        <input type="range" id="sec-opacity-slider" min="10" max="100" value="85">
-                        <span id="sec-opacity-label">85</span>
-                    </div>
-                    <div class="inline-row">
-                        <button class="color-pick-btn" id="sec-color-btn" style="background:#ffffff"></button>
-                        <span class="inline-label">Color</span>
-                    </div>
+                    <div class="slider-row"><label>Size</label><input type="range" id="sec-size-slider" min="10" max="30" value="12"><span id="sec-size-label">12</span></div>
+                    <div class="slider-row"><label>Opacity</label><input type="range" id="sec-opacity-slider" min="10" max="100" value="85"><span id="sec-opacity-label">85</span></div>
+                    <div class="inline-row"><button class="color-pick-btn" id="sec-color-btn" style="background:#ffffff"></button><span class="inline-label">Color</span></div>
                 </div>
-
                 <div class="sheet-section">
                     <div class="sheet-section-title">Settings</div>
-                    <div class="toggle-row">
-                        <span>App watermark</span>
-                        <button class="switch active" id="watermark-toggle"></button>
-                    </div>
+                    <div class="toggle-row"><span>App watermark</span><button class="switch active" id="watermark-toggle"></button></div>
                 </div>
             </div>
 
         </div>
     </section>
 
-    <!-- ================= MODALS ================= -->
-
+    <!-- MODALS -->
     <div id="verse-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -442,7 +409,6 @@
         </div>
     </div>
 
-    <!-- Rendering overlay -->
     <div id="render-overlay" class="render-overlay">
         <div class="render-card">
             <div class="render-spinner"></div>
@@ -452,12 +418,9 @@
         </div>
     </div>
 
-    <!-- Success overlay -->
     <div id="success-overlay" class="success-overlay">
         <div class="success-card">
-            <div class="success-check-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-            </div>
+            <div class="success-check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
             <h2 class="success-title-big">Video Ready</h2>
             <p class="success-filename" id="success-filename"></p>
             <div class="success-actions">
@@ -475,9 +438,7 @@
         </div>
     </div>
 
-    <!-- Language dropdown -->
     <div id="lang-menu" class="lang-menu" style="display:none;"></div>
-
     <div id="toast-container" class="toast-container"></div>
 
     <script src="/shared.js"></script>
@@ -485,4 +446,4 @@
     <script src="/studio/video/encoder.js"></script>
     <script src="/studio/video/studio.js"></script>
 </body>
-  </html>
+                                                                      </html>
