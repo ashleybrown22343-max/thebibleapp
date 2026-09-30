@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Music test — Jamendo</title>
+<title>Music test — Openverse</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
@@ -206,8 +206,8 @@
 <body>
 
 <header>
-  <h1>Music test — Jamendo</h1>
-  <p>Tap a category to load gospel tracks</p>
+  <h1>Music test — Openverse</h1>
+  <p>No API key. Free forever.</p>
 </header>
 
 <div class="categories" id="categories"></div>
@@ -236,20 +236,19 @@
 (function () {
     'use strict';
 
-    var CLIENT_ID = 'c691b562';
+    var API = 'https://api.openverse.org/v1/audio/';
 
     var CATEGORIES = [
-    { id: 'worship',   label: 'Worship',      query: 'tags=worship' },
-    { id: 'gospel',    label: 'Gospel',       query: 'tags=gospel' },
-    { id: 'christian', label: 'Christian',    query: 'tags=christian' },
-    { id: 'piano',     label: 'Soft Piano',   query: 'tags=piano' },
-    { id: 'hymn',      label: 'Hymns',        query: 'tags=hymn' },
-    { id: 'prayer',    label: 'Prayer',       query: 'tags=prayer' },
-    { id: 'cinematic', label: 'Cinematic',    query: 'tags=cinematic' },
-    { id: 'ambient',   label: 'Ambient',      query: 'tags=ambient' },
-    { id: 'peaceful',  label: 'Peaceful',     query: 'tags=peaceful' },
-    { id: 'african',   label: 'African',      query: 'tags=african' }
-];
+        { id: 'worship',   label: 'Worship',       query: 'worship' },
+        { id: 'gospel',    label: 'Gospel',        query: 'gospel' },
+        { id: 'piano',     label: 'Piano Worship', query: 'worship piano' },
+        { id: 'hymn',      label: 'Hymns',         query: 'hymn' },
+        { id: 'prayer',    label: 'Prayer',        query: 'prayer' },
+        { id: 'christian', label: 'Christian',     query: 'christian' },
+        { id: 'instr',     label: 'Instrumental',  query: 'christian instrumental' },
+        { id: 'african',   label: 'African',       query: 'african gospel' }
+    ];
+
     var activeCategory = null;
     var currentTrack = null;
     var audio = null;
@@ -277,10 +276,10 @@
 
     function licenseClass(lic) {
         if (!lic) return 'other';
-        if (lic.indexOf('cc0') === 0) return 'cc0';
-        if (lic.indexOf('by-nc') === 0) return 'by-nc';
-        if (lic.indexOf('by-sa') === 0) return 'by-sa';
-        if (lic.indexOf('by') === 0) return 'by';
+        if (/^cc0/.test(lic)) return 'cc0';
+        if (/by-nc/.test(lic)) return 'by-nc';
+        if (/by-sa/.test(lic)) return 'by-sa';
+        if (/^by/.test(lic)) return 'by';
         return 'other';
     }
 
@@ -307,21 +306,31 @@
         setActiveCategory(cat.id);
         listEl.innerHTML = '<div class="status">Loading ' + cat.label + '…</div>';
 
-        var url = 'https://api.jamendo.com/v3.0/tracks/?' +
-            'client_id=' + CLIENT_ID +
-            '&format=json' +
-            '&limit=20' +
-            '&tags=' + cat.tags +
-            '&audioformat=mp32' +
-            '&include=musicinfo+licenses' +
-            '&order=popularity_total';
+        var url = API +
+            '?q=' + encodeURIComponent(cat.query) +
+            '&page_size=20' +
+            '&category=music';
 
         try {
-            var res = await fetch(url);
+            var res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             var data = await res.json();
-            var tracks = (data.results || []).filter(function (t) {
-                return t.audio && t.duration > 30;
+
+            var tracks = [];
+            var seen = {};
+            (data.results || []).forEach(function (r) {
+                if (!r.url) return;
+                if (!r.duration || r.duration < 30000) return;
+                if (r.duration > 1800000) return;
+                if (r.source === 'wikimedia_audio' && r.category === 'pronunciation') return;
+                if (seen[r.id]) return;
+                seen[r.id] = true;
+                tracks.push(r);
             });
+
+            // Shortest first — better for 15s videos
+            tracks.sort(function (a, b) { return a.duration - b.duration; });
+
             renderTracks(tracks);
         } catch (e) {
             listEl.innerHTML = '<div class="status" style="color:#f87171;">Error: ' + (e.message || e) + '</div>';
@@ -331,7 +340,7 @@
     function renderTracks(tracks) {
         listEl.innerHTML = '';
         if (!tracks.length) {
-            listEl.innerHTML = '<div class="status">No tracks found for this category.</div>';
+            listEl.innerHTML = '<div class="status">No tracks found.</div>';
             return;
         }
         tracks.forEach(function (t) {
@@ -341,9 +350,9 @@
 
             var art = document.createElement('div');
             art.className = 'track-art';
-            if (t.image) {
+            if (t.thumbnail) {
                 var img = document.createElement('img');
-                img.src = t.image;
+                img.src = t.thumbnail;
                 img.alt = '';
                 img.onerror = function () { art.textContent = '♪'; };
                 art.appendChild(img);
@@ -356,17 +365,20 @@
 
             var title = document.createElement('div');
             title.className = 'track-title';
-            title.textContent = t.name || 'Untitled';
+            title.textContent = t.title || 'Untitled';
 
             var meta = document.createElement('div');
             meta.className = 'track-meta';
-            meta.appendChild(document.createTextNode((t.artist_name || 'Unknown') + ' · ' + fmt(t.duration)));
+            var mins = Math.floor((t.duration || 0) / 60000);
+            var secs = Math.floor(((t.duration || 0) % 60000) / 1000);
+            meta.appendChild(document.createTextNode(
+                (t.creator || 'Unknown') + ' · ' + mins + ':' + (secs < 10 ? '0' : '') + secs
+            ));
 
-            var lic = (t.license_ccurl || '').match(/licenses\/([a-z\-]+)\//);
-            var licText = lic ? lic[1] : 'other';
+            var licShort = (t.license || 'other').replace(/^cc-/, '').replace(/^cc/, '');
             var badge = document.createElement('span');
-            badge.className = 'license ' + licenseClass(licText);
-            badge.textContent = licText;
+            badge.className = 'license ' + licenseClass(t.license);
+            badge.textContent = licShort;
             meta.appendChild(badge);
 
             info.appendChild(title);
@@ -405,16 +417,16 @@
         });
 
         currentTrack = t;
-        audio = new Audio(t.audio);
+        audio = new Audio(t.url);
         audio.crossOrigin = 'anonymous';
 
         playerBar.classList.add('show');
-        playerTitle.textContent = t.name || 'Untitled';
-        playerArtist.textContent = t.artist_name || 'Unknown';
+        playerTitle.textContent = t.title || 'Untitled';
+        playerArtist.textContent = t.creator || 'Unknown';
         playerArt.innerHTML = '';
-        if (t.image) {
+        if (t.thumbnail) {
             var img = document.createElement('img');
-            img.src = t.image;
+            img.src = t.thumbnail;
             img.onerror = function () { playerArt.textContent = '♪'; };
             playerArt.appendChild(img);
         } else {
@@ -475,4 +487,4 @@
 })();
 </script>
 </body>
-                 </html>
+</html>
