@@ -239,15 +239,17 @@
     var CLIENT_ID = 'c691b562';
 
     var CATEGORIES = [
-        { id: 'soaking',   label: 'Soaking Worship', tags: 'worship+instrumental' },
-        { id: 'piano',     label: 'Soft Piano',      tags: 'piano+instrumental' },
-        { id: 'hymn',      label: 'Hymns',           tags: 'hymn+choir' },
-        { id: 'cinematic', label: 'Cinematic',       tags: 'cinematic+gospel' },
-        { id: 'prayer',    label: 'Prayer',          tags: 'prayer+meditation' },
-        { id: 'ambient',   label: 'Ambient',         tags: 'ambient+christian' },
-        { id: 'uplifting', label: 'Uplifting',       tags: 'uplifting+worship' },
-        { id: 'african',   label: 'African Gospel',  tags: 'african+gospel' }
-    ];
+    { id: 'worship',   label: 'Worship',      query: 'fuzzytags=worship' },
+    { id: 'gospel',    label: 'Gospel',       query: 'fuzzytags=gospel' },
+    { id: 'christian', label: 'Christian',    query: 'fuzzytags=christian' },
+    { id: 'piano',     label: 'Soft Piano',   query: 'fuzzytags=piano' },
+    { id: 'hymn',      label: 'Hymns',        query: 'fuzzytags=hymn' },
+    { id: 'prayer',    label: 'Prayer',       query: 'fuzzytags=prayer' },
+    { id: 'cinematic', label: 'Cinematic',    query: 'fuzzytags=cinematic' },
+    { id: 'ambient',   label: 'Ambient',      query: 'fuzzytags=ambient' },
+    { id: 'peaceful',  label: 'Peaceful',     query: 'fuzzytags=peaceful' },
+    { id: 'african',   label: 'African',      query: 'fuzzytags=african' }
+];
 
     var activeCategory = null;
     var currentTrack = null;
